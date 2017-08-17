@@ -26,6 +26,7 @@
 #   This macro calls:
 #
 #     AC_SUBST(POSTGRESQL_CPPFLAGS)
+#     AC_SUBST(POSTGRESQL_LIBDIR)
 #     AC_SUBST(POSTGRESQL_VERSION)
 #
 # LICENSE
@@ -73,6 +74,7 @@ AC_DEFUN([AX_LIB_POSTGRESQL],
         AC_MSG_CHECKING([for PostgreSQL libraries])
 
         POSTGRESQL_CPPFLAGS="-I`$PG_CONFIG --includedir-server`"
+        POSTGRESQL_LIBDIR="`$PG_CONFIG --libdir`"
         POSTGRESQL_VERSION=`$PG_CONFIG --version | sed -e 's#PostgreSQL ##'`
 
         found_postgresql="yes"
@@ -134,5 +136,6 @@ AC_DEFUN([AX_LIB_POSTGRESQL],
     fi
 
     AC_SUBST([POSTGRESQL_VERSION])
+    AC_SUBST([POSTGRESQL_LIBDIR])
     AC_SUBST([POSTGRESQL_CPPFLAGS])
 ])

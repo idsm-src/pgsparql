@@ -22,6 +22,7 @@ LT_INIT
 dnl check for postgresql
 AX_LIB_POSTGRESQL(9.2.0)
 
+libdir=$POSTGRESQL_LIBDIR
 
 AC_CONFIG_FILES(Makefile src/Makefile)
 AC_OUTPUT
