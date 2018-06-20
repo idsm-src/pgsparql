@@ -27,6 +27,7 @@
 #
 #     AC_SUBST(POSTGRESQL_CPPFLAGS)
 #     AC_SUBST(POSTGRESQL_LIBDIR)
+#     AC_SUBST(POSTGRESQL_SHAREDIR)
 #     AC_SUBST(POSTGRESQL_VERSION)
 #
 # LICENSE
@@ -74,7 +75,8 @@ AC_DEFUN([AX_LIB_POSTGRESQL],
         AC_MSG_CHECKING([for PostgreSQL libraries])
 
         POSTGRESQL_CPPFLAGS="-I`$PG_CONFIG --includedir-server`"
-        POSTGRESQL_LIBDIR="`$PG_CONFIG --libdir`"
+        POSTGRESQL_LIBDIR="`$PG_CONFIG --pkglibdir`"
+        POSTGRESQL_SHAREDIR="`$PG_CONFIG --sharedir`"
         POSTGRESQL_VERSION=`$PG_CONFIG --version | sed -e 's#PostgreSQL ##'`
 
         found_postgresql="yes"
@@ -110,9 +112,14 @@ AC_DEFUN([AX_LIB_POSTGRESQL],
 
         dnl Decompose version string of installed PostgreSQL
         dnl and calculate its number representation
-        postgresql_version_major=`expr $POSTGRESQL_VERSION : '\([[0-9]]*\)'`
-        postgresql_version_minor=`expr $POSTGRESQL_VERSION : '[[0-9]]*\.\([[0-9]]*\)'`
-        postgresql_version_micro=`expr $POSTGRESQL_VERSION : '[[0-9]]*\.[[0-9]]*\.\([[0-9]]*\)'`
+        postgresql_version_major=`expr "$POSTGRESQL_VERSION" : '\([[0-9]]*\)'`
+        postgresql_version_minor=`expr "$POSTGRESQL_VERSION" : '[[0-9]]*\.\([[0-9]]*\)'`
+        postgresql_version_micro=`expr "$POSTGRESQL_VERSION" : '[[0-9]]*\.[[0-9]]*\.\([[0-9]]*\)'`
+
+        if test "x$postgresql_version_minor" = "x"; then
+            postgresql_version_minor="0"
+        fi
+
         if test "x$postgresql_version_micro" = "x"; then
             postgresql_version_micro="0"
         fi
@@ -137,5 +144,6 @@ AC_DEFUN([AX_LIB_POSTGRESQL],
 
     AC_SUBST([POSTGRESQL_VERSION])
     AC_SUBST([POSTGRESQL_LIBDIR])
+    AC_SUBST([POSTGRESQL_SHAREDIR])
     AC_SUBST([POSTGRESQL_CPPFLAGS])
 ])
