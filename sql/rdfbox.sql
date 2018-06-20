@@ -1,12 +1,12 @@
-CREATE TYPE "RdfBox";
+CREATE TYPE "rdfbox";
 
-CREATE FUNCTION "RdfBoxInput"(cstring) RETURNS "RdfBox"  AS 'libpgsparql.so' LANGUAGE C IMMUTABLE STRICT;
-CREATE FUNCTION "RdfBoxOutput"("RdfBox") RETURNS cstring AS 'libpgsparql.so' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "rdfbox_input"(cstring) RETURNS "rdfbox"  AS 'libpgsparql.so','pg_rdfbox_input' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "rdfbox_output"("rdfbox") RETURNS cstring AS 'libpgsparql.so','pg_rdfbox_output' LANGUAGE C IMMUTABLE STRICT;
 
-CREATE TYPE "RdfBox"
+CREATE TYPE "rdfbox"
 (
     internallength = VARIABLE,
-    input = "RdfBoxInput",
-    output = "RdfBoxOutput",
+    input = "rdfbox_input",
+    output = "rdfbox_output",
     alignment = double
 );

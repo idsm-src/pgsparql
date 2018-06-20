@@ -20,15 +20,15 @@
 #define SUFFIX_SIZE(X)  (STRLEN(SUFFIX(X)))
 
 
-PG_FUNCTION_INFO_V1(RdfBoxInput);
-Datum RdfBoxInput(PG_FUNCTION_ARGS)
+PG_FUNCTION_INFO_V1(pg_rdfbox_input);
+Datum pg_rdfbox_input(PG_FUNCTION_ARGS)
 {
-    ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION), errmsg("RdfBox input function is not implemented")));
+    ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION), errmsg("rdfbox input function is not implemented")));
 }
 
 
-PG_FUNCTION_INFO_V1(RdfBoxOutput);
-Datum RdfBoxOutput(PG_FUNCTION_ARGS)
+PG_FUNCTION_INFO_V1(pg_rdfbox_output);
+Datum pg_rdfbox_output(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
     char *result = NULL;
