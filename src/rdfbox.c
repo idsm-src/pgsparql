@@ -31,6 +31,8 @@ PG_FUNCTION_INFO_V1(RdfBoxOutput);
 Datum RdfBoxOutput(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    char *result = NULL;
+
 
     switch(box->type)
     {
@@ -39,14 +41,14 @@ Datum RdfBoxOutput(PG_FUNCTION_ARGS)
             bool value = ((RdfBoxBoolean *) box)->value;
 
             size_t buffsize = PREFIX_SIZE + (value ? 4 : 5) + SUFFIX_SIZE(XSD_BOOLEAN_IRI) + 1;
-            char *result = (char *) palloc0(buffsize);
+            result = (char *) palloc0(buffsize);
 
             if(value)
                 snprintf(result, buffsize, PREFIX "true" SUFFIX(XSD_BOOLEAN_IRI));
             else
                 snprintf(result, buffsize, PREFIX "false" SUFFIX(XSD_BOOLEAN_IRI));
 
-            PG_RETURN_CSTRING(result);
+            break;
         }
 
         case XSD_INTEGER:
@@ -54,10 +56,10 @@ Datum RdfBoxOutput(PG_FUNCTION_ARGS)
             int32 value = ((RdfBoxInteger *) box)->value;
 
             size_t buffsize = PREFIX_SIZE + 11 + SUFFIX_SIZE(XSD_INTEGER_IRI) + 1;
-            char *result = (char *) palloc0(buffsize);
+            result = (char *) palloc0(buffsize);
 
             snprintf(result, buffsize, PREFIX "%" SCNi32 SUFFIX(XSD_INTEGER_IRI), value);
-            PG_RETURN_CSTRING(result);
+            break;
         }
 
         case XSD_LONG:
@@ -65,10 +67,10 @@ Datum RdfBoxOutput(PG_FUNCTION_ARGS)
             int64 value = ((RdfBoxLong *) box)->value;
 
             size_t buffsize = PREFIX_SIZE + 20 + SUFFIX_SIZE(XSD_LONG_IRI) + 1;
-            char *result = (char *) palloc0(buffsize);
+            result = (char *) palloc0(buffsize);
 
             snprintf(result, buffsize, PREFIX "%" SCNi64 SUFFIX(XSD_LONG_IRI), value);
-            PG_RETURN_CSTRING(result);
+            break;
         }
 
         case XSD_FLOAT:
@@ -78,13 +80,15 @@ Datum RdfBoxOutput(PG_FUNCTION_ARGS)
             char *data = DatumGetCString(DirectFunctionCall1(numeric_out, NumericGetDatum(numeric)));
 
             size_t length = strlen(data);
-            char *result = (char *) palloc0(PREFIX_SIZE + length + SUFFIX_SIZE(XSD_FLOAT_IRI) + 1);
+            result = (char *) palloc0(PREFIX_SIZE + length + SUFFIX_SIZE(XSD_FLOAT_IRI) + 1);
 
             memcpy(result, PREFIX, PREFIX_SIZE);
             memcpy(result + PREFIX_SIZE, data, length);
             memcpy(result + PREFIX_SIZE + length, SUFFIX(XSD_FLOAT_IRI), SUFFIX_SIZE(XSD_FLOAT_IRI));
 
-            PG_RETURN_CSTRING(result);
+            pfree(data);
+            pfree(numeric);
+            break;
         }
 
         case XSD_DOUBLE:
@@ -94,13 +98,15 @@ Datum RdfBoxOutput(PG_FUNCTION_ARGS)
             char *data = DatumGetCString(DirectFunctionCall1(numeric_out, NumericGetDatum(numeric)));
 
             size_t length = strlen(data);
-            char *result = (char *) palloc0(PREFIX_SIZE + length + SUFFIX_SIZE(XSD_DOUBLE_IRI) + 1);
+            result = (char *) palloc0(PREFIX_SIZE + length + SUFFIX_SIZE(XSD_DOUBLE_IRI) + 1);
 
             memcpy(result, PREFIX, PREFIX_SIZE);
             memcpy(result + PREFIX_SIZE, data, length);
             memcpy(result + PREFIX_SIZE + length, SUFFIX(XSD_DOUBLE_IRI), SUFFIX_SIZE(XSD_DOUBLE_IRI));
 
-            PG_RETURN_CSTRING(result);
+            pfree(data);
+            pfree(numeric);
+            break;
         }
 
         case XSD_DECIMAL:
@@ -109,13 +115,14 @@ Datum RdfBoxOutput(PG_FUNCTION_ARGS)
             char *data = DatumGetCString(DirectFunctionCall1(numeric_out, NumericGetDatum(value)));
 
             size_t length = strlen(data);
-            char *result = (char *) palloc0(PREFIX_SIZE + length + SUFFIX_SIZE(XSD_DECIMAL_IRI) + 1);
+            result = (char *) palloc0(PREFIX_SIZE + length + SUFFIX_SIZE(XSD_DECIMAL_IRI) + 1);
 
             memcpy(result, PREFIX, PREFIX_SIZE);
             memcpy(result + PREFIX_SIZE, data, length);
             memcpy(result + PREFIX_SIZE + length, SUFFIX(XSD_DECIMAL_IRI), SUFFIX_SIZE(XSD_DECIMAL_IRI));
 
-            PG_RETURN_CSTRING(result);
+            pfree(data);
+            break;
         }
 
         case XSD_DATETIME:
@@ -135,13 +142,13 @@ Datum RdfBoxOutput(PG_FUNCTION_ARGS)
             EncodeDateTime(&tm, fsec, zone != PG_INT32_MIN, tz, tzn, USE_XSD_DATES, data);
 
             size_t length = strlen(data);
-            char *result = (char *) palloc0(PREFIX_SIZE + length + SUFFIX_SIZE(XSD_DATETIME_IRI) + 1);
+            result = (char *) palloc0(PREFIX_SIZE + length + SUFFIX_SIZE(XSD_DATETIME_IRI) + 1);
 
             memcpy(result, PREFIX, PREFIX_SIZE);
             memcpy(result + PREFIX_SIZE, data, length);
             memcpy(result + PREFIX_SIZE + length, SUFFIX(XSD_DATETIME_IRI), SUFFIX_SIZE(XSD_DATETIME_IRI));
 
-            PG_RETURN_CSTRING(result);
+            break;
         }
 
         case XSD_DATE:
@@ -166,13 +173,13 @@ Datum RdfBoxOutput(PG_FUNCTION_ARGS)
             }
 
             size_t length = strlen(data);
-            char *result = (char *) palloc0(PREFIX_SIZE + length + SUFFIX_SIZE(XSD_DATE_IRI) + 1);
+            result = (char *) palloc0(PREFIX_SIZE + length + SUFFIX_SIZE(XSD_DATE_IRI) + 1);
 
             memcpy(result, PREFIX, PREFIX_SIZE);
             memcpy(result + PREFIX_SIZE, data, length);
             memcpy(result + PREFIX_SIZE + length, SUFFIX(XSD_DATE_IRI), SUFFIX_SIZE(XSD_DATE_IRI));
 
-            PG_RETURN_CSTRING(result);
+            break;
         }
 
         case XSD_DAYTIMEDURATION:
@@ -248,13 +255,13 @@ Datum RdfBoxOutput(PG_FUNCTION_ARGS)
             }
 
             size_t length = strlen(data);
-            char *result = (char *) palloc0(PREFIX_SIZE + length + SUFFIX_SIZE(XSD_DAYTIMEDURATION_IRI) + 1);
+            result = (char *) palloc0(PREFIX_SIZE + length + SUFFIX_SIZE(XSD_DAYTIMEDURATION_IRI) + 1);
 
             memcpy(result, PREFIX, PREFIX_SIZE);
             memcpy(result + PREFIX_SIZE, data, length);
             memcpy(result + PREFIX_SIZE + length, SUFFIX(XSD_DAYTIMEDURATION_IRI), SUFFIX_SIZE(XSD_DAYTIMEDURATION_IRI));
 
-            PG_RETURN_CSTRING(result);
+            break;
         }
 
         case XSD_STRING:
@@ -262,13 +269,13 @@ Datum RdfBoxOutput(PG_FUNCTION_ARGS)
             Datum datum = PointerGetDatum(((RdfBoxString *) box)->value);
 
             size_t length = VARSIZE(datum) - VARHDRSZ;
-            char *result = (char *) palloc0(PREFIX_SIZE + length + SUFFIX_SIZE(XSD_STRING_IRI) + 1);
+            result = (char *) palloc0(PREFIX_SIZE + length + SUFFIX_SIZE(XSD_STRING_IRI) + 1);
 
             memcpy(result, PREFIX, PREFIX_SIZE);
             memcpy(result + PREFIX_SIZE, VARDATA(datum), length);
             memcpy(result + PREFIX_SIZE + length, SUFFIX(XSD_STRING_IRI), SUFFIX_SIZE(XSD_STRING_IRI));
 
-            PG_RETURN_CSTRING(result);
+            break;
         }
 
         case RDF_LANGSTRING:
@@ -279,14 +286,14 @@ Datum RdfBoxOutput(PG_FUNCTION_ARGS)
 
             size_t valueLength = size - VARHDRSZ;
             size_t langLength = VARSIZE(lang) - VARHDRSZ;
-            char *result = (char *) palloc0(PREFIX_SIZE + valueLength + STRLEN(VALUE_DELIM LANG_DELIM) + langLength + 1);
+            result = (char *) palloc0(PREFIX_SIZE + valueLength + STRLEN(VALUE_DELIM LANG_DELIM) + langLength + 1);
 
             memcpy(result, PREFIX, PREFIX_SIZE);
             memcpy(result + PREFIX_SIZE, VARDATA(datum), valueLength);
             memcpy(result + PREFIX_SIZE + valueLength, VALUE_DELIM LANG_DELIM, STRLEN(VALUE_DELIM LANG_DELIM));
             memcpy(result + PREFIX_SIZE + valueLength + STRLEN(VALUE_DELIM LANG_DELIM), VARDATA(lang), langLength);
 
-            PG_RETURN_CSTRING(result);
+            break;
         }
 
         case TYPED_LITERAL:
@@ -297,7 +304,7 @@ Datum RdfBoxOutput(PG_FUNCTION_ARGS)
 
             size_t valueLength = size - VARHDRSZ;
             size_t langLength = VARSIZE(lang) - VARHDRSZ;
-            char *result = (char *) palloc0(PREFIX_SIZE + valueLength + STRLEN(VALUE_DELIM IRI_BEGIN) + langLength + STRLEN(IRI_END) + 1);
+            result = (char *) palloc0(PREFIX_SIZE + valueLength + STRLEN(VALUE_DELIM IRI_BEGIN) + langLength + STRLEN(IRI_END) + 1);
 
             memcpy(result, PREFIX, PREFIX_SIZE);
             memcpy(result + PREFIX_SIZE, VARDATA(datum), valueLength);
@@ -305,7 +312,7 @@ Datum RdfBoxOutput(PG_FUNCTION_ARGS)
             memcpy(result + PREFIX_SIZE + valueLength + STRLEN(VALUE_DELIM IRI_BEGIN), VARDATA(lang), langLength);
             memcpy(result + PREFIX_SIZE + valueLength + STRLEN(VALUE_DELIM IRI_BEGIN) + langLength, IRI_END, STRLEN(IRI_END));
 
-            PG_RETURN_CSTRING(result);
+            break;
         }
 
         case IRI:
@@ -313,13 +320,13 @@ Datum RdfBoxOutput(PG_FUNCTION_ARGS)
             Datum datum = PointerGetDatum(((RdfBoxString *) box)->value);
 
             size_t length = VARSIZE(datum) - VARHDRSZ;
-            char *result = (char *) palloc0(STRLEN(IRI_BEGIN) + length + STRLEN(IRI_END) + 1);
+            result = (char *) palloc0(STRLEN(IRI_BEGIN) + length + STRLEN(IRI_END) + 1);
 
             memcpy(result, IRI_BEGIN, STRLEN(IRI_BEGIN));
             memcpy(result + STRLEN(IRI_BEGIN), VARDATA(datum), length);
             memcpy(result + STRLEN(IRI_BEGIN) + length, IRI_END, STRLEN(IRI_END));
 
-            PG_RETURN_CSTRING(result);
+            break;
         }
 
         case BLANKNODE_INT:
@@ -327,10 +334,10 @@ Datum RdfBoxOutput(PG_FUNCTION_ARGS)
             int32 value = ((RdfBoxBlankNodeInt *) box)->value;
 
             size_t buffsize = STRLEN(BLKNODE_PREFIX) + 11 + 1;
-            char *result = (char *) palloc0(buffsize);
+            result = (char *) palloc0(buffsize);
 
             snprintf(result, buffsize, BLKNODE_PREFIX "%" SCNi32, value);
-            PG_RETURN_CSTRING(result);
+            break;
         }
 
         case BLANKNODE_STR:
@@ -338,16 +345,20 @@ Datum RdfBoxOutput(PG_FUNCTION_ARGS)
             Datum datum = PointerGetDatum(((RdfBoxBlankNodeStr *) box)->value);
 
             size_t length = VARSIZE(datum) - VARHDRSZ;
-            char *result = (char *) palloc0(STRLEN(BLKNODE_PREFIX VALUE_DELIM) + length + STRLEN(VALUE_DELIM) + 1);
+            result = (char *) palloc0(STRLEN(BLKNODE_PREFIX VALUE_DELIM) + length + STRLEN(VALUE_DELIM) + 1);
 
             memcpy(result, BLKNODE_PREFIX VALUE_DELIM, STRLEN(BLKNODE_PREFIX VALUE_DELIM));
             memcpy(result + STRLEN(BLKNODE_PREFIX VALUE_DELIM), VARDATA(datum), length);
             memcpy(result + STRLEN(BLKNODE_PREFIX VALUE_DELIM) + length, VALUE_DELIM, STRLEN(VALUE_DELIM));
 
-            PG_RETURN_CSTRING(result);
+            break;
         }
-
-        default:
-            PG_RETURN_NULL();
     }
+
+    PG_FREE_IF_COPY(box, 0);
+
+    if(result)
+        PG_RETURN_CSTRING(result);
+    else
+        PG_RETURN_NULL();
 }
