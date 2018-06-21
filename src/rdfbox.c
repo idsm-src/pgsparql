@@ -11,10 +11,11 @@
 #define IRI_BEGIN       "<"
 #define IRI_END         ">"
 #define LANG_DELIM      "@"
+#define TYPE_DELIM      "^^"
 #define VALUE_DELIM     "\""
 #define BLKNODE_PREFIX  "_:"
 #define PREFIX          VALUE_DELIM
-#define SUFFIX(X)       VALUE_DELIM IRI_BEGIN X IRI_END
+#define SUFFIX(X)       VALUE_DELIM TYPE_DELIM IRI_BEGIN X IRI_END
 #define STRLEN(X)       (sizeof(X) - 1)
 #define PREFIX_SIZE     (STRLEN(PREFIX))
 #define SUFFIX_SIZE(X)  (STRLEN(SUFFIX(X)))
