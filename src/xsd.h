@@ -1,3 +1,7 @@
+#ifndef XSD_H_
+#define XSD_H_
+
+
 #define XSD_IRI_PREFIX          "http://www.w3.org/2001/XMLSchema#"
 #define XSD_BOOLEAN_IRI         XSD_IRI_PREFIX "boolean"
 #define XSD_INTEGER_IRI         XSD_IRI_PREFIX "integer"
@@ -9,3 +13,5 @@
 #define XSD_DATE_IRI            XSD_IRI_PREFIX "date"
 #define XSD_DAYTIMEDURATION_IRI XSD_IRI_PREFIX "dayTimeDuration"
 #define XSD_STRING_IRI          XSD_IRI_PREFIX "string"
+
+#endif /* XSD_H_ */

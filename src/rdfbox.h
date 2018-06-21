@@ -1,3 +1,6 @@
+#ifndef RDFBOX_H_
+#define RDFBOX_H_
+
 #include <postgres.h>
 #include <utils/date.h>
 #include <utils/timestamp.h>
@@ -141,3 +144,5 @@ typedef struct
 #define RdfBoxGetDatum(X)       PointerGetDatum(X)
 #define PG_GETARG_RDFBOX_P(n)   DatumGetRdfBox(PG_GETARG_DATUM(n))
 #define PG_RETURN_RDFBOX_P(x)	return RdfBoxGetDatum(x)
+
+#endif /* RDFBOX_H_ */
