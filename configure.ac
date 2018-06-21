@@ -24,5 +24,5 @@ AX_LIB_POSTGRESQL(9.2.0)
 
 libdir=$POSTGRESQL_LIBDIR
 
-AC_CONFIG_FILES(Makefile src/Makefile)
+AC_CONFIG_FILES(Makefile src/Makefile extension/Makefile)
 AC_OUTPUT
