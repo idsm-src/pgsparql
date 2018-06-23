@@ -52,6 +52,17 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
             break;
         }
 
+        case XSD_SHORT:
+        {
+            int16 value = ((RdfBoxShort *) box)->value;
+
+            size_t buffsize = PREFIX_SIZE + 6 + SUFFIX_SIZE(XSD_SHORT_IRI) + 1;
+            result = (char *) palloc0(buffsize);
+
+            snprintf(result, buffsize, PREFIX "%" SCNi16 SUFFIX(XSD_SHORT_IRI), value);
+            break;
+        }
+
         case XSD_INT:
         {
             int32 value = ((RdfBoxInt *) box)->value;

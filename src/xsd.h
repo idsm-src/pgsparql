@@ -4,6 +4,7 @@
 
 #define XSD_IRI_PREFIX          "http://www.w3.org/2001/XMLSchema#"
 #define XSD_BOOLEAN_IRI         XSD_IRI_PREFIX "boolean"
+#define XSD_SHORT_IRI           XSD_IRI_PREFIX "short"
 #define XSD_INT_IRI             XSD_IRI_PREFIX "int"
 #define XSD_LONG_IRI            XSD_IRI_PREFIX "long"
 #define XSD_FLOAT_IRI           XSD_IRI_PREFIX "float"

@@ -9,6 +9,7 @@
 typedef enum
 {
     XSD_BOOLEAN,
+    XSD_SHORT,
     XSD_INT,
     XSD_LONG,
     XSD_FLOAT,
@@ -39,6 +40,13 @@ typedef struct
     RdfBox header;
     bool value;
 } RdfBoxBoolean;
+
+
+typedef struct
+{
+    RdfBox header;
+    int16 value;
+} RdfBoxShort;
 
 
 typedef struct
