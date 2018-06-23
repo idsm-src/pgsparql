@@ -52,14 +52,14 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
             break;
         }
 
-        case XSD_INTEGER:
+        case XSD_INT:
         {
-            int32 value = ((RdfBoxInteger *) box)->value;
+            int32 value = ((RdfBoxInt *) box)->value;
 
-            size_t buffsize = PREFIX_SIZE + 11 + SUFFIX_SIZE(XSD_INTEGER_IRI) + 1;
+            size_t buffsize = PREFIX_SIZE + 11 + SUFFIX_SIZE(XSD_INT_IRI) + 1;
             result = (char *) palloc0(buffsize);
 
-            snprintf(result, buffsize, PREFIX "%" SCNi32 SUFFIX(XSD_INTEGER_IRI), value);
+            snprintf(result, buffsize, PREFIX "%" SCNi32 SUFFIX(XSD_INT_IRI), value);
             break;
         }
 
@@ -107,6 +107,22 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
 
             pfree(data);
             pfree(numeric);
+            break;
+        }
+
+        case XSD_INTEGER:
+        {
+            Numeric value = (Numeric) ((RdfBoxInteger *) box)->value;
+            char *data = DatumGetCString(DirectFunctionCall1(numeric_out, NumericGetDatum(value)));
+
+            size_t length = strlen(data);
+            result = (char *) palloc0(PREFIX_SIZE + length + SUFFIX_SIZE(XSD_INTEGER_IRI) + 1);
+
+            memcpy(result, PREFIX, PREFIX_SIZE);
+            memcpy(result + PREFIX_SIZE, data, length);
+            memcpy(result + PREFIX_SIZE + length, SUFFIX(XSD_INTEGER_IRI), SUFFIX_SIZE(XSD_INTEGER_IRI));
+
+            pfree(data);
             break;
         }
 

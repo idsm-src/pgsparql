@@ -9,10 +9,11 @@
 typedef enum
 {
     XSD_BOOLEAN,
-    XSD_INTEGER,
+    XSD_INT,
     XSD_LONG,
     XSD_FLOAT,
     XSD_DOUBLE,
+    XSD_INTEGER,
     XSD_DECIMAL,
     XSD_DATETIME,
     XSD_DATE,
@@ -44,7 +45,7 @@ typedef struct
 {
     RdfBox header;
     int32 value;
-} RdfBoxInteger;
+} RdfBoxInt;
 
 
 typedef struct
@@ -66,6 +67,13 @@ typedef struct
     RdfBox header;
     float8 value;
 } RdfBoxDouble;
+
+
+typedef struct
+{
+    RdfBox header;
+    char value[];
+} RdfBoxInteger;
 
 
 typedef struct
