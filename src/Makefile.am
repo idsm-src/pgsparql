@@ -8,7 +8,20 @@ lib_LTLIBRARIES = libpgsparql.la
 # Build information for each library
 
 # Sources for pgsparql
-libpgsparql_la_SOURCES = pgsparql.c rdfbox.c
+libpgsparql_la_SOURCES = \
+		create.c \
+		pgsparql.c \
+		rdfbox.c \
+		cast/boolean.c \
+		cast/decimal.c \
+		cast/double.c \
+		cast/float.c \
+		cast/int.c \
+		cast/integer.c \
+		cast/long.c \
+		cast/rdfbox.c \
+		cast/short.c \
+		cast/string.c
 
 # Linker options libTestProgram
 libpgsparql_la_LDFLAGS = 
