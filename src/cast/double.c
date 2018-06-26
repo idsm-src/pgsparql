@@ -53,28 +53,16 @@ PG_FUNCTION_INFO_V1(cast_as_double_from_integer);
 Datum cast_as_double_from_integer(PG_FUNCTION_ARGS)
 {
     Numeric value = PG_GETARG_NUMERIC(0);
-    bool isNull = false;
-    Datum result;
+    char *string = DatumGetCString(DirectFunctionCall1(numeric_out, NumericGetDatum(value)));
 
-    PG_TRY_EX();
-    {
-        result = DirectFunctionCall1(numeric_float8, NumericGetDatum(value));
-    }
-    PG_CATCH_EX();
-    {
-        if(sqlerrcode != ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE)
-            PG_RE_THROW_EX();
+    errno = 0;
+    float8 result = strtod(string, NULL);
 
-        isNull = true;
-    }
-    PG_END_TRY_EX();
+    if(errno == ERANGE && result != 0.0)
+        result *= HUGE_VAL;
 
-    PG_FREE_IF_COPY(value, 0);
-
-    if(isNull)
-        PG_RETURN_NULL();
-
-    PG_RETURN_DATUM(result);
+    pfree(string);
+    PG_RETURN_FLOAT8(result);
 }
 
 
@@ -82,28 +70,16 @@ PG_FUNCTION_INFO_V1(cast_as_double_from_decimal);
 Datum cast_as_double_from_decimal(PG_FUNCTION_ARGS)
 {
     Numeric value = PG_GETARG_NUMERIC(0);
-    bool isNull = false;
-    Datum result;
+    char *string = DatumGetCString(DirectFunctionCall1(numeric_out, NumericGetDatum(value)));
 
-    PG_TRY_EX();
-    {
-        result = DirectFunctionCall1(numeric_float8, NumericGetDatum(value));
-    }
-    PG_CATCH_EX();
-    {
-        if(sqlerrcode != ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE)
-            PG_RE_THROW_EX();
+    errno = 0;
+    float8 result = strtod(string, NULL);
 
-        isNull = true;
-    }
-    PG_END_TRY_EX();
+    if(errno == ERANGE && result != 0.0)
+        result *= HUGE_VAL;
 
-    PG_FREE_IF_COPY(value, 0);
-
-    if(isNull)
-        PG_RETURN_NULL();
-
-    PG_RETURN_DATUM(result);
+    pfree(string);
+    PG_RETURN_FLOAT8(result);
 }
 
 
