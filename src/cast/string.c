@@ -5,6 +5,7 @@
 #include <postgres.h>
 #include <utils/builtins.h>
 #include <utils/numeric.h>
+#include <utils/int8.h>
 #include "call.h"
 #include "rdfbox.h"
 
