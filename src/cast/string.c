@@ -5,6 +5,7 @@
 #include <postgres.h>
 #include <utils/builtins.h>
 #include <utils/numeric.h>
+#include "call.h"
 #include "rdfbox.h"
 
 
@@ -101,41 +102,40 @@ PG_FUNCTION_INFO_V1(cast_as_string_from_rdfbox);
 Datum cast_as_string_from_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    bool isNull = false;
-    Datum result;
+    NullableDatum result = { .isNull = false };
 
     switch(box->type)
     {
         case XSD_BOOLEAN:
-            result = DirectFunctionCall1(cast_as_string_from_boolean, BoolGetDatum(((RdfBoxBoolean *) box)->value));
+            result = NullableFunctionCall1(cast_as_string_from_boolean, BoolGetDatum(((RdfBoxBoolean *) box)->value));
             break;
 
         case XSD_SHORT:
-            result = DirectFunctionCall1(cast_as_string_from_short, Int16GetDatum(((RdfBoxShort *) box)->value));
+            result = NullableFunctionCall1(cast_as_string_from_short, Int16GetDatum(((RdfBoxShort *) box)->value));
             break;
 
         case XSD_INT:
-            result = DirectFunctionCall1(cast_as_string_from_int, Int32GetDatum(((RdfBoxInt *) box)->value));
+            result = NullableFunctionCall1(cast_as_string_from_int, Int32GetDatum(((RdfBoxInt *) box)->value));
             break;
 
         case XSD_LONG:
-            result = DirectFunctionCall1(cast_as_string_from_long, Int64GetDatum(((RdfBoxLong *) box)->value));
+            result = NullableFunctionCall1(cast_as_string_from_long, Int64GetDatum(((RdfBoxLong *) box)->value));
             break;
 
         case XSD_FLOAT:
-            result = DirectFunctionCall1(cast_as_string_from_float, Float4GetDatum(((RdfBoxFloat *) box)->value));
+            result = NullableFunctionCall1(cast_as_string_from_float, Float4GetDatum(((RdfBoxFloat *) box)->value));
             break;
 
         case XSD_DOUBLE:
-            result = DirectFunctionCall1(cast_as_string_from_double, Float8GetDatum(((RdfBoxDouble *) box)->value));
+            result = NullableFunctionCall1(cast_as_string_from_double, Float8GetDatum(((RdfBoxDouble *) box)->value));
             break;
 
         case XSD_INTEGER:
-            result = DirectFunctionCall1(cast_as_string_from_integer, NumericGetDatum(((RdfBoxInteger *) box)->value));
+            result = NullableFunctionCall1(cast_as_string_from_integer, NumericGetDatum(((RdfBoxInteger *) box)->value));
             break;
 
         case XSD_DECIMAL:
-            result = DirectFunctionCall1(cast_as_string_from_decimal, NumericGetDatum(((RdfBoxDecinal *) box)->value));
+            result = NullableFunctionCall1(cast_as_string_from_decimal, NumericGetDatum(((RdfBoxDecinal *) box)->value));
             break;
 
         case XSD_STRING:
@@ -145,20 +145,20 @@ Datum cast_as_string_from_rdfbox(PG_FUNCTION_ARGS)
 
             VarChar *copy = palloc(length);
             memcpy(copy, value, length);
-            result = PointerGetDatum(copy);
+            result.datum = PointerGetDatum(copy);
         }
         break;
             break;
 
         default:
-            isNull = true;
+            result.isNull = true;
             break;
     }
 
     PG_FREE_IF_COPY(box, 0);
 
-    if(isNull)
+    if(result.isNull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result);
+    PG_RETURN_DATUM(result.datum);
 }
