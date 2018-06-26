@@ -9,9 +9,14 @@ lib_LTLIBRARIES = libpgsparql.la
 
 # Sources for pgsparql
 libpgsparql_la_SOURCES = \
+		call.h \
 		create.c \
+		create.h \
 		pgsparql.c \
 		rdfbox.c \
+		rdfbox.h \
+		try-catch.h \
+		xsd.h \
 		cast/boolean.c \
 		cast/decimal.c \
 		cast/double.c \
