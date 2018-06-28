@@ -20,7 +20,7 @@ Datum cast_as_integer_from_float(PG_FUNCTION_ARGS)
         PG_RETURN_NULL();
 
     Datum result = DirectFunctionCall1(float4_numeric, Float4GetDatum(truncf(value)));
-    PG_RETURN_NUMERIC(result);
+    PG_RETURN_DATUM(result);
 }
 
 
@@ -33,7 +33,7 @@ Datum cast_as_integer_from_double(PG_FUNCTION_ARGS)
         PG_RETURN_NULL();
 
     Datum result = DirectFunctionCall1(float8_numeric, Float8GetDatum(trunc(value)));
-    PG_RETURN_NUMERIC(result);
+    PG_RETURN_DATUM(result);
 }
 
 
@@ -43,7 +43,7 @@ Datum cast_as_integer_from_string(PG_FUNCTION_ARGS)
     text *value = PG_GETARG_TEXT_P(0);
     char *cstring = text_to_cstring(value);
     bool isNull = false;
-    Numeric result;
+    Datum result;
 
     PG_TRY_EX();
     {
@@ -51,8 +51,7 @@ Datum cast_as_integer_from_string(PG_FUNCTION_ARGS)
             if(*c != ' ' && *c != '+' && *c != '-' && (*c < '0' || *c > '9'))
                 ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION)));
 
-        result = DatumGetNumeric(DirectFunctionCall3(numeric_in, CStringGetDatum(cstring), ObjectIdGetDatum(InvalidOid),
-                Int32GetDatum(-1)));
+        result = DirectFunctionCall3(numeric_in, CStringGetDatum(cstring), ObjectIdGetDatum(InvalidOid), Int32GetDatum(-1));
     }
     PG_CATCH_EX();
     {
@@ -70,7 +69,7 @@ Datum cast_as_integer_from_string(PG_FUNCTION_ARGS)
     if(isNull)
         PG_RETURN_NULL();
 
-    PG_RETURN_NUMERIC(result);
+    PG_RETURN_DATUM(result);
 }
 
 

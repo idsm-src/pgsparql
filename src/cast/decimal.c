@@ -15,7 +15,7 @@ Datum cast_as_decimal_from_boolean(PG_FUNCTION_ARGS)
 {
     bool value = PG_GETARG_BOOL(0);
     Datum result = DirectFunctionCall1(int4_numeric, Int32GetDatum(value ? 1 : 0));
-    PG_RETURN_NUMERIC(result);
+    PG_RETURN_DATUM(result);
 }
 
 
@@ -24,7 +24,7 @@ Datum cast_as_decimal_from_short(PG_FUNCTION_ARGS)
 {
     int16 value = PG_GETARG_INT16(0);
     Datum result = DirectFunctionCall1(int2_numeric, Int32GetDatum(value));
-    PG_RETURN_NUMERIC(result);
+    PG_RETURN_DATUM(result);
 }
 
 
@@ -33,7 +33,7 @@ Datum cast_as_decimal_from_int(PG_FUNCTION_ARGS)
 {
     int32 value = PG_GETARG_INT32(0);
     Datum result = DirectFunctionCall1(int4_numeric, Int32GetDatum(value));
-    PG_RETURN_NUMERIC(result);
+    PG_RETURN_DATUM(result);
 }
 
 
@@ -42,7 +42,7 @@ Datum cast_as_decimal_from_long(PG_FUNCTION_ARGS)
 {
     int64 value = PG_GETARG_INT64(0);
     Datum result = DirectFunctionCall1(int8_numeric, Int64GetDatum(value));
-    PG_RETURN_NUMERIC(result);
+    PG_RETURN_DATUM(result);
 }
 
 
@@ -55,7 +55,7 @@ Datum cast_as_decimal_from_float(PG_FUNCTION_ARGS)
         PG_RETURN_NULL();
 
     Datum result = DirectFunctionCall1(float4_numeric, Float4GetDatum(value));
-    PG_RETURN_NUMERIC(result);
+    PG_RETURN_DATUM(result);
 }
 
 
@@ -68,7 +68,7 @@ Datum cast_as_decimal_from_double(PG_FUNCTION_ARGS)
         PG_RETURN_NULL();
 
     Datum result = DirectFunctionCall1(float8_numeric, Float8GetDatum(value));
-    PG_RETURN_NUMERIC(result);
+    PG_RETURN_DATUM(result);
 }
 
 
@@ -86,7 +86,7 @@ Datum cast_as_decimal_from_string(PG_FUNCTION_ARGS)
     text *value = PG_GETARG_TEXT_P(0);
     char *cstring = text_to_cstring(value);
     bool isNull = false;
-    Numeric result;
+    Datum result;
 
     PG_TRY_EX();
     {
@@ -94,8 +94,7 @@ Datum cast_as_decimal_from_string(PG_FUNCTION_ARGS)
             if(*c != ' ' && *c != '+' && *c != '-' && *c != '.' && (*c < '0' || *c > '9'))
                 ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION)));
 
-        result = DatumGetNumeric(DirectFunctionCall3(numeric_in, CStringGetDatum(cstring), ObjectIdGetDatum(InvalidOid),
-                Int32GetDatum(-1)));
+        result = DirectFunctionCall3(numeric_in, CStringGetDatum(cstring), ObjectIdGetDatum(InvalidOid), Int32GetDatum(-1));
     }
     PG_CATCH_EX();
     {
@@ -113,7 +112,7 @@ Datum cast_as_decimal_from_string(PG_FUNCTION_ARGS)
     if(isNull)
         PG_RETURN_NULL();
 
-    PG_RETURN_NUMERIC(result);
+    PG_RETURN_DATUM(result);
 }
 
 
