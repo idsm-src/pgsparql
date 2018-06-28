@@ -132,7 +132,7 @@ Datum cast_as_string_from_rdfbox(PG_FUNCTION_ARGS)
             break;
 
         case XSD_INTEGER:
-            result = NullableFunctionCall1(cast_as_string_from_integer, NumericGetDatum(((RdfBoxInteger *) box)->value));
+            result = NullableFunctionCall1(cast_as_string_from_integer, NumericGetDatum(((RdfBoxDecinal *) box)->value));
             break;
 
         case XSD_DECIMAL:

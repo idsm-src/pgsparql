@@ -81,13 +81,6 @@ typedef struct
 {
     RdfBox header;
     char value[];
-} RdfBoxInteger;
-
-
-typedef struct
-{
-    RdfBox header;
-    char value[];
 } RdfBoxDecinal;
 
 

@@ -123,7 +123,7 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
 
         case XSD_INTEGER:
         {
-            Numeric value = (Numeric) ((RdfBoxInteger *) box)->value;
+            Numeric value = (Numeric) ((RdfBoxDecinal *) box)->value;
             char *data = DatumGetCString(DirectFunctionCall1(numeric_out, NumericGetDatum(value)));
 
             size_t length = strlen(data);

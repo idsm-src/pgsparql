@@ -152,7 +152,7 @@ Datum cast_as_integer_from_rdfbox(PG_FUNCTION_ARGS)
 
         case XSD_INTEGER:
             {
-                Numeric value = (Numeric) ((RdfBoxInteger *) box)->value;
+                Numeric value = (Numeric) ((RdfBoxDecinal *) box)->value;
                 size_t length = VARSIZE(value);
 
                 Numeric copy = palloc(length);

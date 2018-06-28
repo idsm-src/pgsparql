@@ -80,9 +80,9 @@ RdfBox *rdfbox_from_integer(Numeric value)
 {
     int32 size = VARSIZE(value);
 
-    RdfBoxInteger *result = (RdfBoxInteger *) palloc0(sizeof(RdfBoxInteger) + size);
+    RdfBoxDecinal *result = (RdfBoxDecinal *) palloc0(sizeof(RdfBoxDecinal) + size);
 
-    SET_VARSIZE(result, sizeof(RdfBoxInteger) + size);
+    SET_VARSIZE(result, sizeof(RdfBoxDecinal) + size);
     result->header.type = XSD_INTEGER;
     memcpy(result->value, value, size);
 
