@@ -18,6 +18,7 @@ libpgsparql_la_SOURCES = \
 		try-catch.h \
 		xsd.h \
 		cast/boolean.c \
+		cast/cast.h \
 		cast/decimal.c \
 		cast/double.c \
 		cast/float.c \

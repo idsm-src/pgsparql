@@ -8,42 +8,7 @@
 #include "rdfbox.h"
 #include "call.h"
 #include "try-catch.h"
-
-
-PG_FUNCTION_INFO_V1(cast_as_integer_from_boolean);
-Datum cast_as_integer_from_boolean(PG_FUNCTION_ARGS)
-{
-    bool value = PG_GETARG_BOOL(0);
-    Datum result = DirectFunctionCall1(int4_numeric, Int32GetDatum(value ? 1 : 0));
-    PG_RETURN_DATUM(result);
-}
-
-
-PG_FUNCTION_INFO_V1(cast_as_integer_from_short);
-Datum cast_as_integer_from_short(PG_FUNCTION_ARGS)
-{
-    int16 value = PG_GETARG_INT16(0);
-    Datum result = DirectFunctionCall1(int2_numeric, Int16GetDatum(value));
-    PG_RETURN_DATUM(result);
-}
-
-
-PG_FUNCTION_INFO_V1(cast_as_integer_from_int);
-Datum cast_as_integer_from_int(PG_FUNCTION_ARGS)
-{
-    int32 value = PG_GETARG_INT32(0);
-    Datum result = DirectFunctionCall1(int4_numeric, Int32GetDatum(value));
-    PG_RETURN_DATUM(result);
-}
-
-
-PG_FUNCTION_INFO_V1(cast_as_integer_from_long);
-Datum cast_as_integer_from_long(PG_FUNCTION_ARGS)
-{
-    int64 value = PG_GETARG_INT64(0);
-    Datum result = DirectFunctionCall1(int8_numeric, Int64GetDatum(value));
-    PG_RETURN_DATUM(result);
-}
+#include "cast/cast.h"
 
 
 PG_FUNCTION_INFO_V1(cast_as_integer_from_float);
@@ -69,15 +34,6 @@ Datum cast_as_integer_from_double(PG_FUNCTION_ARGS)
 
     Datum result = DirectFunctionCall1(float8_numeric, Float8GetDatum(trunc(value)));
     PG_RETURN_NUMERIC(result);
-}
-
-
-PG_FUNCTION_INFO_V1(cast_as_integer_from_decimal);
-Datum cast_as_integer_from_decimal(PG_FUNCTION_ARGS)
-{
-    Numeric value = PG_GETARG_NUMERIC(0);
-    Datum result = DirectFunctionCall2(numeric_trunc, NumericGetDatum(value), Int32GetDatum(0));
-    PG_RETURN_DATUM(result);
 }
 
 
@@ -127,19 +83,19 @@ Datum cast_as_integer_from_rdfbox(PG_FUNCTION_ARGS)
     switch(box->type)
     {
         case XSD_BOOLEAN:
-            result = NullableFunctionCall1(cast_as_integer_from_boolean, BoolGetDatum(((RdfBoxBoolean *) box)->value));
+            result = NullableFunctionCall1(cast_as_decimal_from_boolean, BoolGetDatum(((RdfBoxBoolean *) box)->value));
             break;
 
         case XSD_SHORT:
-            result = NullableFunctionCall1(cast_as_integer_from_short, Int16GetDatum(((RdfBoxShort *) box)->value));
+            result = NullableFunctionCall1(cast_as_decimal_from_short, Int16GetDatum(((RdfBoxShort *) box)->value));
             break;
 
         case XSD_INT:
-            result = NullableFunctionCall1(cast_as_integer_from_int, Int32GetDatum(((RdfBoxInt *) box)->value));
+            result = NullableFunctionCall1(cast_as_decimal_from_int, Int32GetDatum(((RdfBoxInt *) box)->value));
             break;
 
         case XSD_LONG:
-            result = NullableFunctionCall1(cast_as_integer_from_long, Int64GetDatum(((RdfBoxLong *) box)->value));
+            result = NullableFunctionCall1(cast_as_decimal_from_long, Int64GetDatum(((RdfBoxLong *) box)->value));
             break;
 
         case XSD_FLOAT:

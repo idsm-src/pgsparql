@@ -50,23 +50,6 @@ Datum cast_as_double_from_float(PG_FUNCTION_ARGS)
 }
 
 
-PG_FUNCTION_INFO_V1(cast_as_double_from_integer);
-Datum cast_as_double_from_integer(PG_FUNCTION_ARGS)
-{
-    Numeric value = PG_GETARG_NUMERIC(0);
-    char *string = DatumGetCString(DirectFunctionCall1(numeric_out, NumericGetDatum(value)));
-
-    errno = 0;
-    float8 result = strtod(string, NULL);
-
-    if(errno == ERANGE && result != 0.0)
-        result *= HUGE_VAL;
-
-    pfree(string);
-    PG_RETURN_FLOAT8(result);
-}
-
-
 PG_FUNCTION_INFO_V1(cast_as_double_from_decimal);
 Datum cast_as_double_from_decimal(PG_FUNCTION_ARGS)
 {
@@ -149,9 +132,6 @@ Datum cast_as_double_from_rdfbox(PG_FUNCTION_ARGS)
             break;
 
         case XSD_INTEGER:
-            result = NullableFunctionCall1(cast_as_double_from_integer, NumericGetDatum(((RdfBoxDecinal *) box)->value));
-            break;
-
         case XSD_DECIMAL:
             result = NullableFunctionCall1(cast_as_double_from_decimal, NumericGetDatum(((RdfBoxDecinal *) box)->value));
             break;

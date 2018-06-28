@@ -49,22 +49,6 @@ Datum cast_as_boolean_from_double(PG_FUNCTION_ARGS)
 }
 
 
-PG_FUNCTION_INFO_V1(cast_as_boolean_from_integer);
-Datum cast_as_boolean_from_integer(PG_FUNCTION_ARGS)
-{
-    Numeric value = PG_GETARG_NUMERIC(0);
-    Numeric zero = DatumGetNumeric(DirectFunctionCall1(int4_numeric, Int32GetDatum(0)));
-
-    bool isNonZero = DatumGetBool(DirectFunctionCall2(numeric_ne, NumericGetDatum(value), NumericGetDatum(zero)));
-    bool isNan = numeric_is_nan(value);
-
-    pfree(zero);
-    PG_FREE_IF_COPY(value, 0);
-
-    PG_RETURN_BOOL(isNonZero && !isNan);
-}
-
-
 PG_FUNCTION_INFO_V1(cast_as_boolean_from_decimal);
 Datum cast_as_boolean_from_decimal(PG_FUNCTION_ARGS)
 {
@@ -150,9 +134,6 @@ Datum cast_as_boolean_from_rdfbox(PG_FUNCTION_ARGS)
             break;
 
         case XSD_INTEGER:
-            result = NullableFunctionCall1(cast_as_boolean_from_integer, NumericGetDatum(((RdfBoxDecinal *) box)->value));
-            break;
-
         case XSD_DECIMAL:
             result = NullableFunctionCall1(cast_as_boolean_from_decimal, NumericGetDatum(((RdfBoxDecinal *) box)->value));
             break;

@@ -150,16 +150,6 @@ Datum cast_as_decimal_from_rdfbox(PG_FUNCTION_ARGS)
             break;
 
         case XSD_INTEGER:
-            {
-                Numeric value = (Numeric) ((RdfBoxDecinal *) box)->value;
-                size_t length = VARSIZE(value);
-
-                Numeric copy = palloc(length);
-                memcpy(copy, value, length);
-                result.datum = NumericGetDatum(copy);
-            }
-            break;
-
         case XSD_DECIMAL:
             {
                 Numeric value = (Numeric) ((RdfBoxDecinal *) box)->value;
