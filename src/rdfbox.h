@@ -154,4 +154,10 @@ typedef struct
 #define PG_GETARG_RDFBOX_P(n)   DatumGetRdfBox(PG_GETARG_DATUM(n))
 #define PG_RETURN_RDFBOX_P(x)	return RdfBoxGetDatum(x)
 
+
+static inline bool rdfbox_is_numeric(RdfBox *rdfbox)
+{
+    return rdfbox->type >= XSD_SHORT && rdfbox->type <=  XSD_DECIMAL;
+}
+
 #endif /* RDFBOX_H_ */

@@ -17,6 +17,11 @@ libpgsparql_la_SOURCES = \
 		rdfbox.h \
 		try-catch.h \
 		xsd.h \
+		arithmetic/addition.c \
+		arithmetic/division.c \
+		arithmetic/multiplication.c \
+		arithmetic/subtraction.c \
+		arithmetic/uminus.c \
 		cast/boolean.c \
 		cast/cast.h \
 		cast/decimal.c \
