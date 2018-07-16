@@ -3,6 +3,7 @@
 #include <utils/numeric.h>
 #include "rdfbox.h"
 #include "create.h"
+#include "try-catch.h"
 #include "cast/cast.h"
 
 
@@ -29,11 +30,27 @@ Datum div_decimal(PG_FUNCTION_ARGS)
 {
     Numeric left = PG_GETARG_NUMERIC(0);
     Numeric right = PG_GETARG_NUMERIC(1);
+    bool isNull = false;
+    Datum result;
 
-    Datum result = DirectFunctionCall2(numeric_div, NumericGetDatum(left), NumericGetDatum(right));
+    PG_TRY_EX();
+    {
+        result = DirectFunctionCall2(numeric_div, NumericGetDatum(left), NumericGetDatum(right));
+    }
+    PG_CATCH_EX();
+    {
+        if(sqlerrcode != ERRCODE_DIVISION_BY_ZERO)
+            PG_RE_THROW_EX();
+
+        isNull = true;
+    }
+    PG_END_TRY_EX();
 
     PG_FREE_IF_COPY(left, 0);
     PG_FREE_IF_COPY(right, 1);
+
+    if(isNull)
+        PG_RETURN_NULL();
 
     PG_RETURN_DATUM(result);
 }
@@ -68,12 +85,24 @@ Datum div_rdfbox(PG_FUNCTION_ARGS)
     {
         Numeric l = DatumGetNumeric(DirectFunctionCall1(cast_as_decimal_from_rdfbox, RdfBoxGetDatum(left)));
         Numeric r = DatumGetNumeric(DirectFunctionCall1(cast_as_decimal_from_rdfbox, RdfBoxGetDatum(right)));
-        Numeric v = DatumGetNumeric(DirectFunctionCall2(numeric_div, NumericGetDatum(l), NumericGetDatum(r)));
-        result = DirectFunctionCall1(cast_as_rdfbox_from_decimal, NumericGetDatum(v));
+
+        PG_TRY_EX();
+        {
+            Numeric v = DatumGetNumeric(DirectFunctionCall2(numeric_div, NumericGetDatum(l), NumericGetDatum(r)));
+            result = DirectFunctionCall1(cast_as_rdfbox_from_decimal, NumericGetDatum(v));
+            pfree(v);
+        }
+        PG_CATCH_EX();
+        {
+            if(sqlerrcode != ERRCODE_DIVISION_BY_ZERO)
+                PG_RE_THROW_EX();
+
+            isNull = true;
+        }
+        PG_END_TRY_EX();
 
         pfree(l);
         pfree(r);
-        pfree(v);
     }
 
     PG_FREE_IF_COPY(left, 0);
