@@ -124,7 +124,7 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
         case XSD_INTEGER:
         {
             Numeric value = (Numeric) ((RdfBoxDecinal *) box)->value;
-            char *data = DatumGetCString(DirectFunctionCall1(numeric_out, NumericGetDatum(value)));
+            char *data = numeric_normalize(value);
 
             size_t length = strlen(data);
             result = (char *) palloc0(PREFIX_SIZE + length + SUFFIX_SIZE(XSD_INTEGER_IRI) + 1);
@@ -140,7 +140,7 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
         case XSD_DECIMAL:
         {
             Numeric value = (Numeric) ((RdfBoxDecinal *) box)->value;
-            char *data = DatumGetCString(DirectFunctionCall1(numeric_out, NumericGetDatum(value)));
+            char *data = numeric_normalize(value);
 
             size_t length = strlen(data);
             result = (char *) palloc0(PREFIX_SIZE + length + SUFFIX_SIZE(XSD_DECIMAL_IRI) + 1);

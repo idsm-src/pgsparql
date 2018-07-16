@@ -79,7 +79,7 @@ PG_FUNCTION_INFO_V1(cast_as_string_from_decimal);
 Datum cast_as_string_from_decimal(PG_FUNCTION_ARGS)
 {
     Numeric value = PG_GETARG_NUMERIC(0);
-    char *string = DatumGetCString(DirectFunctionCall1(numeric_out, NumericGetDatum(value)));
+    char *string = numeric_normalize(value);
     Datum result = CStringGetTextDatum(string);
     pfree(string);
     PG_FREE_IF_COPY(value, 0);
