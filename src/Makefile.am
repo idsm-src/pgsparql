@@ -22,6 +22,8 @@ libpgsparql_la_SOURCES = \
 		arithmetic/multiplication.c \
 		arithmetic/subtraction.c \
 		arithmetic/uminus.c \
+		date/date.c \
+		date/date.h \
 		date/datetime.c \
 		date/datetime.h \
 		date/timezone.c \
