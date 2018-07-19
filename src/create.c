@@ -104,6 +104,18 @@ RdfBox *rdfbox_from_decimal(Numeric value)
 }
 
 
+RdfBox *rdfbox_from_datetime(ZonedDateTime *value)
+{
+    RdfBoxDateTime *result = (RdfBoxDateTime *) palloc0(sizeof(RdfBoxDateTime));
+
+    SET_VARSIZE(result, sizeof(RdfBoxDateTime));
+    result->header.type = XSD_DATETIME;
+    result->value = *value;
+
+    return (RdfBox *) result;
+}
+
+
 RdfBox *rdfbox_from_string(VarChar *value)
 {
     int32 size = VARSIZE(value);

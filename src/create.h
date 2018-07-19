@@ -13,6 +13,7 @@ RdfBox *rdfbox_from_float(float4 value);
 RdfBox *rdfbox_from_double(float8 value);
 RdfBox *rdfbox_from_integer(Numeric value);
 RdfBox *rdfbox_from_decimal(Numeric value);
+RdfBox *rdfbox_from_datetime(ZonedDateTime *value);
 RdfBox *rdfbox_from_string(VarChar *value);
 
 #endif /* CREATE_H_ */

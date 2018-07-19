@@ -30,6 +30,7 @@ libpgsparql_la_SOURCES = \
 		date/timezone.h \
 		cast/boolean.c \
 		cast/cast.h \
+		cast/datetime.c \
 		cast/decimal.c \
 		cast/double.c \
 		cast/float.c \

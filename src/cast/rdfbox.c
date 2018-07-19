@@ -75,6 +75,15 @@ Datum cast_as_rdfbox_from_decimal(PG_FUNCTION_ARGS)
 }
 
 
+PG_FUNCTION_INFO_V1(cast_as_rdfbox_from_datetime);
+Datum cast_as_rdfbox_from_datetime(PG_FUNCTION_ARGS)
+{
+    ZonedDateTime *value = PG_GETARG_ZONEDDATETIME_P(0);
+    RdfBox *result = rdfbox_from_datetime(value);
+    PG_RETURN_RDFBOX_P(result);
+}
+
+
 PG_FUNCTION_INFO_V1(cast_as_rdfbox_from_string);
 Datum cast_as_rdfbox_from_string(PG_FUNCTION_ARGS)
 {
