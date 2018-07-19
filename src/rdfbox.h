@@ -2,8 +2,8 @@
 #define RDFBOX_H_
 
 #include <postgres.h>
-#include <utils/date.h>
-#include <utils/timestamp.h>
+#include "date/date.h"
+#include "date/datetime.h"
 
 
 typedef enum
@@ -87,16 +87,14 @@ typedef struct
 typedef struct
 {
     RdfBox header;
-    Timestamp value;
-    int32 zone;
+    ZonedDateTime value;
 } RdfBoxDateTime;
 
 
 typedef struct
 {
     RdfBox header;
-    DateADT value;
-    int32 zone;
+    ZonedDate value;
 } RdfBoxDate;
 
 

@@ -155,19 +155,8 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
 
         case XSD_DATETIME:
         {
-            Timestamp value = ((RdfBoxDateTime *) box)->value;
-            int32 zone = ((RdfBoxDateTime *) box)->zone;
-
-            fsec_t fsec;
-            struct pg_tm tm;
-            int tz;
-            const char *tzn;
-
-            pg_tz *timezone = pg_tzset_offset(zone != PG_INT32_MIN ? -zone * (long) SECS_PER_MINUTE : 0);
-            timestamp2tm(value, &tz, &tm, &fsec, &tzn, timezone);
-
-            char data[MAXDATELEN + 1];
-            EncodeDateTime(&tm, fsec, zone != PG_INT32_MIN, tz, tzn, USE_XSD_DATES, data);
+            ZonedDateTime *value = &((RdfBoxDateTime *) box)->value;
+            char *data = DatumGetCString(DirectFunctionCall1(zoneddatetime_output, ZonedDateTimeGetDatum(value)));
 
             size_t length = strlen(data);
             result = (char *) palloc0(PREFIX_SIZE + length + SUFFIX_SIZE(XSD_DATETIME_IRI) + 1);
@@ -176,29 +165,14 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
             memcpy(result + PREFIX_SIZE, data, length);
             memcpy(result + PREFIX_SIZE + length, SUFFIX(XSD_DATETIME_IRI), SUFFIX_SIZE(XSD_DATETIME_IRI));
 
+            pfree(data);
             break;
         }
 
         case XSD_DATE:
         {
-            DateADT value = ((RdfBoxDate *) box)->value;
-            int32 zone = ((RdfBoxDate *) box)->zone;
-
-            struct pg_tm tm;
-            j2date(value + POSTGRES_EPOCH_JDATE, &(tm.tm_year), &(tm.tm_mon), &(tm.tm_mday));
-
-            char data[MAXDATELEN + 1];
-            EncodeDateOnly(&tm, DateStyle, data);
-
-            if(zone != PG_INT32_MIN)
-            {
-                char *str = data + strlen(data);
-                *str++ = (zone >= 0 ? '+' : '-');
-                str = pg_ltostr_zeropad(str, abs(zone) / MINS_PER_HOUR, 2);
-                *str++ = ':';
-                str = pg_ltostr_zeropad(str, abs(zone) % MINS_PER_HOUR, 2);
-                *str++ = '\0';
-            }
+            ZonedDate value = ((RdfBoxDate *) box)->value;
+            char *data = DatumGetCString(DirectFunctionCall1(zoneddate_output, ZonedDateGetDatum(value)));
 
             size_t length = strlen(data);
             result = (char *) palloc0(PREFIX_SIZE + length + SUFFIX_SIZE(XSD_DATE_IRI) + 1);
@@ -207,6 +181,7 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
             memcpy(result + PREFIX_SIZE, data, length);
             memcpy(result + PREFIX_SIZE + length, SUFFIX(XSD_DATE_IRI), SUFFIX_SIZE(XSD_DATE_IRI));
 
+            pfree(data);
             break;
         }
 

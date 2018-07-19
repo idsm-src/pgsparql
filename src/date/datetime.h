@@ -17,4 +17,8 @@ typedef struct
 #define PG_GETARG_ZONEDDATETIME_P(n)    DatumGetZonedDateTime(PG_GETARG_DATUM(n))
 #define PG_RETURN_ZONEDDATETIME_P(x)    return ZonedDateTimeGetDatum(x)
 
+
+Datum zoneddatetime_input(PG_FUNCTION_ARGS);
+Datum zoneddatetime_output(PG_FUNCTION_ARGS);
+
 #endif /* DATE_DATETIME_H_ */
