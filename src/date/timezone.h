@@ -9,6 +9,8 @@
 #define ZONE_MIN                        (-ZONE_MAX)
 #define ZONE_UNSPECIFIED                PG_INT16_MIN
 
+#define IS_VALID_TIMEZONE(tz)           ((tz) >= ZONE_MIN && (tz) <= ZONE_MAX || (tz) == ZONE_UNSPECIFIED)
+
 
 extern int16 implicit_timezone;
 
