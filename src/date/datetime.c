@@ -223,7 +223,6 @@ Datum zoneddatetime_output(PG_FUNCTION_ARGS)
 
     *str = '\0';
 
-    PG_FREE_IF_COPY(date, 0);
     PG_RETURN_CSTRING(pstrdup(data));
 }
 
@@ -244,10 +243,6 @@ Datum zoneddatetime_equal(PG_FUNCTION_ARGS)
     ZonedDateTime *right = PG_GETARG_ZONEDDATETIME_P(1);
 
     bool result = get_time_value(left) == get_time_value(right);
-
-    PG_FREE_IF_COPY(left, 0);
-    PG_FREE_IF_COPY(right, 1);
-
     PG_RETURN_BOOL(result);
 }
 
@@ -259,10 +254,6 @@ Datum zoneddatetime_not_equal(PG_FUNCTION_ARGS)
     ZonedDateTime *right = PG_GETARG_ZONEDDATETIME_P(1);
 
     bool result = get_time_value(left) != get_time_value(right);
-
-    PG_FREE_IF_COPY(left, 0);
-    PG_FREE_IF_COPY(right, 1);
-
     PG_RETURN_BOOL(result);
 }
 
@@ -274,10 +265,6 @@ Datum zoneddatetime_less_than(PG_FUNCTION_ARGS)
     ZonedDateTime *right = PG_GETARG_ZONEDDATETIME_P(1);
 
     bool result = get_time_value(left) < get_time_value(right);
-
-    PG_FREE_IF_COPY(left, 0);
-    PG_FREE_IF_COPY(right, 1);
-
     PG_RETURN_BOOL(result);
 }
 
@@ -289,10 +276,6 @@ Datum zoneddatetime_greater_than(PG_FUNCTION_ARGS)
     ZonedDateTime *right = PG_GETARG_ZONEDDATETIME_P(1);
 
     bool result = get_time_value(left) > get_time_value(right);
-
-    PG_FREE_IF_COPY(left, 0);
-    PG_FREE_IF_COPY(right, 1);
-
     PG_RETURN_BOOL(result);
 }
 
@@ -304,10 +287,6 @@ Datum zoneddatetime_not_less_than(PG_FUNCTION_ARGS)
     ZonedDateTime *right = PG_GETARG_ZONEDDATETIME_P(1);
 
     bool result = get_time_value(left) >= get_time_value(right);
-
-    PG_FREE_IF_COPY(left, 0);
-    PG_FREE_IF_COPY(right, 1);
-
     PG_RETURN_BOOL(result);
 }
 
@@ -319,9 +298,5 @@ Datum zoneddatetime_not_greater_than(PG_FUNCTION_ARGS)
     ZonedDateTime *right = PG_GETARG_ZONEDDATETIME_P(1);
 
     bool result = get_time_value(left) <= get_time_value(right);
-
-    PG_FREE_IF_COPY(left, 0);
-    PG_FREE_IF_COPY(right, 1);
-
     PG_RETURN_BOOL(result);
 }
