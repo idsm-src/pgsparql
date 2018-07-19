@@ -201,7 +201,6 @@ Datum zoneddate_equal(PG_FUNCTION_ARGS)
     ZonedDate right = PG_GETARG_ZONEDDATE(1);
 
     bool result = get_time_value(left) == get_time_value(right);
-
     PG_RETURN_BOOL(result);
 }
 
@@ -213,7 +212,6 @@ Datum zoneddate_not_equal(PG_FUNCTION_ARGS)
     ZonedDate right = PG_GETARG_ZONEDDATE(1);
 
     bool result = get_time_value(left) != get_time_value(right);
-
     PG_RETURN_BOOL(result);
 }
 
@@ -225,7 +223,6 @@ Datum zoneddate_less_than(PG_FUNCTION_ARGS)
     ZonedDate right = PG_GETARG_ZONEDDATE(1);
 
     bool result = get_time_value(left) < get_time_value(right);
-
     PG_RETURN_BOOL(result);
 }
 
@@ -237,7 +234,6 @@ Datum zoneddate_greater_than(PG_FUNCTION_ARGS)
     ZonedDate right = PG_GETARG_ZONEDDATE(1);
 
     bool result = get_time_value(left) > get_time_value(right);
-
     PG_RETURN_BOOL(result);
 }
 
@@ -249,7 +245,6 @@ Datum zoneddate_not_less_than(PG_FUNCTION_ARGS)
     ZonedDate right = PG_GETARG_ZONEDDATE(1);
 
     bool result = get_time_value(left) >= get_time_value(right);
-
     PG_RETURN_BOOL(result);
 }
 
@@ -261,6 +256,5 @@ Datum zoneddate_not_greater_than(PG_FUNCTION_ARGS)
     ZonedDate right = PG_GETARG_ZONEDDATE(1);
 
     bool result = get_time_value(left) <= get_time_value(right);
-
     PG_RETURN_BOOL(result);
 }
