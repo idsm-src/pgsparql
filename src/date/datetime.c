@@ -139,6 +139,7 @@ Datum zoneddatetime_input(PG_FUNCTION_ARGS)
 
     ZonedDateTime *result = palloc0(sizeof(ZonedDateTime));
 
+    //SPARQL: the exception should not be thrown according the SPARQL specification
     if(yearOverflow || tm2timestamp(&tm, fsec, &tz, &result->value) != 0)
         ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("zoneddatetime literal out of range")));
 
@@ -153,6 +154,7 @@ Datum zoneddatetime_output(PG_FUNCTION_ARGS)
 {
     ZonedDateTime *date = PG_GETARG_ZONEDDATETIME_P(0);
 
+    // the exception should be never thrown unless there is some bug in the code
     if(TIMESTAMP_NOT_FINITE(date->value) || ((date->zone > ZONE_MAX || date->zone < ZONE_MIN) && date->zone != ZONE_UNSPECIFIED))
         ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("zoneddatetime out of range")));
 

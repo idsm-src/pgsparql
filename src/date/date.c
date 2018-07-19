@@ -117,11 +117,13 @@ Datum zoneddate_input(PG_FUNCTION_ARGS)
 
     ZonedDate result;
 
+    //SPARQL: the exception should not be thrown according the SPARQL specification
     if(yearOverflow || !IS_VALID_JULIAN(tm.tm_year, tm.tm_mon, tm.tm_mday))
         ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("zoneddate literal out of range")));
 
     result.value = date2j(tm.tm_year, tm.tm_mon, tm.tm_mday) - POSTGRES_EPOCH_JDATE;
 
+    //SPARQL: the exception should not be thrown according the SPARQL specification
     if(!IS_VALID_DATE(result.value))
         ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("zoneddate literal out of range")));
 
@@ -136,6 +138,7 @@ Datum zoneddate_output(PG_FUNCTION_ARGS)
 {
     ZonedDate date = PG_GETARG_ZONEDDATE(0);
 
+    // the exception should be never thrown unless there is some bug in the code
     if(DATE_NOT_FINITE(date.value) || ((date.zone > ZONE_MAX || date.zone < ZONE_MIN) && date.zone != ZONE_UNSPECIFIED))
         ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("zoneddate out of range")));
 
