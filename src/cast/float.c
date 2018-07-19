@@ -63,6 +63,8 @@ Datum cast_as_float_from_decimal(PG_FUNCTION_ARGS)
         result *= HUGE_VALF;
 
     pfree(string);
+    PG_FREE_IF_COPY(value, 0);
+
     PG_RETURN_FLOAT4(result);
 }
 
