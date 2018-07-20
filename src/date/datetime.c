@@ -143,7 +143,7 @@ Datum zoneddatetime_input(PG_FUNCTION_ARGS)
     if(yearOverflow || tm2timestamp(&tm, fsec, &tz, &result->value) != 0 || !IS_VALID_TIMESTAMP(result->value))
         ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("zoneddatetime literal out of range")));
 
-    result->zone = hasZone ? -tz / SECS_PER_MINUTE : ZONE_UNSPECIFIED;
+    result->zone = hasZone ? -tz : ZONE_UNSPECIFIED;
 
     PG_RETURN_ZONEDDATETIME_P(result);
 }
@@ -164,7 +164,7 @@ Datum zoneddatetime_output(PG_FUNCTION_ARGS)
     int tz;
     const char *tzn;
 
-    pg_tz *timezone = pg_tzset_offset(date->zone != ZONE_UNSPECIFIED ? -date->zone * SECS_PER_MINUTE : 0);
+    pg_tz *timezone = pg_tzset_offset(date->zone != ZONE_UNSPECIFIED ? -date->zone : 0);
 
     if(timestamp2tm(date->value, &tz, &tm, &fsec, &tzn, timezone))
         ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("zoneddatetime out of range")));
@@ -206,7 +206,7 @@ Datum zoneddatetime_output(PG_FUNCTION_ARGS)
     {
         if(date->zone != 0)
         {
-            int value = abs(tz);
+            int value = abs(tz) / SECS_PER_MINUTE;
             int hours = value / SECS_PER_HOUR;
             int minutes = (value - hours * SECS_PER_HOUR) / SECS_PER_MINUTE;
 
@@ -232,7 +232,7 @@ static Timestamp get_time_value(ZonedDateTime *arg)
     if(arg->zone != ZONE_UNSPECIFIED)
         return arg->value;
 
-    return arg->value - implicit_timezone * SECS_PER_MINUTE;
+    return arg->value - implicit_timezone;
 }
 
 

@@ -127,7 +127,7 @@ Datum zoneddate_input(PG_FUNCTION_ARGS)
     if(!IS_VALID_DATE(result.value))
         ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("zoneddate literal out of range")));
 
-    result.zone = hasZone ? -tz / SECS_PER_MINUTE : ZONE_UNSPECIFIED;
+    result.zone = hasZone ? -tz : ZONE_UNSPECIFIED;
 
     PG_RETURN_ZONEDDATE(result);
 }
@@ -163,7 +163,7 @@ Datum zoneddate_output(PG_FUNCTION_ARGS)
     {
         if(date.zone != 0)
         {
-            int value = abs(date.zone);
+            int value = abs(date.zone) / SECS_PER_MINUTE;
             int hours = value / MINS_PER_HOUR;
             int minutes = (value - hours * MINS_PER_HOUR);
 
@@ -171,8 +171,6 @@ Datum zoneddate_output(PG_FUNCTION_ARGS)
             str = pg_ltostr_zeropad(str, hours, 2);
             *str++ = ':';
             str = pg_ltostr_zeropad(str, minutes, 2);
-
-            elog(NOTICE, "%i", date.zone);
         }
         else
         {
@@ -190,7 +188,7 @@ static int64 get_time_value(ZonedDate arg)
 {
     int16 timezone = arg.zone == ZONE_UNSPECIFIED ? implicit_timezone : arg.zone;
 
-    return (int64) arg.value * HOURS_PER_DAY * MINS_PER_HOUR - timezone;
+    return (int64) arg.value * HOURS_PER_DAY * MINS_PER_HOUR * SECS_PER_MINUTE - timezone;
 }
 
 

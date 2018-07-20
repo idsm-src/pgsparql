@@ -8,7 +8,7 @@
 typedef struct
 {
     DateADT value;
-    int16 zone;
+    int32 zone;
 } ZonedDate;
 
 
@@ -43,7 +43,6 @@ static inline Datum ZonedDateGetDatum(ZonedDate val)
         int64 retval;
     } myunion;
 
-    myunion.retval = 0;
     myunion.value = val;
     return Int64GetDatum(myunion.retval);
 #endif

@@ -8,7 +8,7 @@
 typedef struct
 {
     TimestampTz value;
-    int16 zone;
+    int32 zone;
 } ZonedDateTime;
 
 
