@@ -80,6 +80,10 @@ Datum cast_as_datetime_from_date(PG_FUNCTION_ARGS);
 Datum cast_as_datetime_from_string(PG_FUNCTION_ARGS);
 Datum cast_as_datetime_from_rdfbox(PG_FUNCTION_ARGS);
 
+Datum cast_as_date_from_datetime(PG_FUNCTION_ARGS);
+Datum cast_as_date_from_string(PG_FUNCTION_ARGS);
+Datum cast_as_date_from_rdfbox(PG_FUNCTION_ARGS);
+
 Datum cast_as_string_from_boolean(PG_FUNCTION_ARGS);
 Datum cast_as_string_from_short(PG_FUNCTION_ARGS);
 Datum cast_as_string_from_int(PG_FUNCTION_ARGS);
@@ -88,6 +92,7 @@ Datum cast_as_string_from_float(PG_FUNCTION_ARGS);
 Datum cast_as_string_from_double(PG_FUNCTION_ARGS);
 Datum cast_as_string_from_decimal(PG_FUNCTION_ARGS);
 Datum cast_as_string_from_datetime(PG_FUNCTION_ARGS);
+Datum cast_as_string_from_date(PG_FUNCTION_ARGS);
 Datum cast_as_string_from_rdfbox(PG_FUNCTION_ARGS);
 
 Datum cast_as_rdfbox_from_boolean(PG_FUNCTION_ARGS);
@@ -99,6 +104,7 @@ Datum cast_as_rdfbox_from_double(PG_FUNCTION_ARGS);
 Datum cast_as_rdfbox_from_integer(PG_FUNCTION_ARGS);
 Datum cast_as_rdfbox_from_decimal(PG_FUNCTION_ARGS);
 Datum cast_as_rdfbox_from_datetime(PG_FUNCTION_ARGS);
+Datum cast_as_rdfbox_from_date(PG_FUNCTION_ARGS);
 Datum cast_as_rdfbox_from_string(PG_FUNCTION_ARGS);
 
 #endif /* CAST_CAST_H_ */

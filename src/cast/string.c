@@ -98,6 +98,17 @@ Datum cast_as_string_from_datetime(PG_FUNCTION_ARGS)
 }
 
 
+PG_FUNCTION_INFO_V1(cast_as_string_from_date);
+Datum cast_as_string_from_date(PG_FUNCTION_ARGS)
+{
+    ZonedDate value = PG_GETARG_ZONEDDATE(0);
+    char *string = DatumGetCString(DirectFunctionCall1(zoneddate_output, ZonedDateGetDatum(value)));
+    Datum result = CStringGetTextDatum(string);
+    pfree(string);
+    PG_RETURN_DATUM(result);
+}
+
+
 PG_FUNCTION_INFO_V1(cast_as_string_from_rdfbox);
 Datum cast_as_string_from_rdfbox(PG_FUNCTION_ARGS)
 {
