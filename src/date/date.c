@@ -41,6 +41,11 @@ Datum zoneddate_input(PG_FUNCTION_ARGS)
     /* parse input */
     char *input = value;
 
+    while(*input == ' ')
+        input++;
+
+    char *begin = input;
+
     if(*input == '-')
         input++;
 
@@ -67,6 +72,11 @@ Datum zoneddate_input(PG_FUNCTION_ARGS)
         read_input_digits(&input, 2, true, true);
     }
 
+    char *end = input;
+
+    while(*input == ' ')
+        input++;
+
     read_input_char(&input, '\0');
 
 
@@ -83,16 +93,18 @@ Datum zoneddate_input(PG_FUNCTION_ARGS)
 
 
     /* convert input */
+    bool hasZone = *zone != '\0' && *zone != ' ';
+
     char *field[3];
     int ftype[3];
 
     field[0] = pnstrdup(date, zone - date);
     ftype[0] = DTK_DATE;
 
-    field[1] = (*zone == '\0' || *zone == 'Z') ? "z" : zone;
-    ftype[1] = (*zone == '\0' || *zone == 'Z') ? DTK_STRING : DTK_TZ;
+    field[1] = (!hasZone || *zone == 'Z') ? "z" : pnstrdup(zone, end - zone);
+    ftype[1] = (!hasZone || *zone == 'Z') ? DTK_STRING : DTK_TZ;
 
-    field[2] = value != date ? "bc" : "ad";
+    field[2] = begin != date ? "bc" : "ad";
     ftype[2] = DTK_STRING;
 
 
@@ -103,10 +115,12 @@ Datum zoneddate_input(PG_FUNCTION_ARGS)
     int tz;
 
     int derr = DecodeDateTime(field, ftype, 3, &dtype, &tm, &fsec, &tz);
-    bool hasZone = *zone != '\0';
 
-    pfree(field[0]);
     PG_FREE_IF_COPY(value, 0);
+    pfree(field[0]);
+
+    if(*field[1] != 'z')
+        pfree(field[1]);
 
 
     if(derr != 0 || dtype != DTK_DATE)
