@@ -221,8 +221,8 @@ Datum zoneddatetime_output(PG_FUNCTION_ARGS)
         if(date->zone != 0)
         {
             int value = abs(tz) / SECS_PER_MINUTE;
-            int hours = value / SECS_PER_HOUR;
-            int minutes = (value - hours * SECS_PER_HOUR) / SECS_PER_MINUTE;
+            int hours = value / MINS_PER_HOUR;
+            int minutes = value - hours * MINS_PER_HOUR;
 
             *str++ = (tz <= 0 ? '+' : '-');
             str = pg_ltostr_zeropad(str, hours, 2);
