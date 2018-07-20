@@ -179,7 +179,7 @@ Datum zoneddate_output(PG_FUNCTION_ARGS)
         {
             int value = abs(date.zone) / SECS_PER_MINUTE;
             int hours = value / MINS_PER_HOUR;
-            int minutes = (value - hours * MINS_PER_HOUR);
+            int minutes = value - hours * MINS_PER_HOUR;
 
             *str++ = (date.zone >= 0 ? '+' : '-');
             str = pg_ltostr_zeropad(str, hours, 2);
