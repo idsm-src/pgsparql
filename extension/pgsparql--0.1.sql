@@ -7,13 +7,24 @@ CREATE TYPE "zoneddate";
 CREATE FUNCTION "zoneddate_input"(cstring) RETURNS "zoneddate"  AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION "zoneddate_output"("zoneddate") RETURNS cstring AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 
+DO $$ BEGIN
 CREATE TYPE "zoneddate"
 (
-    internallength = 6,
+    internallength = 8,
+    input = "zoneddate_input",
+    output = "zoneddate_output",
+    alignment = double,
+    passedbyvalue
+);
+EXCEPTION WHEN invalid_object_definition THEN
+CREATE TYPE "zoneddate"
+(
+    internallength = 8,
     input = "zoneddate_input",
     output = "zoneddate_output",
     alignment = int4
 );
+END; $$ LANGUAGE 'plpgsql';
 
 CREATE FUNCTION "zoneddate_equal"("zoneddate", "zoneddate") RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION "zoneddate_not_equal"("zoneddate", "zoneddate") RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
@@ -86,7 +97,7 @@ CREATE FUNCTION "zoneddatetime_output"("zoneddatetime") RETURNS cstring AS 'MODU
 
 CREATE TYPE "zoneddatetime"
 (
-    internallength = 10,
+    internallength = 16,
     input = "zoneddatetime_input",
     output = "zoneddatetime_output",
     alignment = double
