@@ -49,8 +49,8 @@ static inline Datum ZonedDateGetDatum(ZonedDate val)
 }
 
 
-#define PG_GETARG_ZONEDDATE(n)          DatumGetZonedDate(PG_GETARG_DATUM(n))
-#define PG_RETURN_ZONEDDATE(x)          return ZonedDateGetDatum(x)
+#define PG_GETARG_ZONEDDATE(X)          DatumGetZonedDate(PG_GETARG_DATUM(X))
+#define PG_RETURN_ZONEDDATE(X)          return ZonedDateGetDatum(X)
 
 
 Datum zoneddate_input(PG_FUNCTION_ARGS);

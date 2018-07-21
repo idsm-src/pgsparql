@@ -14,8 +14,8 @@ typedef struct
 
 #define DatumGetZonedDateTime(X)        ((ZonedDateTime *) DatumGetPointer(X))
 #define ZonedDateTimeGetDatum(X)        PointerGetDatum(X)
-#define PG_GETARG_ZONEDDATETIME_P(n)    DatumGetZonedDateTime(PG_GETARG_DATUM(n))
-#define PG_RETURN_ZONEDDATETIME_P(x)    return ZonedDateTimeGetDatum(x)
+#define PG_GETARG_ZONEDDATETIME_P(X)    DatumGetZonedDateTime(PG_GETARG_DATUM(X))
+#define PG_RETURN_ZONEDDATETIME_P(X)    return ZonedDateTimeGetDatum(X)
 
 
 Datum zoneddatetime_input(PG_FUNCTION_ARGS);
