@@ -146,6 +146,14 @@ Datum cast_as_string_from_rdfbox(PG_FUNCTION_ARGS)
             result = NullableFunctionCall1(cast_as_string_from_decimal, NumericGetDatum(((RdfBoxDecinal *) box)->value));
             break;
 
+        case XSD_DATETIME:
+            result = NullableFunctionCall1(cast_as_string_from_datetime, ZonedDateTimeGetDatum(&((RdfBoxDateTime *) box)->value));
+            break;
+
+        case XSD_DATE:
+            result = NullableFunctionCall1(cast_as_string_from_date, ZonedDateGetDatum(((RdfBoxDate *) box)->value));
+            break;
+
         case XSD_STRING:
         {
             VarChar *value = (VarChar *) ((RdfBoxString *) box)->value;
