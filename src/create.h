@@ -15,6 +15,7 @@ RdfBox *rdfbox_from_integer(Numeric value);
 RdfBox *rdfbox_from_decimal(Numeric value);
 RdfBox *rdfbox_from_datetime(ZonedDateTime *value);
 RdfBox *rdfbox_from_date(ZonedDate value);
+RdfBox *rdfbox_from_daytimeduration(int64 value);
 RdfBox *rdfbox_from_string(VarChar *value);
 
 #endif /* CREATE_H_ */

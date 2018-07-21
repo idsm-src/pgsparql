@@ -95,6 +95,15 @@ Datum cast_as_rdfbox_from_date(PG_FUNCTION_ARGS)
 }
 
 
+PG_FUNCTION_INFO_V1(cast_as_rdfbox_from_daytimeduration);
+Datum cast_as_rdfbox_from_daytimeduration(PG_FUNCTION_ARGS)
+{
+    int64 value = PG_GETARG_INT64(0);
+    RdfBox *result = rdfbox_from_daytimeduration(value);
+    PG_RETURN_RDFBOX_P(result);
+}
+
+
 PG_FUNCTION_INFO_V1(cast_as_rdfbox_from_string);
 Datum cast_as_rdfbox_from_string(PG_FUNCTION_ARGS)
 {

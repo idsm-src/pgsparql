@@ -4,6 +4,7 @@
 #include <postgres.h>
 #include "date/date.h"
 #include "date/datetime.h"
+#include "date/daytimeduration.h"
 
 
 typedef enum

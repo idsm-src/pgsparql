@@ -109,6 +109,17 @@ Datum cast_as_string_from_date(PG_FUNCTION_ARGS)
 }
 
 
+PG_FUNCTION_INFO_V1(cast_as_string_from_daytimeduration);
+Datum cast_as_string_from_daytimeduration(PG_FUNCTION_ARGS)
+{
+    int64 value = PG_GETARG_INT64(0);
+    char *string = DatumGetCString(DirectFunctionCall1(daytimeduration_output, Int64GetDatum(value)));
+    Datum result = CStringGetTextDatum(string);
+    pfree(string);
+    PG_RETURN_DATUM(result);
+}
+
+
 PG_FUNCTION_INFO_V1(cast_as_string_from_rdfbox);
 Datum cast_as_string_from_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -152,6 +163,10 @@ Datum cast_as_string_from_rdfbox(PG_FUNCTION_ARGS)
 
         case XSD_DATE:
             result = NullableFunctionCall1(cast_as_string_from_date, ZonedDateGetDatum(((RdfBoxDate *) box)->value));
+            break;
+
+        case XSD_DAYTIMEDURATION:
+            result = NullableFunctionCall1(cast_as_string_from_daytimeduration, Int64GetDatum(((RdfBoxDayTimeDuration *) box)->value));
             break;
 
         case XSD_STRING:

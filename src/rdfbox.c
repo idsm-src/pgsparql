@@ -188,74 +188,7 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
         case XSD_DAYTIMEDURATION:
         {
             int64 value = ((RdfBoxDayTimeDuration *) box)->value;
-
-            char data[32];
-            char *str = data;
-
-            if(value == PG_INT64_MIN)
-            {
-                sprintf(str, "-P106751991DT4H54.775808S");
-            }
-            else if (value == 0)
-            {
-                sprintf(str, "PT0S");
-            }
-            else
-            {
-                int64 time = labs(value);
-
-                int64 mday = time / USECS_PER_DAY;
-                time -= mday * USECS_PER_DAY;
-                int64 hour = time / USECS_PER_HOUR;
-                time -= hour * USECS_PER_HOUR;
-                int64 min = time / USECS_PER_MINUTE;
-                time -= min * USECS_PER_MINUTE;
-                int64 sec = time / USECS_PER_SEC;
-                int64 fsec = time - (sec * USECS_PER_SEC);
-
-                if(value < 0)
-                    *str++ = '-';
-
-                *str++ = 'P';
-
-                if(mday)
-                {
-                    sprintf(str, "%ldD", mday);
-                    str += strlen(str);
-                }
-
-                if (hour != 0 || min != 0 || sec != 0 || fsec != 0)
-                    *str++ = 'T';
-
-                if(hour)
-                {
-                    sprintf(str, "%ldH", hour);
-                    str += strlen(str);
-                }
-
-                if(min)
-                {
-                    sprintf(str, "%ldM", min);
-                    str += strlen(str);
-                }
-
-                if (sec != 0 || fsec != 0)
-                {
-                    str = pg_ltostr(str, sec);
-
-                    if (fsec)
-                    {
-                        *str++ = '.';
-                        str = pg_ltostr_zeropad(str, fsec, 6);
-
-                        while(*(str - 1) == '0')
-                            --str;
-                    }
-
-                    *str++ = 'S';
-                    *str++ = '\0';
-                }
-            }
+            char *data = DatumGetCString(DirectFunctionCall1(daytimeduration_output, Int64GetDatum(value)));
 
             size_t length = strlen(data);
             result = (char *) palloc0(PREFIX_SIZE + length + SUFFIX_SIZE(XSD_DAYTIMEDURATION_IRI) + 1);
@@ -264,6 +197,7 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
             memcpy(result + PREFIX_SIZE, data, length);
             memcpy(result + PREFIX_SIZE + length, SUFFIX(XSD_DAYTIMEDURATION_IRI), SUFFIX_SIZE(XSD_DAYTIMEDURATION_IRI));
 
+            pfree(data);
             break;
         }
 

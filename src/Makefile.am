@@ -26,12 +26,15 @@ libpgsparql_la_SOURCES = \
 		date/date.h \
 		date/datetime.c \
 		date/datetime.h \
+		date/daytimeduration.c \
+		date/daytimeduration.h \
 		date/timezone.c \
 		date/timezone.h \
 		cast/boolean.c \
 		cast/cast.h \
 		cast/date.c \
 		cast/datetime.c \
+		cast/daytimeduration.c \
 		cast/decimal.c \
 		cast/double.c \
 		cast/float.c \

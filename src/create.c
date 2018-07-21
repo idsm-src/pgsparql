@@ -128,6 +128,18 @@ RdfBox *rdfbox_from_date(ZonedDate value)
 }
 
 
+RdfBox *rdfbox_from_daytimeduration(int64 value)
+{
+    RdfBoxDayTimeDuration *result = (RdfBoxDayTimeDuration *) palloc0(sizeof(RdfBoxDayTimeDuration));
+
+    SET_VARSIZE(result, sizeof(RdfBoxDayTimeDuration));
+    result->header.type = XSD_DAYTIMEDURATION;
+    result->value = value;
+
+    return (RdfBox *) result;
+}
+
+
 RdfBox *rdfbox_from_string(VarChar *value)
 {
     int32 size = VARSIZE(value);
