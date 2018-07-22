@@ -112,4 +112,10 @@ Datum cast_as_rdfbox_from_date(PG_FUNCTION_ARGS);
 Datum cast_as_rdfbox_from_daytimeduration(PG_FUNCTION_ARGS);
 Datum cast_as_rdfbox_from_string(PG_FUNCTION_ARGS);
 
+Datum cast_as_rdfbox_from_iri(PG_FUNCTION_ARGS);
+Datum cast_as_rdfbox_from_lang_string(PG_FUNCTION_ARGS);
+Datum cast_as_rdfbox_from_typed_literal(PG_FUNCTION_ARGS);
+Datum cast_as_rdfbox_from_int_blanknode(PG_FUNCTION_ARGS);
+Datum cast_as_rdfbox_from_str_blanknode(PG_FUNCTION_ARGS);
+
 #endif /* CAST_CAST_H_ */

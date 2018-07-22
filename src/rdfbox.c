@@ -217,16 +217,17 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
 
         case RDF_LANGSTRING:
         {
-            Datum datum = PointerGetDatum(((RdfBoxLangString *) box)->value);
-            size_t size = VARSIZE(datum);
-            Datum lang = PointerGetDatum(((RdfBoxLangString *) box)->value + size);
+            VarChar *value = (VarChar *) ((RdfBoxLangString *) box)->value;
+            size_t size = VARSIZE(value);
+            VarChar *lang = (VarChar *) (((RdfBoxLangString *) box)->value + size);
 
-            size_t valueLength = size - VARHDRSZ;
-            size_t langLength = VARSIZE(lang) - VARHDRSZ;
+            int32 valueLength = size - VARHDRSZ;
+            int32 langLength = VARSIZE(lang) - VARHDRSZ;
+
             result = (char *) palloc0(PREFIX_SIZE + valueLength + STRLEN(VALUE_DELIM LANG_DELIM) + langLength + 1);
 
             memcpy(result, PREFIX, PREFIX_SIZE);
-            memcpy(result + PREFIX_SIZE, VARDATA(datum), valueLength);
+            memcpy(result + PREFIX_SIZE, VARDATA(value), valueLength);
             memcpy(result + PREFIX_SIZE + valueLength, VALUE_DELIM LANG_DELIM, STRLEN(VALUE_DELIM LANG_DELIM));
             memcpy(result + PREFIX_SIZE + valueLength + STRLEN(VALUE_DELIM LANG_DELIM), VARDATA(lang), langLength);
 
@@ -235,19 +236,20 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
 
         case TYPED_LITERAL:
         {
-            Datum datum = PointerGetDatum(((RdfBoxTypedLiteral *) box)->value);
-            size_t size = VARSIZE(datum);
-            Datum lang = PointerGetDatum(((RdfBoxTypedLiteral *) box)->value + size);
+            VarChar *value = (VarChar *) ((RdfBoxTypedLiteral *) box)->value;
+            size_t size = VARSIZE(value);
+            VarChar *type = (VarChar *) (((RdfBoxTypedLiteral *) box)->value + size);
 
-            size_t valueLength = size - VARHDRSZ;
-            size_t langLength = VARSIZE(lang) - VARHDRSZ;
-            result = (char *) palloc0(PREFIX_SIZE + valueLength + STRLEN(VALUE_DELIM IRI_BEGIN) + langLength + STRLEN(IRI_END) + 1);
+            int32 valueLength = size - VARHDRSZ;
+            int32 typeLength = VARSIZE(type) - VARHDRSZ;
+
+            result = (char *) palloc0(PREFIX_SIZE + valueLength + STRLEN(VALUE_DELIM TYPE_DELIM IRI_BEGIN) + typeLength + STRLEN(IRI_END) + 1);
 
             memcpy(result, PREFIX, PREFIX_SIZE);
-            memcpy(result + PREFIX_SIZE, VARDATA(datum), valueLength);
-            memcpy(result + PREFIX_SIZE + valueLength, VALUE_DELIM IRI_BEGIN, STRLEN(VALUE_DELIM IRI_BEGIN));
-            memcpy(result + PREFIX_SIZE + valueLength + STRLEN(VALUE_DELIM IRI_BEGIN), VARDATA(lang), langLength);
-            memcpy(result + PREFIX_SIZE + valueLength + STRLEN(VALUE_DELIM IRI_BEGIN) + langLength, IRI_END, STRLEN(IRI_END));
+            memcpy(result + PREFIX_SIZE, VARDATA(value), valueLength);
+            memcpy(result + PREFIX_SIZE + valueLength, VALUE_DELIM TYPE_DELIM IRI_BEGIN, STRLEN(VALUE_DELIM TYPE_DELIM IRI_BEGIN));
+            memcpy(result + PREFIX_SIZE + valueLength + STRLEN(VALUE_DELIM TYPE_DELIM IRI_BEGIN), VARDATA(type), typeLength);
+            memcpy(result + PREFIX_SIZE + valueLength + STRLEN(VALUE_DELIM TYPE_DELIM IRI_BEGIN) + typeLength, IRI_END, STRLEN(IRI_END));
 
             break;
         }
@@ -268,12 +270,13 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
 
         case BLANKNODE_INT:
         {
+            int32 space = ((RdfBoxBlankNodeInt *) box)->space;
             int32 value = ((RdfBoxBlankNodeInt *) box)->value;
 
-            size_t buffsize = STRLEN(BLKNODE_PREFIX) + 11 + 1;
+            size_t buffsize = STRLEN(BLKNODE_PREFIX) + 11 + 1 + 11 + 1;
             result = (char *) palloc0(buffsize);
 
-            snprintf(result, buffsize, BLKNODE_PREFIX "%" SCNi32, value);
+            snprintf(result, buffsize, BLKNODE_PREFIX "%" SCNi32 "_%" SCNi32, space, value);
             break;
         }
 

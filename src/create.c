@@ -152,3 +152,76 @@ RdfBox *rdfbox_from_string(VarChar *value)
 
     return (RdfBox *) result;
 }
+
+
+RdfBox *rdfbox_from_iri(VarChar *value)
+{
+    int32 size = VARSIZE(value);
+
+    RdfBoxIri *result = (RdfBoxIri *) palloc0(sizeof(RdfBoxIri) + size);
+
+    SET_VARSIZE(result, sizeof(RdfBoxIri) + size);
+    result->header.type = IRI;
+    memcpy(result->value, value, size);
+
+    return (RdfBox *) result;
+}
+
+
+RdfBox *rdfbox_from_lang_string(VarChar *value, VarChar *lang)
+{
+    int32 valueSize = VARSIZE(value);
+    int32 langSize = VARSIZE(lang);
+
+    RdfBoxLangString *result = (RdfBoxLangString *) palloc0(sizeof(RdfBoxLangString) + valueSize + langSize);
+
+    SET_VARSIZE(result, sizeof(RdfBoxLangString) + valueSize + langSize);
+    result->header.type = RDF_LANGSTRING;
+    memcpy(result->value, value, valueSize);
+    memcpy(result->value + valueSize, lang, langSize);
+
+    return (RdfBox *) result;
+}
+
+
+RdfBox *rdfbox_from_typed_literal(VarChar *value, VarChar *type)
+{
+    int32 valueSize = VARSIZE(value);
+    int32 typeSize = VARSIZE(type);
+
+    RdfBoxTypedLiteral *result = (RdfBoxTypedLiteral *) palloc0(sizeof(RdfBoxTypedLiteral) + valueSize + typeSize);
+
+    SET_VARSIZE(result, sizeof(RdfBoxTypedLiteral) + valueSize + typeSize);
+    result->header.type = TYPED_LITERAL;
+    memcpy(result->value, value, valueSize);
+    memcpy(result->value + valueSize, type, typeSize);
+
+    return (RdfBox *) result;
+}
+
+
+RdfBox *rdfbox_from_int_blanknode(int32 space, int32 value)
+{
+    RdfBoxBlankNodeInt *result = (RdfBoxBlankNodeInt *) palloc0(sizeof(RdfBoxBlankNodeInt));
+
+    SET_VARSIZE(result, sizeof(RdfBoxBlankNodeInt));
+    result->header.type = BLANKNODE_INT;
+    result->space = space;
+    result->value = value;
+
+    return (RdfBox *) result;
+}
+
+
+RdfBox *rdfbox_from_typed_str_blanknode(VarChar *value)
+{
+    int32 size = VARSIZE(value);
+
+    RdfBoxBlankNodeStr *result = (RdfBoxBlankNodeStr *) palloc0(sizeof(RdfBoxBlankNodeStr) + size);
+
+    SET_VARSIZE(result, sizeof(RdfBoxBlankNodeStr) + size);
+    result->header.type = BLANKNODE_STR;
+    memcpy(result->value, value, size);
+
+    return (RdfBox *) result;
+}
