@@ -160,4 +160,10 @@ static inline bool rdfbox_is_numeric(RdfBox *rdfbox)
     return rdfbox->type >= XSD_SHORT && rdfbox->type <=  XSD_DECIMAL;
 }
 
+
+static inline bool rdfbox_is_literal(RdfBox *rdfbox)
+{
+    return rdfbox->type >= XSD_BOOLEAN && rdfbox->type <= TYPED_LITERAL;
+}
+
 #endif /* RDFBOX_H_ */

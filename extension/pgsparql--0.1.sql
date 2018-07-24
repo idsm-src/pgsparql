@@ -353,3 +353,23 @@ CREATE FUNCTION "div_double"(float8,float8) RETURNS float8 AS 'MODULE_PATHNAME' 
 CREATE FUNCTION "div_integer"(decimal,decimal) RETURNS decimal AS 'MODULE_PATHNAME','div_decimal' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION "div_decimal"(decimal,decimal) RETURNS decimal AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION "div_rdfbox"(rdfbox,rdfbox) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+
+
+
+-- equal
+CREATE FUNCTION "equal_rdfbox"(rdfbox,rdfbox) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+
+-- not equal
+CREATE FUNCTION "not_equal_rdfbox"(rdfbox,rdfbox) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+
+-- less than
+CREATE FUNCTION "less_than_rdfbox"(rdfbox,rdfbox) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+
+-- greater than
+CREATE FUNCTION "greater_than_rdfbox"(rdfbox,rdfbox) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+
+-- not less than
+CREATE FUNCTION "not_less_than_rdfbox"(rdfbox,rdfbox) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+
+-- not greater than
+CREATE FUNCTION "not_greater_than_rdfbox"(rdfbox,rdfbox) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;

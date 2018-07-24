@@ -56,4 +56,11 @@ static inline Datum ZonedDateGetDatum(ZonedDate val)
 Datum zoneddate_input(PG_FUNCTION_ARGS);
 Datum zoneddate_output(PG_FUNCTION_ARGS);
 
+Datum zoneddate_equal(PG_FUNCTION_ARGS);
+Datum zoneddate_not_equal(PG_FUNCTION_ARGS);
+Datum zoneddate_less_than(PG_FUNCTION_ARGS);
+Datum zoneddate_greater_than(PG_FUNCTION_ARGS);
+Datum zoneddate_not_less_than(PG_FUNCTION_ARGS);
+Datum zoneddate_not_greater_than(PG_FUNCTION_ARGS);
+
 #endif /* DATE_DATE_H_ */

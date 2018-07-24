@@ -43,7 +43,14 @@ libpgsparql_la_SOURCES = \
 		cast/long.c \
 		cast/rdfbox.c \
 		cast/short.c \
-		cast/string.c
+		cast/string.c \
+		comparison/comparison.h \
+		comparison/equal.c \
+		comparison/greater_than.c \
+		comparison/less_than.c \
+		comparison/not_equal.c \
+		comparison/not_greater_than.c \
+		comparison/not_less_than.c
 
 # Linker options libTestProgram
 libpgsparql_la_LDFLAGS = 
