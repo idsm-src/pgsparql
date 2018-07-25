@@ -256,7 +256,7 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
 
         case IRI:
         {
-            Datum datum = PointerGetDatum(((RdfBoxString *) box)->value);
+            Datum datum = PointerGetDatum(((RdfBoxIri *) box)->value);
 
             size_t length = VARSIZE(datum) - VARHDRSZ;
             result = (char *) palloc0(STRLEN(IRI_BEGIN) + length + STRLEN(IRI_END) + 1);
