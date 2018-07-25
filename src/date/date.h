@@ -62,5 +62,6 @@ Datum zoneddate_less_than(PG_FUNCTION_ARGS);
 Datum zoneddate_greater_than(PG_FUNCTION_ARGS);
 Datum zoneddate_not_less_than(PG_FUNCTION_ARGS);
 Datum zoneddate_not_greater_than(PG_FUNCTION_ARGS);
+Datum zoneddate_compare(PG_FUNCTION_ARGS);
 
 #endif /* DATE_DATE_H_ */

@@ -28,6 +28,7 @@ CREATE FUNCTION "zoneddate_less_than"("zoneddate", "zoneddate") RETURNS bool AS 
 CREATE FUNCTION "zoneddate_greater_than"("zoneddate", "zoneddate") RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION "zoneddate_not_less_than"("zoneddate", "zoneddate") RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION "zoneddate_not_greater_than"("zoneddate", "zoneddate") RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "zoneddate_compare"("zoneddate", "zoneddate") RETURNS int4 AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 
 CREATE OPERATOR = (
     leftarg = "zoneddate",
@@ -82,3 +83,11 @@ CREATE OPERATOR <= (
     negator = >,
     hashes, merges
 );
+
+CREATE OPERATOR CLASS "zoneddate" DEFAULT FOR TYPE "zoneddate" USING btree AS
+    OPERATOR   1   <,
+    OPERATOR   2   <=,
+    OPERATOR   3   =,
+    OPERATOR   4   >=,
+    OPERATOR   5   >,
+    FUNCTION   1   "zoneddate_compare";

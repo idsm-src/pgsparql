@@ -270,3 +270,21 @@ Datum zoneddate_not_greater_than(PG_FUNCTION_ARGS)
     bool result = get_time_value(left) <= get_time_value(right);
     PG_RETURN_BOOL(result);
 }
+
+
+PG_FUNCTION_INFO_V1(zoneddate_compare);
+Datum zoneddate_compare(PG_FUNCTION_ARGS)
+{
+    ZonedDate left = PG_GETARG_ZONEDDATE(0);
+    ZonedDate right = PG_GETARG_ZONEDDATE(1);
+
+    int64 l = get_time_value(left);
+    int64 r = get_time_value(right);
+
+    if(l < r)
+        PG_RETURN_INT32(-1);
+    else if(l > r)
+        PG_RETURN_INT32(1);
+    else
+        PG_RETURN_INT32(0);
+}

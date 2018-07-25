@@ -314,3 +314,21 @@ Datum zoneddatetime_not_greater_than(PG_FUNCTION_ARGS)
     bool result = get_time_value(left) <= get_time_value(right);
     PG_RETURN_BOOL(result);
 }
+
+
+PG_FUNCTION_INFO_V1(zoneddatetime_compare);
+Datum zoneddatetime_compare(PG_FUNCTION_ARGS)
+{
+    ZonedDateTime *left = PG_GETARG_ZONEDDATETIME_P(0);
+    ZonedDateTime *right = PG_GETARG_ZONEDDATETIME_P(1);
+
+    int64 l = get_time_value(left);
+    int64 r = get_time_value(right);
+
+    if(l < r)
+        PG_RETURN_INT32(-1);
+    else if(l > r)
+        PG_RETURN_INT32(1);
+    else
+        PG_RETURN_INT32(0);
+}
