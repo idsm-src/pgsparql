@@ -6,6 +6,7 @@
 #include <miscadmin.h>
 #include "rdfbox.h"
 #include "xsd.h"
+#include "cast/cast.h"
 
 
 #define IRI_BEGIN       "<"
@@ -19,6 +20,8 @@
 #define STRLEN(X)       (sizeof(X) - 1)
 #define PREFIX_SIZE     (STRLEN(PREFIX))
 #define SUFFIX_SIZE(X)  (STRLEN(SUFFIX(X)))
+
+#define compare(a,b)        (((a)==(b)) ? 0 : (((a)<(b)) ? -1 : 1))
 
 
 PG_FUNCTION_INFO_V1(rdfbox_input);
@@ -301,4 +304,220 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
         PG_RETURN_CSTRING(result);
     else
         PG_RETURN_NULL();
+}
+
+
+static int32 varchar_compare(VarChar *l, VarChar *r)
+{
+        int v = memcmp(VARDATA(l), VARDATA(r), Min(VARSIZE(l), VARSIZE(r)) - VARHDRSZ);
+
+        if(v != 0)
+            return v;
+
+        return VARSIZE(l) - VARSIZE(r);
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_order_compare);
+Datum rdfbox_order_compare(PG_FUNCTION_ARGS)
+{
+    RdfBox *left = PG_GETARG_RDFBOX_P(0);
+    RdfBox *right = PG_GETARG_RDFBOX_P(1);
+
+    Datum result;
+
+    if(left->type == XSD_BOOLEAN && right->type == XSD_BOOLEAN)
+    {
+        result = Int32GetDatum(compare(((RdfBoxBoolean *) left)->value, ((RdfBoxBoolean *) right)->value));
+    }
+    else if(rdfbox_is_numeric(left) && rdfbox_is_numeric(right))
+    {
+        if(left->type == XSD_DOUBLE || right->type == XSD_DOUBLE)
+        {
+            float8 l = DatumGetFloat8(DirectFunctionCall1(cast_as_double_from_rdfbox, RdfBoxGetDatum(left)));
+            float8 r = DatumGetFloat8(DirectFunctionCall1(cast_as_double_from_rdfbox, RdfBoxGetDatum(right)));
+
+            if(isnan(l) && isnan(r))
+                result = Int32GetDatum(0);
+            else if(isnan(l))
+                result = Int32GetDatum(1);
+            else if(isnan(r))
+                result = Int32GetDatum(-1);
+            else
+                result = Int32GetDatum(compare(l, r));
+        }
+        else if(left->type == XSD_FLOAT || right->type == XSD_FLOAT)
+        {
+            float4 l = DatumGetFloat4(DirectFunctionCall1(cast_as_float_from_rdfbox, RdfBoxGetDatum(left)));
+            float4 r = DatumGetFloat4(DirectFunctionCall1(cast_as_float_from_rdfbox, RdfBoxGetDatum(right)));
+
+            if(isnanf(l) && isnanf(r))
+                result = Int32GetDatum(0);
+            else if(isnanf(l))
+                result = Int32GetDatum(1);
+            else if(isnanf(r))
+                result = Int32GetDatum(-1);
+            else
+                result = Int32GetDatum(compare(l, r));
+        }
+        else if(left->type == XSD_INTEGER || left->type == XSD_DECIMAL || right->type == XSD_INTEGER || right->type == XSD_DECIMAL)
+        {
+            Numeric l = DatumGetNumeric(DirectFunctionCall1(cast_as_decimal_from_rdfbox, RdfBoxGetDatum(left)));
+            Numeric r = DatumGetNumeric(DirectFunctionCall1(cast_as_decimal_from_rdfbox, RdfBoxGetDatum(right)));
+            result = DirectFunctionCall2(numeric_cmp, NumericGetDatum(l), NumericGetDatum(r));
+
+            pfree(l);
+            pfree(r);
+        }
+        else if(left->type == XSD_LONG || right->type == XSD_LONG)
+        {
+            int64 l = DatumGetInt64(DirectFunctionCall1(cast_as_long_from_rdfbox, RdfBoxGetDatum(left)));
+            int64 r = DatumGetInt64(DirectFunctionCall1(cast_as_long_from_rdfbox, RdfBoxGetDatum(right)));
+            result = Int32GetDatum(compare(l, r));
+        }
+        else if(left->type == XSD_INT || right->type == XSD_INT)
+        {
+            int32 l = DatumGetInt32(DirectFunctionCall1(cast_as_int_from_rdfbox, RdfBoxGetDatum(left)));
+            int32 r = DatumGetInt32(DirectFunctionCall1(cast_as_int_from_rdfbox, RdfBoxGetDatum(right)));
+            result = Int32GetDatum(compare(l, r));
+        }
+        else //if(left->type == XSD_SHORT || right->type == XSD_SHORT)
+        {
+            int16 l = DatumGetInt16(DirectFunctionCall1(cast_as_short_from_rdfbox, RdfBoxGetDatum(left)));
+            int16 r = DatumGetInt16(DirectFunctionCall1(cast_as_short_from_rdfbox, RdfBoxGetDatum(right)));
+            result = Int32GetDatum(compare(l, r));
+        }
+    }
+    else if(left->type == XSD_DATETIME && right->type == XSD_DATETIME)
+    {
+        ZonedDateTime *l = &((RdfBoxDateTime *) left)->value;
+        ZonedDateTime *r = &((RdfBoxDateTime *) right)->value;
+        result = DirectFunctionCall2(zoneddatetime_compare, ZonedDateTimeGetDatum(l), ZonedDateTimeGetDatum(r));
+    }
+    else if(left->type == XSD_DATE && right->type == XSD_DATE)
+    {
+        ZonedDate l = ((RdfBoxDate *) left)->value;
+        ZonedDate r = ((RdfBoxDate *) right)->value;
+        result = DirectFunctionCall2(zoneddate_compare, ZonedDateGetDatum(l), ZonedDateGetDatum(r));
+    }
+    else if(left->type == XSD_DAYTIMEDURATION && right->type == XSD_DAYTIMEDURATION)
+    {
+        int64 l = ((RdfBoxDayTimeDuration *) left)->value;
+        int64 r = ((RdfBoxDayTimeDuration *) right)->value;
+        result = Int32GetDatum(compare(l, r));
+    }
+    else if(left->type == XSD_STRING && right->type == XSD_STRING)
+    {
+        VarChar *l = (VarChar *) ((RdfBoxString *) left)->value;
+        VarChar *r = (VarChar *) ((RdfBoxString *) right)->value;
+
+        result = Int32GetDatum(varchar_compare(l, r));
+    }
+    else if(left->type == RDF_LANGSTRING && right->type == RDF_LANGSTRING)
+    {
+        VarChar *l = (VarChar *) ((RdfBoxLangString *) left)->value;
+        VarChar *r = (VarChar *) ((RdfBoxLangString *) right)->value;
+
+        VarChar *lLang = (VarChar *) (((RdfBoxLangString *) left)->value + VARSIZE(l));
+        VarChar *rLang = (VarChar *) (((RdfBoxLangString *) right)->value + VARSIZE(r));
+
+        result = Int32GetDatum(varchar_compare(l, r));
+
+        if(result == Int32GetDatum(0))
+            result = Int32GetDatum(varchar_compare(lLang, rLang));
+    }
+    else if(left->type == TYPED_LITERAL && right->type == TYPED_LITERAL)
+    {
+        VarChar *l = (VarChar *) ((RdfBoxTypedLiteral *) left)->value;
+        VarChar *r = (VarChar *) ((RdfBoxTypedLiteral *) right)->value;
+
+        VarChar *lType = (VarChar *) (((RdfBoxTypedLiteral *) left)->value + VARSIZE(l));
+        VarChar *rType = (VarChar *) (((RdfBoxTypedLiteral *) right)->value + VARSIZE(r));
+
+        result = Int32GetDatum(varchar_compare(l, r));
+
+        if(result == Int32GetDatum(0))
+            result = Int32GetDatum(varchar_compare(lType, rType));
+    }
+    else if(left->type == IRI && right->type == IRI)
+    {
+        VarChar *l = (VarChar *) ((RdfBoxIri *) left)->value;
+        VarChar *r = (VarChar *) ((RdfBoxIri *) right)->value;
+
+        result = Int32GetDatum(varchar_compare(l, r));
+    }
+    else if(left->type == BLANKNODE_INT && right->type == BLANKNODE_INT)
+    {
+        RdfBoxBlankNodeInt *l = (RdfBoxBlankNodeInt *) left;
+        RdfBoxBlankNodeInt *r = (RdfBoxBlankNodeInt *) right;
+
+        if(l->space == r->space)
+            result = Int32GetDatum(compare(l->value, r->value));
+        else
+            result = Int32GetDatum(compare(l->space, r->space));
+    }
+    else if(left->type == BLANKNODE_STR && right->type == BLANKNODE_STR)
+    {
+        VarChar *l = (VarChar *) ((RdfBoxBlankNodeStr *) left)->value;
+        VarChar *r = (VarChar *) ((RdfBoxBlankNodeStr *) right)->value;
+
+        result = Int32GetDatum(varchar_compare(l, r));
+    }
+    else
+    {
+        result = Int32GetDatum(compare(right->type, left->type));
+    }
+
+    PG_FREE_IF_COPY(left, 0);
+    PG_FREE_IF_COPY(right, 1);
+
+    PG_RETURN_DATUM(result);
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_order_equal);
+Datum rdfbox_order_equal(PG_FUNCTION_ARGS)
+{
+    int32 result = DatumGetInt32(DirectFunctionCall2(rdfbox_order_compare, PG_GETARG_DATUM(0), PG_GETARG_DATUM(1)));
+    PG_RETURN_BOOL(result == 0);
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_order_not_equal);
+Datum rdfbox_order_not_equal(PG_FUNCTION_ARGS)
+{
+    int32 result = DatumGetInt32(DirectFunctionCall2(rdfbox_order_compare, PG_GETARG_DATUM(0), PG_GETARG_DATUM(1)));
+    PG_RETURN_BOOL(result != 0);
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_order_less_than);
+Datum rdfbox_order_less_than(PG_FUNCTION_ARGS)
+{
+    int32 result = DatumGetInt32(DirectFunctionCall2(rdfbox_order_compare, PG_GETARG_DATUM(0), PG_GETARG_DATUM(1)));
+    PG_RETURN_BOOL(result < 0);
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_order_greater_than);
+Datum rdfbox_order_greater_than(PG_FUNCTION_ARGS)
+{
+    int32 result = DatumGetInt32(DirectFunctionCall2(rdfbox_order_compare, PG_GETARG_DATUM(0), PG_GETARG_DATUM(1)));
+    PG_RETURN_BOOL(result > 0);
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_order_not_less_than);
+Datum rdfbox_order_not_less_than(PG_FUNCTION_ARGS)
+{
+    int32 result = DatumGetInt32(DirectFunctionCall2(rdfbox_order_compare, PG_GETARG_DATUM(0), PG_GETARG_DATUM(1)));
+    PG_RETURN_BOOL(result >= 0);
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_order_not_greater_than);
+Datum rdfbox_order_not_greater_than(PG_FUNCTION_ARGS)
+{
+    int32 result = DatumGetInt32(DirectFunctionCall2(rdfbox_order_compare, PG_GETARG_DATUM(0), PG_GETARG_DATUM(1)));
+    PG_RETURN_BOOL(result <= 0);
 }
