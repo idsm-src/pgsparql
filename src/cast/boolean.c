@@ -56,12 +56,11 @@ Datum cast_as_boolean_from_decimal(PG_FUNCTION_ARGS)
     Numeric zero = DatumGetNumeric(DirectFunctionCall1(int4_numeric, Int32GetDatum(0)));
 
     bool isNonZero = DatumGetBool(DirectFunctionCall2(numeric_ne, NumericGetDatum(value), NumericGetDatum(zero)));
-    bool isNan = numeric_is_nan(value);
 
     pfree(zero);
     PG_FREE_IF_COPY(value, 0);
 
-    PG_RETURN_BOOL(isNonZero && !isNan);
+    PG_RETURN_BOOL(isNonZero);
 }
 
 
