@@ -9,6 +9,7 @@ SQLSOURCES = \
 		pgsparql-0.1/zoneddatetime.sql \
 		pgsparql-0.1/rdfbox.sql \
 		pgsparql-0.1/cast.sql \
+		pgsparql-0.1/logical.sql \
 		pgsparql-0.1/arithmetic.sql \
 		pgsparql-0.1/comparison.sql
 

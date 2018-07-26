@@ -50,7 +50,8 @@ libpgsparql_la_SOURCES = \
 		comparison/less_than.c \
 		comparison/not_equal.c \
 		comparison/not_greater_than.c \
-		comparison/not_less_than.c
+		comparison/not_less_than.c \
+		logical/ebv.c
 
 # Linker options libTestProgram
 libpgsparql_la_LDFLAGS = 
