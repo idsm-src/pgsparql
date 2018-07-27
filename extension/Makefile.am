@@ -11,7 +11,8 @@ SQLSOURCES = \
 		pgsparql-0.1/cast.sql \
 		pgsparql-0.1/logical.sql \
 		pgsparql-0.1/arithmetic.sql \
-		pgsparql-0.1/comparison.sql
+		pgsparql-0.1/comparison.sql \
+		pgsparql-0.1/functions.sql
 
 EXTRA_DIST = $(SQLSOURCES)
 
