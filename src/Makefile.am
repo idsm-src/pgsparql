@@ -52,6 +52,7 @@ libpgsparql_la_SOURCES = \
 		comparison/not_greater_than.c \
 		comparison/not_less_than.c \
 		functions/functional.c \
+		functions/rdfterm.c \
 		logical/ebv.c
 
 # Linker options libTestProgram
