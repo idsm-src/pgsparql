@@ -273,13 +273,12 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
 
         case BLANKNODE_INT:
         {
-            int32 space = ((RdfBoxBlankNodeInt *) box)->space;
-            int32 value = ((RdfBoxBlankNodeInt *) box)->value;
+            int64 value = ((RdfBoxBlankNodeInt *) box)->value;
 
             size_t buffsize = STRLEN(BLKNODE_PREFIX) + 11 + 1 + 11 + 1;
             result = (char *) palloc0(buffsize);
 
-            snprintf(result, buffsize, BLKNODE_PREFIX "%" SCNi32 "_%" SCNi32, space, value);
+            snprintf(result, buffsize, BLKNODE_PREFIX "%" SCNi64, value);
             break;
         }
 
@@ -451,10 +450,7 @@ Datum rdfbox_order_compare(PG_FUNCTION_ARGS)
         RdfBoxBlankNodeInt *l = (RdfBoxBlankNodeInt *) left;
         RdfBoxBlankNodeInt *r = (RdfBoxBlankNodeInt *) right;
 
-        if(l->space == r->space)
-            result = Int32GetDatum(compare(l->value, r->value));
-        else
-            result = Int32GetDatum(compare(l->space, r->space));
+        result = Int32GetDatum(compare(l->value, r->value));
     }
     else if(left->type == BLANKNODE_STR && right->type == BLANKNODE_STR)
     {

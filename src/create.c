@@ -200,13 +200,12 @@ RdfBox *rdfbox_from_typed_literal(VarChar *value, VarChar *type)
 }
 
 
-RdfBox *rdfbox_from_int_blanknode(int32 space, int32 value)
+RdfBox *rdfbox_from_int_blanknode(int64 value)
 {
     RdfBoxBlankNodeInt *result = (RdfBoxBlankNodeInt *) palloc0(sizeof(RdfBoxBlankNodeInt));
 
     SET_VARSIZE(result, sizeof(RdfBoxBlankNodeInt));
     result->header.type = BLANKNODE_INT;
-    result->space = space;
     result->value = value;
 
     return (RdfBox *) result;

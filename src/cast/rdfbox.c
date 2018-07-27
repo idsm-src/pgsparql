@@ -249,9 +249,8 @@ Datum cast_as_rdfbox_from_typed_literal(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(cast_as_rdfbox_from_int_blanknode);
 Datum cast_as_rdfbox_from_int_blanknode(PG_FUNCTION_ARGS)
 {
-    int32 space = PG_GETARG_INT32(0);
-    int32 value = PG_GETARG_INT32(1);
-    RdfBox *result = rdfbox_from_int_blanknode(space, value);
+    int64 value = PG_GETARG_INT64(0);
+    RdfBox *result = rdfbox_from_int_blanknode(value);
     PG_RETURN_RDFBOX_P(result);
 }
 

@@ -137,8 +137,7 @@ typedef struct
 typedef struct
 {
     RdfBox header;
-    int32 space;
-    int32 value;
+    int64 value;
 } RdfBoxBlankNodeInt;
 
 

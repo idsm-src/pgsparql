@@ -105,7 +105,7 @@ Datum not_equal_rdfbox(PG_FUNCTION_ARGS)
     {
         RdfBoxBlankNodeInt *l = (RdfBoxBlankNodeInt *) left;
         RdfBoxBlankNodeInt *r = (RdfBoxBlankNodeInt *) right;
-        result = BoolGetDatum(l->space != r->space || l->value != r->value);
+        result = BoolGetDatum(l->value != r->value);
     }
     else if(left->type == BLANKNODE_STR && right->type == BLANKNODE_STR)
     {
