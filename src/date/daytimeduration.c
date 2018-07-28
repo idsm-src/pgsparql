@@ -146,7 +146,7 @@ Datum daytimeduration_output(PG_FUNCTION_ARGS)
     int64 value = PG_GETARG_INT64(0);
 
     if(value == 0)
-        PG_RETURN_CSTRING(pstrdup("T0S"));
+        PG_RETURN_CSTRING(pstrdup("PT0S"));
 
     if(value == INT64_MIN)
         PG_RETURN_CSTRING(pstrdup("-P106751991DT4H54.775808S"));
