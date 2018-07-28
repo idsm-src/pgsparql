@@ -91,36 +91,62 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
         case XSD_FLOAT:
         {
             float4 value = ((RdfBoxFloat *) box)->value;
-            Numeric numeric = DatumGetNumeric(DirectFunctionCall1(float4_numeric, Float4GetDatum(value)));
-            char *data = DatumGetCString(DirectFunctionCall1(numeric_out, NumericGetDatum(numeric)));
 
-            size_t length = strlen(data);
-            result = (char *) palloc0(PREFIX_SIZE + length + SUFFIX_SIZE(XSD_FLOAT_IRI) + 1);
+            if(!isinf(value))
+            {
+                Numeric numeric = DatumGetNumeric(DirectFunctionCall1(float4_numeric, Float4GetDatum(value)));
+                char *data = DatumGetCString(DirectFunctionCall1(numeric_out, NumericGetDatum(numeric)));
 
-            memcpy(result, PREFIX, PREFIX_SIZE);
-            memcpy(result + PREFIX_SIZE, data, length);
-            memcpy(result + PREFIX_SIZE + length, SUFFIX(XSD_FLOAT_IRI), SUFFIX_SIZE(XSD_FLOAT_IRI));
+                size_t length = strlen(data);
+                result = (char *) palloc0(PREFIX_SIZE + length + SUFFIX_SIZE(XSD_FLOAT_IRI) + 1);
 
-            pfree(data);
-            pfree(numeric);
+                memcpy(result, PREFIX, PREFIX_SIZE);
+                memcpy(result + PREFIX_SIZE, data, length);
+                memcpy(result + PREFIX_SIZE + length, SUFFIX(XSD_FLOAT_IRI), SUFFIX_SIZE(XSD_FLOAT_IRI));
+
+                pfree(data);
+                pfree(numeric);
+            }
+            else if(value > 0)
+            {
+                result = pstrdup(PREFIX "INF" SUFFIX(XSD_FLOAT_IRI));
+            }
+            else
+            {
+                result = pstrdup(PREFIX "-INF" SUFFIX(XSD_FLOAT_IRI) );
+            }
+
             break;
         }
 
         case XSD_DOUBLE:
         {
             float8 value = ((RdfBoxDouble *) box)->value;
-            Numeric numeric = DatumGetNumeric(DirectFunctionCall1(float8_numeric, Float8GetDatum(value)));
-            char *data = DatumGetCString(DirectFunctionCall1(numeric_out, NumericGetDatum(numeric)));
 
-            size_t length = strlen(data);
-            result = (char *) palloc0(PREFIX_SIZE + length + SUFFIX_SIZE(XSD_DOUBLE_IRI) + 1);
+            if(!isinf(value))
+            {
+                Numeric numeric = DatumGetNumeric(DirectFunctionCall1(float8_numeric, Float8GetDatum(value)));
+                char *data = DatumGetCString(DirectFunctionCall1(numeric_out, NumericGetDatum(numeric)));
 
-            memcpy(result, PREFIX, PREFIX_SIZE);
-            memcpy(result + PREFIX_SIZE, data, length);
-            memcpy(result + PREFIX_SIZE + length, SUFFIX(XSD_DOUBLE_IRI), SUFFIX_SIZE(XSD_DOUBLE_IRI));
+                size_t length = strlen(data);
+                result = (char *) palloc0(PREFIX_SIZE + length + SUFFIX_SIZE(XSD_DOUBLE_IRI) + 1);
 
-            pfree(data);
-            pfree(numeric);
+                memcpy(result, PREFIX, PREFIX_SIZE);
+                memcpy(result + PREFIX_SIZE, data, length);
+                memcpy(result + PREFIX_SIZE + length, SUFFIX(XSD_DOUBLE_IRI), SUFFIX_SIZE(XSD_DOUBLE_IRI));
+
+                pfree(data);
+                pfree(numeric);
+            }
+            else if(value > 0)
+            {
+                result = pstrdup(PREFIX "INF" SUFFIX(XSD_DOUBLE_IRI));
+            }
+            else
+            {
+                result = pstrdup(PREFIX "-INF" SUFFIX(XSD_DOUBLE_IRI));
+            }
+
             break;
         }
 
