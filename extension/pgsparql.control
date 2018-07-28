@@ -3,4 +3,4 @@ comment = 'Auxiliary functions for the IOCB SPARQL to SQL translator'
 default_version = '0.1'
 module_pathname = '$libdir/libpgsparql'
 schema = sparql
-requires = 'uuid-ossp'
+requires = 'uuid-ossp,pgcrypto'

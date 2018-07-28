@@ -15,3 +15,10 @@ CREATE FUNCTION "iri_rdfbox"(varchar,rdfbox) RETURNS varchar AS 'MODULE_PATHNAME
 CREATE FUNCTION "bnode"() RETURNS int8 AS $$ select nextval('query_blanknode') % (2^32)::int8; $$ LANGUAGE SQL VOLATILE STRICT;
 CREATE FUNCTION "uuid"() RETURNS varchar AS $$ select 'urn:uuid:' || uuid_generate_v4(); $$ LANGUAGE SQL VOLATILE STRICT;
 CREATE FUNCTION "struuid"() RETURNS varchar AS $$ select uuid_generate_v4()::varchar; $$ LANGUAGE SQL VOLATILE STRICT;
+
+-- hash functions
+CREATE FUNCTION "md5_string"(varchar) RETURNS varchar AS $$ select substring(digest($1, 'md5')::varchar from 3); $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION "sha1_string"(varchar) RETURNS varchar AS $$ select substring(digest($1, 'sha1')::varchar from 3); $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION "sha256_string"(varchar) RETURNS varchar AS $$ select substring(digest($1, 'sha256')::varchar from 3); $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION "sha384_string"(varchar) RETURNS varchar AS $$ select substring(digest($1, 'sha384')::varchar from 3); $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION "sha512_string"(varchar) RETURNS varchar AS $$ select substring(digest($1, 'sha512')::varchar from 3); $$ LANGUAGE SQL IMMUTABLE STRICT;
