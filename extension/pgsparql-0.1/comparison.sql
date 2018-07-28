@@ -11,6 +11,9 @@ CREATE FUNCTION "equal_datetime"(x zoneddatetime, y zoneddatetime) RETURNS bool 
 CREATE FUNCTION "equal_date"(x zoneddate, y zoneddate) RETURNS bool AS $$ select x = y; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION "equal_daytimeduration"(x int8, y int8) RETURNS bool AS $$ select x = y; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION "equal_string"(x varchar, y varchar) RETURNS bool AS $$ select x = y; $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION "equal_iri"(x varchar, y varchar) RETURNS bool AS $$ select x = y; $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION "equal_int_blanknode"(x int8, y int8) RETURNS bool AS $$ select x = y; $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION "equal_str_blanknode"(x varchar, y varchar) RETURNS bool AS $$ select x = y; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION "equal_rdfbox"(rdfbox,rdfbox) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 
 -- not equal
@@ -26,6 +29,9 @@ CREATE FUNCTION "not_equal_datetime"(x zoneddatetime, y zoneddatetime) RETURNS b
 CREATE FUNCTION "not_equal_date"(x zoneddate, y zoneddate) RETURNS bool AS $$ select x != y; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION "not_equal_daytimeduration"(x int8, y int8) RETURNS bool AS $$ select x != y; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION "not_equal_string"(x varchar, y varchar) RETURNS bool AS $$ select x != y; $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION "not_equal_iri"(x varchar, y varchar) RETURNS bool AS $$ select x != y; $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION "not_equal_int_blanknode"(x int8, y int8) RETURNS bool AS $$ select x != y; $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION "not_equal_str_blanknode"(x varchar, y varchar) RETURNS bool AS $$ select x != y; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION "not_equal_rdfbox"(rdfbox,rdfbox) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 
 -- less than
