@@ -7,6 +7,7 @@
 #include <utils/numeric.h>
 #include "rdfbox.h"
 #include "call.h"
+#include "constants.h"
 
 
 PG_FUNCTION_INFO_V1(cast_as_boolean_from_short);
@@ -53,13 +54,8 @@ PG_FUNCTION_INFO_V1(cast_as_boolean_from_decimal);
 Datum cast_as_boolean_from_decimal(PG_FUNCTION_ARGS)
 {
     Numeric value = PG_GETARG_NUMERIC(0);
-    Numeric zero = DatumGetNumeric(DirectFunctionCall1(int4_numeric, Int32GetDatum(0)));
-
-    bool isNonZero = DatumGetBool(DirectFunctionCall2(numeric_ne, NumericGetDatum(value), NumericGetDatum(zero)));
-
-    pfree(zero);
+    bool isNonZero = DatumGetBool(DirectFunctionCall2(numeric_ne, NumericGetDatum(value), NumericGetDatum(get_zero())));
     PG_FREE_IF_COPY(value, 0);
-
     PG_RETURN_BOOL(isNonZero);
 }
 

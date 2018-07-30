@@ -10,6 +10,8 @@ lib_LTLIBRARIES = libpgsparql.la
 # Sources for pgsparql
 libpgsparql_la_SOURCES = \
 		call.h \
+		constants.c \
+		constants.h \
 		pgsparql.c \
 		rdfbox.c \
 		rdfbox.h \

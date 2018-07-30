@@ -3,6 +3,7 @@
 #include <utils/numeric.h>
 #include "rdfbox.h"
 #include "xsd.h"
+#include "constants.h"
 
 
 PG_FUNCTION_INFO_V1(ebv_rdfbox);
@@ -43,11 +44,7 @@ Datum ebv_rdfbox(PG_FUNCTION_ARGS)
         case XSD_DECIMAL:
         {
             Numeric value = (Numeric) ((RdfBoxDecinal *) box)->value;
-            Numeric zero = DatumGetNumeric(DirectFunctionCall1(int4_numeric, Int32GetDatum(0)));
-
-            result = DirectFunctionCall2(numeric_ne, NumericGetDatum(value), NumericGetDatum(zero));
-
-            pfree(zero);
+            result = DirectFunctionCall2(numeric_ne, NumericGetDatum(value), NumericGetDatum(get_zero()));
             break;
         }
 
