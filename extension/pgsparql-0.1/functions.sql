@@ -16,6 +16,40 @@ CREATE FUNCTION "bnode"() RETURNS int8 AS $$ select nextval('query_blanknode') %
 CREATE FUNCTION "uuid"() RETURNS varchar AS $$ select 'urn:uuid:' || uuid_generate_v4(); $$ LANGUAGE SQL VOLATILE STRICT;
 CREATE FUNCTION "struuid"() RETURNS varchar AS $$ select uuid_generate_v4()::varchar; $$ LANGUAGE SQL VOLATILE STRICT;
 
+-- functions on strings
+CREATE FUNCTION "strlen_string"(varchar) RETURNS decimal AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "strlen_rdfbox"(rdfbox) RETURNS decimal AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "substr_string"(varchar,decimal) RETURNS varchar AS 'MODULE_PATHNAME','substr_no_len_string' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "substr_string"(varchar,decimal,decimal) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "substr_rdfbox"(rdfbox,decimal) RETURNS rdfbox AS 'MODULE_PATHNAME','substr_no_len_rdfbox' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "substr_rdfbox"(rdfbox,decimal,decimal) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "ucase_string"(varchar) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "ucase_rdfbox"(rdfbox) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "lcase_string"(varchar) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "lcase_rdfbox"(rdfbox) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "strstarts_string_string"(varchar,varchar) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "strstarts_rdfbox_string"(rdfbox,varchar) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "strstarts_rdfbox_rdfbox"(rdfbox,rdfbox) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "strends_string_string"(varchar,varchar) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "strends_rdfbox_string"(rdfbox,varchar) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "strends_rdfbox_rdfbox"(rdfbox,rdfbox) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "contains_string_string"(varchar,varchar) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "contains_rdfbox_string"(rdfbox,varchar) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "contains_rdfbox_rdfbox"(rdfbox,rdfbox) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "strbefore_string_string"(varchar,varchar) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "strbefore_rdfbox_string"(rdfbox,varchar) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "strbefore_rdfbox_rdfbox"(rdfbox,rdfbox) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "strafter_string_string"(varchar,varchar) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "strafter_rdfbox_string"(rdfbox,varchar) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "strafter_rdfbox_rdfbox"(rdfbox,rdfbox) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "encode_for_uri_string"(varchar) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "encode_for_uri_rdfbox"(rdfbox) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "concat_string_string"(varchar,varchar) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "concat_rdfbox_string"(rdfbox,varchar) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "concat_rdfbox_rdfbox"(rdfbox,rdfbox) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "langmatches_string_string"(varchar,varchar) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "langmatches_rdfbox_rdfbox"(rdfbox,rdfbox) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+
 -- functions on numerics
 CREATE FUNCTION "abs_float"(float4) RETURNS float4 AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION "abs_double"(float8) RETURNS float8 AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;

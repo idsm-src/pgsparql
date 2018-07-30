@@ -55,6 +55,7 @@ libpgsparql_la_SOURCES = \
 		functions/datetime.c \
 		functions/numeric.c \
 		functions/rdfterm.c \
+		functions/string.c \
 		logical/ebv.c
 
 # Linker options libTestProgram
