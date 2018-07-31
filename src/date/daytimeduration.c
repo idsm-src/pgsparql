@@ -105,7 +105,7 @@ Datum daytimeduration_input(PG_FUNCTION_ARGS)
                 double frac = strtod(input, &input);
 
                 if(*input != 'S' || errno != 0)
-                    elog(ERROR, "E3");
+                    ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed daytimeduration literal")));
 
                 isValid &= add_duration_part(&result, rint(frac * 1000000), 1);
                 input++;
