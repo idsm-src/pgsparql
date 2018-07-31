@@ -20,8 +20,7 @@ Numeric get_zero()
 }
 
 
-__attribute__((destructor))
-static void destroy_constants()
+static __attribute__((destructor)) void destroy_constants()
 {
     if(zero != NULL)
         pfree(zero);

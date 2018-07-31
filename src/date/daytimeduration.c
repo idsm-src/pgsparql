@@ -90,7 +90,7 @@ Datum daytimeduration_input(PG_FUNCTION_ARGS)
                 last = 2;
                 input++;
             }
-            else if (*input == 'M' && last < 3)
+            else if(*input == 'M' && last < 3)
             {
                 isValid &= add_duration_part(&result, value, USECS_PER_MINUTE);
                 last = 3;
@@ -110,7 +110,7 @@ Datum daytimeduration_input(PG_FUNCTION_ARGS)
                 isValid &= add_duration_part(&result, rint(frac * 1000000), 1);
                 input++;
             }
-            else if (*input == 'S' && last < 5)
+            else if(*input == 'S' && last < 5)
             {
                 isValid &= add_duration_part(&result, value, USECS_PER_SEC);
                 last = 5;

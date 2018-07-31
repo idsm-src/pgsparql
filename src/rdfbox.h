@@ -151,7 +151,7 @@ typedef struct
 #define DatumGetRdfBox(X)       ((RdfBox *) PG_DETOAST_DATUM(X))
 #define RdfBoxGetDatum(X)       PointerGetDatum(X)
 #define PG_GETARG_RDFBOX_P(n)   DatumGetRdfBox(PG_GETARG_DATUM(n))
-#define PG_RETURN_RDFBOX_P(x)	return RdfBoxGetDatum(x)
+#define PG_RETURN_RDFBOX_P(x)   return RdfBoxGetDatum(x)
 
 
 static inline bool rdfbox_is_numeric(RdfBox *rdfbox)
