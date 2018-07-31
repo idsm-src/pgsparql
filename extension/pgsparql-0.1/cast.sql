@@ -129,7 +129,7 @@ CREATE FUNCTION cast_as_rdfbox_from_daytimeduration(int8) RETURNS rdfbox AS 'MOD
 CREATE FUNCTION cast_as_rdfbox_from_string(varchar) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 
 CREATE FUNCTION cast_as_rdfbox_from_iri(varchar) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
-CREATE FUNCTION cast_as_rdfbox_from_lang_string(varchar, varchar) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
-CREATE FUNCTION cast_as_rdfbox_from_typed_literal(varchar, varchar) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION cast_as_rdfbox_from_lang_string(varchar,varchar) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION cast_as_rdfbox_from_typed_literal(varchar,varchar) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION cast_as_rdfbox_from_int_blanknode(int8) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION cast_as_rdfbox_from_str_blanknode(varchar) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;

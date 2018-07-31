@@ -11,13 +11,13 @@ CREATE TYPE zoneddatetime
     alignment = double
 );
 
-CREATE FUNCTION zoneddatetime_equal(zoneddatetime, zoneddatetime) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
-CREATE FUNCTION zoneddatetime_not_equal(zoneddatetime, zoneddatetime) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
-CREATE FUNCTION zoneddatetime_less_than(zoneddatetime, zoneddatetime) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
-CREATE FUNCTION zoneddatetime_greater_than(zoneddatetime, zoneddatetime) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
-CREATE FUNCTION zoneddatetime_not_less_than(zoneddatetime, zoneddatetime) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
-CREATE FUNCTION zoneddatetime_not_greater_than(zoneddatetime, zoneddatetime) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
-CREATE FUNCTION zoneddatetime_compare(zoneddatetime, zoneddatetime) RETURNS int4 AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION zoneddatetime_equal(zoneddatetime,zoneddatetime) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION zoneddatetime_not_equal(zoneddatetime,zoneddatetime) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION zoneddatetime_less_than(zoneddatetime,zoneddatetime) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION zoneddatetime_greater_than(zoneddatetime,zoneddatetime) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION zoneddatetime_not_less_than(zoneddatetime,zoneddatetime) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION zoneddatetime_not_greater_than(zoneddatetime,zoneddatetime) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION zoneddatetime_compare(zoneddatetime,zoneddatetime) RETURNS int4 AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 
 CREATE OPERATOR = (
     leftarg = zoneddatetime,

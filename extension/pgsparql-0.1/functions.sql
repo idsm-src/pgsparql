@@ -98,8 +98,8 @@ CREATE FUNCTION tz_date(zoneddate) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE
 CREATE FUNCTION tz_rdfbox(rdfbox) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 
 -- hash functions
-CREATE FUNCTION md5_string(varchar) RETURNS varchar AS $$ select substring(digest($1, 'md5')::varchar from 3); $$ LANGUAGE SQL IMMUTABLE STRICT;
-CREATE FUNCTION sha1_string(varchar) RETURNS varchar AS $$ select substring(digest($1, 'sha1')::varchar from 3); $$ LANGUAGE SQL IMMUTABLE STRICT;
-CREATE FUNCTION sha256_string(varchar) RETURNS varchar AS $$ select substring(digest($1, 'sha256')::varchar from 3); $$ LANGUAGE SQL IMMUTABLE STRICT;
-CREATE FUNCTION sha384_string(varchar) RETURNS varchar AS $$ select substring(digest($1, 'sha384')::varchar from 3); $$ LANGUAGE SQL IMMUTABLE STRICT;
-CREATE FUNCTION sha512_string(varchar) RETURNS varchar AS $$ select substring(digest($1, 'sha512')::varchar from 3); $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION md5_string(varchar) RETURNS varchar AS $$ select substring(digest($1,'md5')::varchar from 3); $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION sha1_string(varchar) RETURNS varchar AS $$ select substring(digest($1,'sha1')::varchar from 3); $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION sha256_string(varchar) RETURNS varchar AS $$ select substring(digest($1,'sha256')::varchar from 3); $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION sha384_string(varchar) RETURNS varchar AS $$ select substring(digest($1,'sha384')::varchar from 3); $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION sha512_string(varchar) RETURNS varchar AS $$ select substring(digest($1,'sha512')::varchar from 3); $$ LANGUAGE SQL IMMUTABLE STRICT;

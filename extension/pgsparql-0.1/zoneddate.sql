@@ -22,13 +22,13 @@ CREATE TYPE zoneddate
 );
 END; $$ LANGUAGE 'plpgsql';
 
-CREATE FUNCTION zoneddate_equal(zoneddate, zoneddate) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
-CREATE FUNCTION zoneddate_not_equal(zoneddate, zoneddate) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
-CREATE FUNCTION zoneddate_less_than(zoneddate, zoneddate) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
-CREATE FUNCTION zoneddate_greater_than(zoneddate, zoneddate) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
-CREATE FUNCTION zoneddate_not_less_than(zoneddate, zoneddate) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
-CREATE FUNCTION zoneddate_not_greater_than(zoneddate, zoneddate) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
-CREATE FUNCTION zoneddate_compare(zoneddate, zoneddate) RETURNS int4 AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION zoneddate_equal(zoneddate,zoneddate) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION zoneddate_not_equal(zoneddate,zoneddate) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION zoneddate_less_than(zoneddate,zoneddate) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION zoneddate_greater_than(zoneddate,zoneddate) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION zoneddate_not_less_than(zoneddate,zoneddate) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION zoneddate_not_greater_than(zoneddate,zoneddate) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION zoneddate_compare(zoneddate,zoneddate) RETURNS int4 AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 
 CREATE OPERATOR = (
     leftarg = zoneddate,
