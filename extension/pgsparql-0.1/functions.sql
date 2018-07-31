@@ -50,6 +50,10 @@ CREATE FUNCTION "concat_rdfbox_rdfbox"(rdfbox,rdfbox) RETURNS rdfbox AS 'MODULE_
 CREATE FUNCTION "langmatches_string_string"(varchar,varchar) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION "langmatches_rdfbox_rdfbox"(rdfbox,rdfbox) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 
+-- functions using regular expressions
+CREATE FUNCTION "regex_string"(varchar,varchar,varchar='') RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION "replace_string"(varchar,varchar,varchar,varchar='') RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+
 -- functions on numerics
 CREATE FUNCTION "abs_float"(float4) RETURNS float4 AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION "abs_double"(float8) RETURNS float8 AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;

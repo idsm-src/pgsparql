@@ -55,12 +55,13 @@ libpgsparql_la_SOURCES = \
 		functions/datetime.c \
 		functions/numeric.c \
 		functions/rdfterm.c \
+		functions/regex.c \
 		functions/string.c \
 		logical/ebv.c
 
 # Linker options libTestProgram
-libpgsparql_la_LDFLAGS = 
+libpgsparql_la_LDFLAGS = $(PCRE2_LIBS)
 
 # Compiler options. Here we are adding the include directory
 # to be searched for headers included in the source code.
-libpgsparql_la_CPPFLAGS = $(POSTGRESQL_CPPFLAGS)
+libpgsparql_la_CPPFLAGS = $(POSTGRESQL_CPPFLAGS) $(PCRE2_CFLAGS)
