@@ -198,6 +198,16 @@ Datum zoneddate_output(PG_FUNCTION_ARGS)
 }
 
 
+PG_FUNCTION_INFO_V1(zoneddate_create);
+Datum zoneddate_create(PG_FUNCTION_ARGS)
+{
+    DateADT value = PG_GETARG_DATEADT(0);
+    int32 zone = PG_GETARG_INT32(1);
+    ZonedDate result = { .value = value, .zone = zone };
+    PG_RETURN_ZONEDDATE(result);
+}
+
+
 PG_FUNCTION_INFO_V1(zoneddate_date);
 Datum zoneddate_date(PG_FUNCTION_ARGS)
 {

@@ -11,6 +11,7 @@ CREATE TYPE zoneddatetime
     alignment = double
 );
 
+CREATE FUNCTION zoneddatetime_create(timestamptz,int4) RETURNS zoneddatetime AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION zoneddatetime_datetime(zoneddatetime) RETURNS timestamptz AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION zoneddatetime_zone(zoneddatetime) RETURNS int4 AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 

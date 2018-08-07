@@ -241,6 +241,20 @@ Datum zoneddatetime_output(PG_FUNCTION_ARGS)
 }
 
 
+PG_FUNCTION_INFO_V1(zoneddatetime_create);
+Datum zoneddatetime_create(PG_FUNCTION_ARGS)
+{
+    TimestampTz value = PG_GETARG_TIMESTAMPTZ(0);
+    int32 zone = PG_GETARG_INT32(1);
+
+    ZonedDateTime *result = palloc0(sizeof(ZonedDateTime));
+    result->value = value;
+    result->zone = zone;
+
+    PG_RETURN_ZONEDDATETIME_P(result);
+}
+
+
 PG_FUNCTION_INFO_V1(zoneddatetime_datetime);
 Datum zoneddatetime_datetime(PG_FUNCTION_ARGS)
 {
