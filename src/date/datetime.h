@@ -21,6 +21,9 @@ typedef struct
 Datum zoneddatetime_input(PG_FUNCTION_ARGS);
 Datum zoneddatetime_output(PG_FUNCTION_ARGS);
 
+Datum zoneddatetime_datetime(PG_FUNCTION_ARGS);
+Datum zoneddatetime_zone(PG_FUNCTION_ARGS);
+
 Datum zoneddatetime_equal(PG_FUNCTION_ARGS);
 Datum zoneddatetime_not_equal(PG_FUNCTION_ARGS);
 Datum zoneddatetime_less_than(PG_FUNCTION_ARGS);

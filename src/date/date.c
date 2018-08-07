@@ -198,6 +198,22 @@ Datum zoneddate_output(PG_FUNCTION_ARGS)
 }
 
 
+PG_FUNCTION_INFO_V1(zoneddate_date);
+Datum zoneddate_date(PG_FUNCTION_ARGS)
+{
+    ZonedDate date = PG_GETARG_ZONEDDATE(0);
+    PG_RETURN_DATEADT(date.value);
+}
+
+
+PG_FUNCTION_INFO_V1(zoneddate_zone);
+Datum zoneddate_zone(PG_FUNCTION_ARGS)
+{
+    ZonedDate date = PG_GETARG_ZONEDDATE(0);
+    PG_RETURN_INT32(date.zone);
+}
+
+
 static int64 get_time_value(ZonedDate arg)
 {
     int16 timezone = arg.zone == ZONE_UNSPECIFIED ? implicit_timezone : arg.zone;
