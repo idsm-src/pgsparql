@@ -119,7 +119,7 @@ Datum zoneddatetime_input(PG_FUNCTION_ARGS)
     field[0] = pnstrdup(date, time - date - 1);
     ftype[0] = DTK_DATE;
 
-    field[1] = pnstrdup(time, zone - time);
+    field[1] = pnstrdup(time, Min(zone - time, 15));   // use limit 15 to truncate field to microseconds
     ftype[1] = DTK_TIME;
 
     field[2] = (!hasZone || *zone == 'Z') ? "z" : pnstrdup(zone, end - zone);

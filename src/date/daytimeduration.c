@@ -101,13 +101,21 @@ Datum daytimeduration_input(PG_FUNCTION_ARGS)
                 isValid &= add_duration_part(&result, value, USECS_PER_SEC);
                 last = 4;
 
-                errno = 0;
-                double frac = strtod(input, &input);
+                input++;
+
+                // truncate field to microseconds
+                char frac[] = {'0', '0', '0', '0', '0', '0', '\0'};
+
+                for(int i = 0; i < 6 && *input >= '0' && *input <= '9'; i++)
+                    frac[i] = *(input++);
+
+                while(*input >= '0' && *input <= '9')
+                    input++;
 
                 if(*input != 'S' || errno != 0)
                     ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed daytimeduration literal")));
 
-                isValid &= add_duration_part(&result, rint(frac * 1000000), 1);
+                isValid &= add_duration_part(&result, strtol(frac, NULL, 10), 1);
                 input++;
             }
             else if(*input == 'S' && last < 5)
