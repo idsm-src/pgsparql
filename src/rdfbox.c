@@ -14,7 +14,8 @@
 #define LANG_DELIM      "@"
 #define TYPE_DELIM      "^^"
 #define VALUE_DELIM     "\""
-#define BLKNODE_PREFIX  "_:"
+#define BLKNODE_IPREFIX "_:I"
+#define BLKNODE_SPREFIX "_:S"
 #define PREFIX          VALUE_DELIM
 #define SUFFIX(X)       VALUE_DELIM TYPE_DELIM IRI_BEGIN X IRI_END
 #define STRLEN(X)       (sizeof(X) - 1)
@@ -301,25 +302,43 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
         {
             int64 value = ((RdfBoxBlankNodeInt *) box)->value;
 
-            size_t buffsize = STRLEN(BLKNODE_PREFIX) + 11 + 1 + 11 + 1;
+            size_t buffsize = STRLEN(BLKNODE_IPREFIX) + 21;
             result = (char *) palloc0(buffsize);
 
-            snprintf(result, buffsize, BLKNODE_PREFIX "%" SCNi64, value);
+            snprintf(result, buffsize, BLKNODE_IPREFIX "%" SCNi64, value);
             break;
         }
 
         case BLANKNODE_STR:
         {
-            Datum datum = PointerGetDatum(((RdfBoxBlankNodeStr *) box)->value);
+            static char table[16] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
-            size_t length = VARSIZE(datum) - VARHDRSZ;
-            result = (char *) palloc0(STRLEN(BLKNODE_PREFIX VALUE_DELIM) + length + STRLEN(VALUE_DELIM) + 1);
+            Datum value = PointerGetDatum(((RdfBoxBlankNodeStr *) box)->value);
+            char *data = VARDATA(value);
+            int32 size = VARSIZE(value) - VARHDRSZ;
 
-            memcpy(result, BLKNODE_PREFIX VALUE_DELIM, STRLEN(BLKNODE_PREFIX VALUE_DELIM));
-            memcpy(result + STRLEN(BLKNODE_PREFIX VALUE_DELIM), VARDATA(datum), length);
-            memcpy(result + STRLEN(BLKNODE_PREFIX VALUE_DELIM) + length, VALUE_DELIM, STRLEN(VALUE_DELIM));
+            for(int i = 0; i < VARSIZE(value) - VARHDRSZ; i++)
+                if((data[i] < '0' || data[i] > '9') && (data[i] < 'A' || data[i] > 'Z') && (data[i] < 'a' || data[i] > 'z'))
+                    size += 2;
 
-            break;
+            result = (char *) palloc0(STRLEN(BLKNODE_SPREFIX) + size + 1);
+            memcpy(result, BLKNODE_SPREFIX, STRLEN(BLKNODE_SPREFIX));
+
+            char *out = result + STRLEN(BLKNODE_SPREFIX);
+
+            for(int i = 0; i < VARSIZE(value) - VARHDRSZ; i++)
+            {
+                if((data[i] < '0' || data[i] > '9') && (data[i] < 'A' || data[i] > 'Z') && (data[i] < 'a' || data[i] > 'z'))
+                {
+                    *out++ = '_';
+                    *out++ = table[(unsigned char) data[i] / 16];
+                    *out++ = table[(unsigned char) data[i] % 16];
+                }
+                else
+                {
+                    *out++ = data[i];
+                }
+            }
         }
     }
 
