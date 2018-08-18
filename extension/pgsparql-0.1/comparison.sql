@@ -7,8 +7,8 @@ CREATE FUNCTION equal_float(float4,float4) RETURNS bool AS $$ select $1 != 'NaN'
 CREATE FUNCTION equal_double(float8,float8) RETURNS bool AS $$ select $1 != 'NaN'::float8 and $2 != 'NaN'::float8 and $1 = $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION equal_integer(decimal,decimal) RETURNS bool AS $$ select $1 = $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION equal_decimal(decimal,decimal) RETURNS bool AS $$ select $1 = $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
-CREATE FUNCTION equal_datetime(zoneddatetime,zoneddatetime) RETURNS bool AS $$ select $1 = $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
-CREATE FUNCTION equal_date(zoneddate,zoneddate) RETURNS bool AS $$ select $1 = $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION equal_datetime(zoneddatetime,zoneddatetime) RETURNS bool AS $$ select $1 operator(sparql.=) $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION equal_date(zoneddate,zoneddate) RETURNS bool AS $$ select $1 operator(sparql.=) $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION equal_daytimeduration(int8,int8) RETURNS bool AS $$ select $1 = $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION equal_string(varchar,varchar) RETURNS bool AS $$ select $1 = $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION equal_iri(varchar,varchar) RETURNS bool AS $$ select $1 = $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
@@ -25,8 +25,8 @@ CREATE FUNCTION not_equal_float(float4,float4) RETURNS bool AS $$ select $1 != '
 CREATE FUNCTION not_equal_double(float8,float8) RETURNS bool AS $$ select $1 != 'NaN'::float8 and $2 != 'NaN'::float8 and $1 != $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION not_equal_integer(decimal,decimal) RETURNS bool AS $$ select $1 != $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION not_equal_decimal(decimal,decimal) RETURNS bool AS $$ select $1 != $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
-CREATE FUNCTION not_equal_datetime(zoneddatetime,zoneddatetime) RETURNS bool AS $$ select $1 != $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
-CREATE FUNCTION not_equal_date(zoneddate,zoneddate) RETURNS bool AS $$ select $1 != $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION not_equal_datetime(zoneddatetime,zoneddatetime) RETURNS bool AS $$ select $1 operator(sparql.!=) $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION not_equal_date(zoneddate,zoneddate) RETURNS bool AS $$ select $1 operator(sparql.!=) $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION not_equal_daytimeduration(int8,int8) RETURNS bool AS $$ select $1 != $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION not_equal_string(varchar,varchar) RETURNS bool AS $$ select $1 != $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION not_equal_iri(varchar,varchar) RETURNS bool AS $$ select $1 != $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
@@ -43,8 +43,8 @@ CREATE FUNCTION less_than_float(float4,float4) RETURNS bool AS $$ select $1 != '
 CREATE FUNCTION less_than_double(float8,float8) RETURNS bool AS $$ select $1 != 'NaN'::float8 and $2 != 'NaN'::float8 and $1 < $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION less_than_integer(decimal,decimal) RETURNS bool AS $$ select $1 < $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION less_than_decimal(decimal,decimal) RETURNS bool AS $$ select $1 < $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
-CREATE FUNCTION less_than_datetime(zoneddatetime,zoneddatetime) RETURNS bool AS $$ select $1 < $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
-CREATE FUNCTION less_than_date(zoneddate,zoneddate) RETURNS bool AS $$ select $1 < $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION less_than_datetime(zoneddatetime,zoneddatetime) RETURNS bool AS $$ select $1 operator(sparql.<) $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION less_than_date(zoneddate,zoneddate) RETURNS bool AS $$ select $1 operator(sparql.<) $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION less_than_daytimeduration(int8,int8) RETURNS bool AS $$ select $1 < $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION less_than_string(varchar,varchar) RETURNS bool AS $$ select $1 < $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION less_than_rdfbox(rdfbox,rdfbox) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
@@ -58,8 +58,8 @@ CREATE FUNCTION greater_than_float(float4,float4) RETURNS bool AS $$ select $1 !
 CREATE FUNCTION greater_than_double(float8,float8) RETURNS bool AS $$ select $1 != 'NaN'::float8 and $2 != 'NaN'::float8 and $1 > $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION greater_than_integer(decimal,decimal) RETURNS bool AS $$ select $1 > $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION greater_than_decimal(decimal,decimal) RETURNS bool AS $$ select $1 > $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
-CREATE FUNCTION greater_than_datetime(zoneddatetime,zoneddatetime) RETURNS bool AS $$ select $1 > $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
-CREATE FUNCTION greater_than_date(zoneddate,zoneddate) RETURNS bool AS $$ select $1 > $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION greater_than_datetime(zoneddatetime,zoneddatetime) RETURNS bool AS $$ select $1 operator(sparql.>) $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION greater_than_date(zoneddate,zoneddate) RETURNS bool AS $$ select $1 operator(sparql.>) $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION greater_than_daytimeduration(int8,int8) RETURNS bool AS $$ select $1 > $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION greater_than_string(varchar,varchar) RETURNS bool AS $$ select $1 > $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION greater_than_rdfbox(rdfbox,rdfbox) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
@@ -73,8 +73,8 @@ CREATE FUNCTION not_less_than_float(float4,float4) RETURNS bool AS $$ select $1 
 CREATE FUNCTION not_less_than_double(float8,float8) RETURNS bool AS $$ select $1 != 'NaN'::float8 and $2 != 'NaN'::float8 and $1 >= $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION not_less_than_integer(decimal,decimal) RETURNS bool AS $$ select $1 >= $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION not_less_than_decimal(decimal,decimal) RETURNS bool AS $$ select $1 >= $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
-CREATE FUNCTION not_less_than_datetime(zoneddatetime,zoneddatetime) RETURNS bool AS $$ select $1 >= $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
-CREATE FUNCTION not_less_than_date(zoneddate,zoneddate) RETURNS bool AS $$ select $1 >= $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION not_less_than_datetime(zoneddatetime,zoneddatetime) RETURNS bool AS $$ select $1 operator(sparql.>=) $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION not_less_than_date(zoneddate,zoneddate) RETURNS bool AS $$ select $1 operator(sparql.>=) $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION not_less_than_daytimeduration(int8,int8) RETURNS bool AS $$ select $1 >= $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION not_less_than_string(varchar,varchar) RETURNS bool AS $$ select $1 >= $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION not_less_than_rdfbox(rdfbox,rdfbox) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
@@ -88,8 +88,8 @@ CREATE FUNCTION not_greater_than_float(float4,float4) RETURNS bool AS $$ select 
 CREATE FUNCTION not_greater_than_double(float8,float8) RETURNS bool AS $$ select $1 != 'NaN'::float8 and $2 != 'NaN'::float8 and $1 <= $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION not_greater_than_integer(decimal,decimal) RETURNS bool AS $$ select $1 <= $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION not_greater_than_decimal(decimal,decimal) RETURNS bool AS $$ select $1 <= $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
-CREATE FUNCTION not_greater_than_datetime(zoneddatetime,zoneddatetime) RETURNS bool AS $$ select $1 <= $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
-CREATE FUNCTION not_greater_than_date(zoneddate,zoneddate) RETURNS bool AS $$ select $1 <= $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION not_greater_than_datetime(zoneddatetime,zoneddatetime) RETURNS bool AS $$ select $1 operator(sparql.<=) $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION not_greater_than_date(zoneddate,zoneddate) RETURNS bool AS $$ select $1 operator(sparql.<=) $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION not_greater_than_daytimeduration(int8,int8) RETURNS bool AS $$ select $1 <= $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION not_greater_than_string(varchar,varchar) RETURNS bool AS $$ select $1 <= $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION not_greater_than_rdfbox(rdfbox,rdfbox) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
