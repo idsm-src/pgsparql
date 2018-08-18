@@ -124,7 +124,9 @@ CREATE FUNCTION cast_as_rdfbox_from_double(float8) RETURNS rdfbox AS 'MODULE_PAT
 CREATE FUNCTION cast_as_rdfbox_from_integer(decimal) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION cast_as_rdfbox_from_decimal(decimal) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION cast_as_rdfbox_from_datetime(zoneddatetime) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION cast_as_rdfbox_from_datetime(timestamptz,int4) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION cast_as_rdfbox_from_date(zoneddate) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION cast_as_rdfbox_from_date(date,int4) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION cast_as_rdfbox_from_daytimeduration(int8) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION cast_as_rdfbox_from_string(varchar) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 

@@ -110,7 +110,12 @@ Datum cast_as_rdfbox_from_datetime(PG_FUNCTION_ARGS)
     RdfBoxDateTime *result = (RdfBoxDateTime *) palloc0(sizeof(RdfBoxDateTime));
     SET_VARSIZE(result, sizeof(RdfBoxDateTime));
     result->header.type = XSD_DATETIME;
-    result->value = *PG_GETARG_ZONEDDATETIME_P(0);
+
+    if(PG_NARGS() == 1)
+        result->value = *PG_GETARG_ZONEDDATETIME_P(0);
+    else
+        result->value = (ZonedDateTime) { .value = PG_GETARG_TIMESTAMPTZ(0), .zone = PG_GETARG_INT32(1) };
+
     PG_RETURN_RDFBOX_P(result);
 }
 
@@ -121,7 +126,12 @@ Datum cast_as_rdfbox_from_date(PG_FUNCTION_ARGS)
     RdfBoxDate *result = (RdfBoxDate *) palloc0(sizeof(RdfBoxDate));
     SET_VARSIZE(result, sizeof(RdfBoxDate));
     result->header.type = XSD_DATE;
-    result->value = PG_GETARG_ZONEDDATE(0);
+
+    if(PG_NARGS() == 1)
+        result->value = PG_GETARG_ZONEDDATE(0);
+    else
+        result->value = (ZonedDate) { .value = PG_GETARG_DATEADT(0), .zone = PG_GETARG_INT32(1) };
+
     PG_RETURN_RDFBOX_P(result);
 }
 
