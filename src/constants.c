@@ -1,6 +1,6 @@
 #include <postgres.h>
 #include <utils/memutils.h>
-#include <utils/fmgrprotos.h>
+#include <utils/builtins.h>
 #include "constants.h"
 
 
