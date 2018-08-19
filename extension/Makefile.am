@@ -16,6 +16,7 @@ SQLSOURCES = \
 		pgsparql-0.1/extract.sql
 
 EXTRA_DIST = $(SQLSOURCES)
+MOSTLYCLEANFILES = pgsparql--0.1.sql
 
 pgsparql--0.1.sql : $(SQLSOURCES)
 		for F in $(SQLSOURCES); do cat $(srcdir)/$$F; echo -e '\n\n'; done > pgsparql--0.1.sql
