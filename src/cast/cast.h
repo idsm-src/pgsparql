@@ -63,6 +63,7 @@ Datum cast_as_double_from_rdfbox(PG_FUNCTION_ARGS);
 
 Datum cast_as_integer_from_float(PG_FUNCTION_ARGS);
 Datum cast_as_integer_from_double(PG_FUNCTION_ARGS);
+Datum cast_as_integer_from_decimal(PG_FUNCTION_ARGS);
 Datum cast_as_integer_from_string(PG_FUNCTION_ARGS);
 Datum cast_as_integer_from_rdfbox(PG_FUNCTION_ARGS);
 

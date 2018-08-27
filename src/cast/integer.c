@@ -37,6 +37,16 @@ Datum cast_as_integer_from_double(PG_FUNCTION_ARGS)
 }
 
 
+PG_FUNCTION_INFO_V1(cast_as_integer_from_decimal);
+Datum cast_as_integer_from_decimal(PG_FUNCTION_ARGS)
+{
+    Numeric value = PG_GETARG_NUMERIC(0);
+    Numeric result = DatumGetNumeric(DirectFunctionCall2(numeric_trunc, NumericGetDatum(value), Int32GetDatum(0)));
+    PG_FREE_IF_COPY(value, 0);
+    PG_RETURN_NUMERIC(result);
+}
+
+
 PG_FUNCTION_INFO_V1(cast_as_integer_from_string);
 Datum cast_as_integer_from_string(PG_FUNCTION_ARGS)
 {

@@ -71,7 +71,7 @@ CREATE FUNCTION cast_as_integer_from_int(int4) RETURNS decimal AS 'MODULE_PATHNA
 CREATE FUNCTION cast_as_integer_from_long(int8) RETURNS decimal AS 'MODULE_PATHNAME','cast_as_decimal_from_long' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION cast_as_integer_from_float(float4) RETURNS decimal AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION cast_as_integer_from_double(float8) RETURNS decimal AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
-CREATE FUNCTION cast_as_integer_from_decimal(decimal) RETURNS decimal AS 'MODULE_PATHNAME','cast_as_decimal_from_integer' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION cast_as_integer_from_decimal(decimal) RETURNS decimal AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION cast_as_integer_from_string(varchar) RETURNS decimal AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION cast_as_integer_from_rdfbox(rdfbox) RETURNS decimal AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 
