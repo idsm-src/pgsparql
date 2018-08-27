@@ -15,13 +15,13 @@
 PG_FUNCTION_INFO_V1(cast_as_date_from_datetime);
 Datum cast_as_date_from_datetime(PG_FUNCTION_ARGS)
 {
-    ZonedDateTime *date = PG_GETARG_ZONEDDATETIME_P(0);
-    TimestampTz value = date->value;
+    ZonedDateTime date = PG_NARGS() == 1 ? *PG_GETARG_ZONEDDATETIME_P(0) :
+            (ZonedDateTime) { .value = PG_GETARG_TIMESTAMPTZ(0), .zone = PG_GETARG_INT32(1) };
 
-    if(date->zone != ZONE_UNSPECIFIED)
-        value += date->zone * USECS_PER_SEC;
+    if(date.zone != ZONE_UNSPECIFIED)
+        date.value += date.zone * USECS_PER_SEC;
 
-    ZonedDate result = { .value = value / USECS_PER_DAY, .zone = date->zone };
+    ZonedDate result = { .value = date.value / USECS_PER_DAY, .zone = date.zone };
     PG_RETURN_ZONEDDATE(result);
 }
 

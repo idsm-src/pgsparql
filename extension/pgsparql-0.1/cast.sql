@@ -88,11 +88,13 @@ CREATE FUNCTION cast_as_decimal_from_rdfbox(rdfbox) RETURNS decimal AS 'MODULE_P
 
 -- cast as datetime
 CREATE FUNCTION cast_as_datetime_from_date(zoneddate) RETURNS zoneddatetime AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION cast_as_datetime_from_date(date,int4) RETURNS zoneddatetime AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION cast_as_datetime_from_string(varchar) RETURNS zoneddatetime AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION cast_as_datetime_from_rdfbox(rdfbox) RETURNS zoneddatetime AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 
 -- cast as date
 CREATE FUNCTION cast_as_date_from_datetime(zoneddatetime) RETURNS zoneddate AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION cast_as_date_from_datetime(timestamptz,int4) RETURNS zoneddate AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION cast_as_date_from_string(varchar) RETURNS zoneddate AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION cast_as_date_from_rdfbox(rdfbox) RETURNS zoneddate AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 
@@ -110,7 +112,9 @@ CREATE FUNCTION cast_as_string_from_double(float8) RETURNS varchar AS 'MODULE_PA
 CREATE FUNCTION cast_as_string_from_integer(decimal) RETURNS varchar AS 'MODULE_PATHNAME','cast_as_rdfbox_from_decimal' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION cast_as_string_from_decimal(decimal) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION cast_as_string_from_datetime(zoneddatetime) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION cast_as_string_from_datetime(timestamptz,int4) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION cast_as_string_from_date(zoneddate) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION cast_as_string_from_date(date,int4) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION cast_as_string_from_daytimeduration(int8) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION cast_as_string_from_rdfbox(rdfbox) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 

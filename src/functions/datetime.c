@@ -9,6 +9,13 @@
 #include "rdfbox.h"
 
 
+#define PG_GETARG_DATETIME() (PG_NARGS() == 1 ? *PG_GETARG_ZONEDDATETIME_P(0) : \
+        (ZonedDateTime) { .value = PG_GETARG_TIMESTAMPTZ(0), .zone = PG_GETARG_INT32(1) })
+
+#define PG_GETARG_DATE() (PG_NARGS() == 1 ? PG_GETARG_ZONEDDATE(0) : \
+                    (ZonedDate) { .value = PG_GETARG_DATEADT(0), .zone = PG_GETARG_INT32(1) })
+
+
 static void datetime_decompose(ZonedDateTime *date, struct pg_tm *tm, fsec_t *fsec)
 {
     // the exception should be never thrown unless there is some bug in the code
@@ -65,10 +72,10 @@ static text *timezone_to_text(int64 zone)
 PG_FUNCTION_INFO_V1(year_datetime);
 Datum year_datetime(PG_FUNCTION_ARGS)
 {
-    ZonedDateTime *date = PG_GETARG_ZONEDDATETIME_P(0);
+    ZonedDateTime date = PG_GETARG_DATETIME();
     struct pg_tm tm;
     fsec_t fsec;
-    datetime_decompose(date, &tm, &fsec);
+    datetime_decompose(&date, &tm, &fsec);
     PG_RETURN_DATUM(DirectFunctionCall1(cast_as_decimal_from_int, Int32GetDatum(tm.tm_year)));
 }
 
@@ -76,7 +83,7 @@ Datum year_datetime(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(year_date);
 Datum year_date(PG_FUNCTION_ARGS)
 {
-    ZonedDate date = PG_GETARG_ZONEDDATE(0);
+    ZonedDate date = PG_GETARG_DATE();
     struct pg_tm tm;
     date_decompose(&date, &tm);
     PG_RETURN_DATUM(DirectFunctionCall1(cast_as_decimal_from_int, Int32GetDatum(tm.tm_year)));
@@ -112,10 +119,10 @@ Datum year_rdfbox(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(month_datetime);
 Datum month_datetime(PG_FUNCTION_ARGS)
 {
-    ZonedDateTime *date = PG_GETARG_ZONEDDATETIME_P(0);
+    ZonedDateTime date = PG_GETARG_DATETIME();
     struct pg_tm tm;
     fsec_t fsec;
-    datetime_decompose(date, &tm, &fsec);
+    datetime_decompose(&date, &tm, &fsec);
     PG_RETURN_DATUM(DirectFunctionCall1(cast_as_decimal_from_int, Int32GetDatum(tm.tm_mon)));
 }
 
@@ -123,7 +130,7 @@ Datum month_datetime(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(month_date);
 Datum month_date(PG_FUNCTION_ARGS)
 {
-    ZonedDate date = PG_GETARG_ZONEDDATE(0);
+    ZonedDate date = PG_GETARG_DATE();
     struct pg_tm tm;
     date_decompose(&date, &tm);
     PG_RETURN_DATUM(DirectFunctionCall1(cast_as_decimal_from_int, Int32GetDatum(tm.tm_mon)));
@@ -159,10 +166,10 @@ Datum month_rdfbox(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(day_datetime);
 Datum day_datetime(PG_FUNCTION_ARGS)
 {
-    ZonedDateTime *date = PG_GETARG_ZONEDDATETIME_P(0);
+    ZonedDateTime date = PG_GETARG_DATETIME();
     struct pg_tm tm;
     fsec_t fsec;
-    datetime_decompose(date, &tm, &fsec);
+    datetime_decompose(&date, &tm, &fsec);
     PG_RETURN_DATUM(DirectFunctionCall1(cast_as_decimal_from_int, Int32GetDatum(tm.tm_mday)));
 }
 
@@ -170,7 +177,7 @@ Datum day_datetime(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(day_date);
 Datum day_date(PG_FUNCTION_ARGS)
 {
-    ZonedDate date = PG_GETARG_ZONEDDATE(0);
+    ZonedDate date = PG_GETARG_DATE();
     struct pg_tm tm;
     date_decompose(&date, &tm);
     PG_RETURN_DATUM(DirectFunctionCall1(cast_as_decimal_from_int, Int32GetDatum(tm.tm_mday)));
@@ -206,10 +213,10 @@ Datum day_rdfbox(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(hours_datetime);
 Datum hours_datetime(PG_FUNCTION_ARGS)
 {
-    ZonedDateTime *date = PG_GETARG_ZONEDDATETIME_P(0);
+    ZonedDateTime date = PG_GETARG_DATETIME();
     struct pg_tm tm;
     fsec_t fsec;
-    datetime_decompose(date, &tm, &fsec);
+    datetime_decompose(&date, &tm, &fsec);
     PG_RETURN_DATUM(DirectFunctionCall1(cast_as_decimal_from_int, Int32GetDatum(tm.tm_hour)));
 }
 
@@ -235,10 +242,10 @@ Datum hours_rdfbox(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(minutes_datetime);
 Datum minutes_datetime(PG_FUNCTION_ARGS)
 {
-    ZonedDateTime *date = PG_GETARG_ZONEDDATETIME_P(0);
+    ZonedDateTime date = PG_GETARG_DATETIME();
     struct pg_tm tm;
     fsec_t fsec;
-    datetime_decompose(date, &tm, &fsec);
+    datetime_decompose(&date, &tm, &fsec);
     PG_RETURN_DATUM(DirectFunctionCall1(cast_as_decimal_from_int, Int32GetDatum(tm.tm_min)));
 }
 
@@ -264,10 +271,10 @@ Datum minutes_rdfbox(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(seconds_datetime);
 Datum seconds_datetime(PG_FUNCTION_ARGS)
 {
-    ZonedDateTime *date = PG_GETARG_ZONEDDATETIME_P(0);
+    ZonedDateTime date = PG_GETARG_DATETIME();
     struct pg_tm tm;
     fsec_t fsec;
-    datetime_decompose(date, &tm, &fsec);
+    datetime_decompose(&date, &tm, &fsec);
     PG_RETURN_DATUM(DirectFunctionCall1(cast_as_decimal_from_double, Float8GetDatum(tm.tm_sec + (double) fsec / USECS_PER_SEC)));
 }
 
@@ -293,19 +300,19 @@ Datum seconds_rdfbox(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(timezone_datetime);
 Datum timezone_datetime(PG_FUNCTION_ARGS)
 {
-    ZonedDateTime *date = PG_GETARG_ZONEDDATETIME_P(0);
+    ZonedDateTime date = PG_GETARG_DATETIME();
 
-    if(date->zone == ZONE_UNSPECIFIED)
+    if(date.zone == ZONE_UNSPECIFIED)
         PG_RETURN_NULL();
 
-    PG_RETURN_INT64((int64) date->zone * USECS_PER_SEC);
+    PG_RETURN_INT64((int64) date.zone * USECS_PER_SEC);
 }
 
 
 PG_FUNCTION_INFO_V1(timezone_date);
 Datum timezone_date(PG_FUNCTION_ARGS)
 {
-    ZonedDate date = PG_GETARG_ZONEDDATE(0);
+    ZonedDate date = PG_GETARG_DATE();
 
     if(date.zone == ZONE_UNSPECIFIED)
         PG_RETURN_NULL();
@@ -343,15 +350,15 @@ Datum timezone_rdfbox(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(tz_datetime);
 Datum tz_datetime(PG_FUNCTION_ARGS)
 {
-    ZonedDateTime *date = PG_GETARG_ZONEDDATETIME_P(0);
-    PG_RETURN_POINTER(timezone_to_text(date->zone));
+    ZonedDateTime date = PG_GETARG_DATETIME();
+    PG_RETURN_POINTER(timezone_to_text(date.zone));
 }
 
 
 PG_FUNCTION_INFO_V1(tz_date);
 Datum tz_date(PG_FUNCTION_ARGS)
 {
-    ZonedDate date = PG_GETARG_ZONEDDATE(0);
+    ZonedDate date = PG_GETARG_DATE();
     PG_RETURN_POINTER(timezone_to_text(date.zone));
 }
 

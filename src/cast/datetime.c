@@ -15,7 +15,8 @@
 PG_FUNCTION_INFO_V1(cast_as_datetime_from_date);
 Datum cast_as_datetime_from_date(PG_FUNCTION_ARGS)
 {
-    ZonedDate date = PG_GETARG_ZONEDDATE(0);
+    ZonedDate date = PG_NARGS() == 1 ? PG_GETARG_ZONEDDATE(0) :
+            (ZonedDate) { .value = PG_GETARG_DATEADT(0), .zone = PG_GETARG_INT32(1) };
 
     // err:FODT0001, Overflow/underflow in date/time operation
     if(date.value < MIN_TIMESTAMP / USECS_PER_DAY || date.value >= END_TIMESTAMP / USECS_PER_DAY)

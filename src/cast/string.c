@@ -90,8 +90,9 @@ Datum cast_as_string_from_decimal(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(cast_as_string_from_datetime);
 Datum cast_as_string_from_datetime(PG_FUNCTION_ARGS)
 {
-    ZonedDateTime *value = PG_GETARG_ZONEDDATETIME_P(0);
-    char *string = DatumGetCString(DirectFunctionCall1(zoneddatetime_output, ZonedDateTimeGetDatum(value)));
+    ZonedDateTime value = PG_NARGS() == 1 ? *PG_GETARG_ZONEDDATETIME_P(0) :
+            (ZonedDateTime) { .value = PG_GETARG_TIMESTAMPTZ(0), .zone = PG_GETARG_INT32(1) };
+    char *string = DatumGetCString(DirectFunctionCall1(zoneddatetime_output, ZonedDateTimeGetDatum(&value)));
     Datum result = CStringGetTextDatum(string);
     pfree(string);
     PG_RETURN_DATUM(result);
@@ -101,7 +102,8 @@ Datum cast_as_string_from_datetime(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(cast_as_string_from_date);
 Datum cast_as_string_from_date(PG_FUNCTION_ARGS)
 {
-    ZonedDate value = PG_GETARG_ZONEDDATE(0);
+    ZonedDate value = PG_NARGS() == 1 ? PG_GETARG_ZONEDDATE(0) :
+            (ZonedDate) { .value = PG_GETARG_DATEADT(0), .zone = PG_GETARG_INT32(1) };
     char *string = DatumGetCString(DirectFunctionCall1(zoneddate_output, ZonedDateGetDatum(value)));
     Datum result = CStringGetTextDatum(string);
     pfree(string);
