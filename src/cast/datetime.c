@@ -25,7 +25,7 @@ Datum cast_as_datetime_from_date(PG_FUNCTION_ARGS)
     TimestampTz value = (TimestampTz) date.value * USECS_PER_DAY;
 
     if(date.zone != ZONE_UNSPECIFIED)
-        value -= date.zone * USECS_PER_MINUTE;
+        value -= date.zone * USECS_PER_SEC;
 
     // err:FODT0001, Overflow/underflow in date/time operation
     if(!IS_VALID_TIMESTAMP(value))
