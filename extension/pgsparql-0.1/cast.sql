@@ -92,11 +92,19 @@ CREATE FUNCTION cast_as_datetime_from_date(date,int4) RETURNS zoneddatetime AS '
 CREATE FUNCTION cast_as_datetime_from_string(varchar) RETURNS zoneddatetime AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION cast_as_datetime_from_rdfbox(rdfbox) RETURNS zoneddatetime AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 
+-- cast as plain datetime (datetime without timezone)
+CREATE FUNCTION cast_as_plain_datetime_from_date(date,int4) RETURNS timestamptz AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION cast_as_plain_datetime_from_rdfbox(rdfbox) RETURNS timestamptz AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+
 -- cast as date
 CREATE FUNCTION cast_as_date_from_datetime(zoneddatetime) RETURNS zoneddate AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION cast_as_date_from_datetime(timestamptz,int4) RETURNS zoneddate AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION cast_as_date_from_string(varchar) RETURNS zoneddate AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION cast_as_date_from_rdfbox(rdfbox) RETURNS zoneddate AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+
+-- cast as plain date (date without timezone)
+CREATE FUNCTION cast_as_plain_date_from_datetime(timestamptz,int4) RETURNS date AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION cast_as_plain_date_from_rdfbox(rdfbox) RETURNS date AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 
 -- cast as daytimeduration
 CREATE FUNCTION cast_as_daytimeduration_from_string(varchar) RETURNS int8 AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;

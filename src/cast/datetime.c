@@ -39,6 +39,29 @@ Datum cast_as_datetime_from_date(PG_FUNCTION_ARGS)
 }
 
 
+PG_FUNCTION_INFO_V1(cast_as_plain_datetime_from_date);
+Datum cast_as_plain_datetime_from_date(PG_FUNCTION_ARGS)
+{
+    ZonedDate date = PG_NARGS() == 1 ? PG_GETARG_ZONEDDATE(0) :
+            (ZonedDate) { .value = PG_GETARG_DATEADT(0), .zone = PG_GETARG_INT32(1) };
+
+    // err:FODT0001, Overflow/underflow in date/time operation
+    if(date.value < MIN_TIMESTAMP / USECS_PER_DAY || date.value >= END_TIMESTAMP / USECS_PER_DAY)
+        PG_RETURN_NULL();
+
+    TimestampTz value = (TimestampTz) date.value * USECS_PER_DAY;
+
+    if(date.zone != ZONE_UNSPECIFIED)
+        value -= date.zone * USECS_PER_SEC;
+
+    // err:FODT0001, Overflow/underflow in date/time operation
+    if(!IS_VALID_TIMESTAMP(value))
+        PG_RETURN_NULL();
+
+    PG_RETURN_TIMESTAMPTZ(value);
+}
+
+
 PG_FUNCTION_INFO_V1(cast_as_datetime_from_string);
 Datum cast_as_datetime_from_string(PG_FUNCTION_ARGS)
 {
@@ -93,6 +116,36 @@ Datum cast_as_datetime_from_rdfbox(PG_FUNCTION_ARGS)
 
         case XSD_STRING:
             result = NullableFunctionCall1(cast_as_datetime_from_string, PointerGetDatum(((RdfBoxString *) box)->value));
+            break;
+
+        default:
+            result.isNull = true;
+            break;
+    }
+
+    PG_FREE_IF_COPY(box, 0);
+
+    if(result.isNull)
+        PG_RETURN_NULL();
+
+    PG_RETURN_DATUM(result.datum);
+}
+
+
+PG_FUNCTION_INFO_V1(cast_as_plain_datetime_from_rdfbox);
+Datum cast_as_plain_datetime_from_rdfbox(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    NullableDatum result = { .isNull = false };
+
+    switch(box->type)
+    {
+        case XSD_DATETIME:
+            result.datum = TimestampTzGetDatum(((RdfBoxDateTime *) box)->value.value);
+            break;
+
+        case XSD_DATE:
+            result = NullableFunctionCall1(cast_as_plain_datetime_from_date, ZonedDateGetDatum(((RdfBoxDate *) box)->value));
             break;
 
         default:
