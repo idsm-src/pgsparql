@@ -182,28 +182,6 @@ Datum cast_as_string_from_rdfbox(PG_FUNCTION_ARGS)
             break;
         }
 
-        case RDF_LANGSTRING:
-        {
-            VarChar *value = (VarChar *) ((RdfBoxLangString *) box)->value;
-            size_t length = VARSIZE(value);
-
-            VarChar *copy = palloc(length);
-            memcpy(copy, value, length);
-            result.datum = PointerGetDatum(copy);
-            break;
-        }
-
-        case TYPED_LITERAL:
-        {
-            VarChar *value = (VarChar *) ((RdfBoxTypedLiteral *) box)->value;
-            size_t length = VARSIZE(value);
-
-            VarChar *copy = palloc(length);
-            memcpy(copy, value, length);
-            result.datum = PointerGetDatum(copy);
-            break;
-        }
-
         case IRI:
         {
             VarChar *value = (VarChar *) ((RdfBoxIri *) box)->value;
