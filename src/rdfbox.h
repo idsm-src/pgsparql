@@ -156,7 +156,7 @@ typedef struct
 
 static inline bool rdfbox_is_numeric(RdfBox *rdfbox)
 {
-    return rdfbox->type >= XSD_SHORT && rdfbox->type <=  XSD_DECIMAL;
+    return rdfbox->type >= XSD_SHORT && rdfbox->type <=  XSD_DOUBLE;
 }
 
 
