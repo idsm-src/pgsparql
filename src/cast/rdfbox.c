@@ -5,6 +5,18 @@
 #include "xsd.h"
 #include "cast/cast.h"
 
+#define PCRE2_CODE_UNIT_WIDTH 8
+#include <pcre2.h>
+
+
+static pcre2_code *languageTagRegex = NULL;
+static pcre2_match_data *languageTagMatchData = NULL;
+static const char *languageTagPattern = "^(([A-Za-z]{2,3}(-[A-Za-z]{3}){0,3}|[A-Za-z]{4,8})"
+        "(-[A-Za-z]{4})?(-([A-Za-z]{2}|[0-9]{3}))?(-([A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*"
+        "(-[0-9A-WY-Za-wy-z](-[A-Za-z0-9]{2,8})+)*(-x(-[A-Za-z0-9]{1,8})+)?|x(-[A-Za-z0-9]{1,8})+"
+        "|i-ami|i-bnn|i-default|i-enochian|i-hak|i-klingon|i-lux|i-mingo|i-navajo|i-pwn"
+        "|i-tao|i-tay|i-tsu|sgn-BE-FR|sgn-BE-NL|sgn-CH-DE)$";
+
 
 PG_FUNCTION_INFO_V1(cast_as_rdfbox_from_boolean);
 Datum cast_as_rdfbox_from_boolean(PG_FUNCTION_ARGS)
@@ -186,6 +198,27 @@ Datum cast_as_rdfbox_from_lang_string(PG_FUNCTION_ARGS)
     VarChar *lang = PG_GETARG_VARCHAR_P(1);
     int32 valueSize = VARSIZE(value);
     int32 langSize = VARSIZE(lang);
+
+
+    int errornumber;
+    PCRE2_SIZE erroroffset;
+
+    if(languageTagRegex == NULL &&
+            (languageTagRegex = pcre2_compile(languageTagPattern, strlen(languageTagPattern), PCRE2_CASELESS, &errornumber, &erroroffset, NULL)) == NULL)
+        elog(ERROR, "cannot compile language tag pattern");
+
+    if(languageTagMatchData == NULL &&
+            (languageTagMatchData = pcre2_match_data_create_from_pattern(languageTagRegex, NULL)) == NULL)
+        elog(ERROR, "cannot create language tag match data");
+
+    int rc = pcre2_match(languageTagRegex, VARDATA(lang), langSize - VARHDRSZ, 0, 0, languageTagMatchData, NULL);
+
+    if(rc == PCRE2_ERROR_NOMATCH)
+        PG_RETURN_NULL();
+
+    if(rc < 0)
+        elog(ERROR, "language tag match failed");
+
 
     RdfBoxLangString *result = (RdfBoxLangString *) palloc0(sizeof(RdfBoxLangString) + valueSize + langSize);
     SET_VARSIZE(result, sizeof(RdfBoxLangString) + valueSize + langSize);
