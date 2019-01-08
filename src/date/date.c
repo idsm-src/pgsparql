@@ -232,6 +232,17 @@ static int64 get_time_value(ZonedDate arg)
 }
 
 
+PG_FUNCTION_INFO_V1(zoneddate_same);
+Datum zoneddate_same(PG_FUNCTION_ARGS)
+{
+    ZonedDate left = PG_GETARG_ZONEDDATE(0);
+    ZonedDate right = PG_GETARG_ZONEDDATE(1);
+
+    bool result = left.value == right.value && left.zone == right.zone;
+    PG_RETURN_BOOL(result);
+}
+
+
 PG_FUNCTION_INFO_V1(zoneddate_equal);
 Datum zoneddate_equal(PG_FUNCTION_ARGS)
 {
