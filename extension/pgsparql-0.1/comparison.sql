@@ -1,5 +1,5 @@
 -- equal
-CREATE FUNCTION equal_bool(bool,bool) RETURNS bool AS $$ select $1 = $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION equal_boolean(bool,bool) RETURNS bool AS $$ select $1 = $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION equal_short(int2,int2) RETURNS bool AS $$ select $1 = $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION equal_int(int4,int4) RETURNS bool AS $$ select $1 = $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION equal_long(int8,int8) RETURNS bool AS $$ select $1 = $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
@@ -21,7 +21,7 @@ CREATE FUNCTION equal_typed_literal(varchar,varchar,varchar,varchar) RETURNS boo
 CREATE FUNCTION equal_rdfbox(rdfbox,rdfbox) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 
 -- not equal
-CREATE FUNCTION not_equal_bool(bool,bool) RETURNS bool AS $$ select $1 != $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION not_equal_boolean(bool,bool) RETURNS bool AS $$ select $1 != $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION not_equal_short(int2,int2) RETURNS bool AS $$ select $1 != $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION not_equal_int(int4,int4) RETURNS bool AS $$ select $1 != $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION not_equal_long(int8,int8) RETURNS bool AS $$ select $1 != $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
@@ -43,7 +43,7 @@ CREATE FUNCTION not_equal_typed_literal(varchar,varchar,varchar,varchar) RETURNS
 CREATE FUNCTION not_equal_rdfbox(rdfbox,rdfbox) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 
 -- less than
-CREATE FUNCTION less_than_bool(bool,bool) RETURNS bool AS $$ select $1 < $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION less_than_boolean(bool,bool) RETURNS bool AS $$ select $1 < $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION less_than_short(int2,int2) RETURNS bool AS $$ select $1 < $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION less_than_int(int4,int4) RETURNS bool AS $$ select $1 < $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION less_than_long(int8,int8) RETURNS bool AS $$ select $1 < $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
@@ -60,7 +60,7 @@ CREATE FUNCTION less_than_string(varchar,varchar) RETURNS bool AS $$ select $1 <
 CREATE FUNCTION less_than_rdfbox(rdfbox,rdfbox) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 
 -- greater than
-CREATE FUNCTION greater_than_bool(bool,bool) RETURNS bool AS $$ select $1 > $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION greater_than_boolean(bool,bool) RETURNS bool AS $$ select $1 > $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION greater_than_short(int2,int2) RETURNS bool AS $$ select $1 > $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION greater_than_int(int4,int4) RETURNS bool AS $$ select $1 > $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION greater_than_long(int8,int8) RETURNS bool AS $$ select $1 > $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
@@ -77,7 +77,7 @@ CREATE FUNCTION greater_than_string(varchar,varchar) RETURNS bool AS $$ select $
 CREATE FUNCTION greater_than_rdfbox(rdfbox,rdfbox) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 
 -- not less than
-CREATE FUNCTION not_less_than_bool(bool,bool) RETURNS bool AS $$ select $1 >= $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION not_less_than_boolean(bool,bool) RETURNS bool AS $$ select $1 >= $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION not_less_than_short(int2,int2) RETURNS bool AS $$ select $1 >= $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION not_less_than_int(int4,int4) RETURNS bool AS $$ select $1 >= $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION not_less_than_long(int8,int8) RETURNS bool AS $$ select $1 >= $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
@@ -94,7 +94,7 @@ CREATE FUNCTION not_less_than_string(varchar,varchar) RETURNS bool AS $$ select 
 CREATE FUNCTION not_less_than_rdfbox(rdfbox,rdfbox) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 
 -- not greater than
-CREATE FUNCTION not_greater_than_bool(bool,bool) RETURNS bool AS $$ select $1 <= $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION not_greater_than_boolean(bool,bool) RETURNS bool AS $$ select $1 <= $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION not_greater_than_short(int2,int2) RETURNS bool AS $$ select $1 <= $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION not_greater_than_int(int4,int4) RETURNS bool AS $$ select $1 <= $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
 CREATE FUNCTION not_greater_than_long(int8,int8) RETURNS bool AS $$ select $1 <= $2; $$ LANGUAGE SQL IMMUTABLE STRICT;
