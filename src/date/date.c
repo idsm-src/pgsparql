@@ -11,7 +11,7 @@ static void read_input_digits(char **input, int requiredLength, bool exactLength
     char *str = *input;
 
     while(*str >= '0' && *str <= '9')
-        *str++;
+        str++;
 
     if(str - *input < requiredLength || exactLength && str - *input > requiredLength)
         ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed zoneddate literal")));
