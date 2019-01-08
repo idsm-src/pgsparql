@@ -280,6 +280,17 @@ static Timestamp get_time_value(ZonedDateTime *arg)
 }
 
 
+PG_FUNCTION_INFO_V1(zoneddatetime_same);
+Datum zoneddatetime_same(PG_FUNCTION_ARGS)
+{
+    ZonedDateTime *left = PG_GETARG_ZONEDDATETIME_P(0);
+    ZonedDateTime *right = PG_GETARG_ZONEDDATETIME_P(1);
+
+    bool result = left->value == right->value && left->zone == right->zone;
+    PG_RETURN_BOOL(result);
+}
+
+
 PG_FUNCTION_INFO_V1(zoneddatetime_equal);
 Datum zoneddatetime_equal(PG_FUNCTION_ARGS)
 {

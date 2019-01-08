@@ -15,6 +15,7 @@ CREATE FUNCTION zoneddatetime_create(timestamptz,int4) RETURNS zoneddatetime AS 
 CREATE FUNCTION zoneddatetime_datetime(zoneddatetime) RETURNS timestamptz AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION zoneddatetime_zone(zoneddatetime) RETURNS int4 AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 
+CREATE FUNCTION zoneddatetime_same(zoneddatetime,zoneddatetime) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION zoneddatetime_equal(zoneddatetime,zoneddatetime) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION zoneddatetime_not_equal(zoneddatetime,zoneddatetime) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION zoneddatetime_less_than(zoneddatetime,zoneddatetime) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
