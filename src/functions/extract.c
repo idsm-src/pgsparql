@@ -436,6 +436,27 @@ Datum rdfbox_extract_str_blanknode(PG_FUNCTION_ARGS)
 }
 
 
+PG_FUNCTION_INFO_V1(rdfbox_extract_string_literal);
+Datum rdfbox_extract_string_literal(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+
+    if(box->type != XSD_STRING && box->type != RDF_LANGSTRING)
+    {
+        PG_FREE_IF_COPY(box, 0);
+        PG_RETURN_NULL();
+    }
+
+    VarChar *value = (VarChar *) (box->type == XSD_STRING ? ((RdfBoxString *) box)->value : ((RdfBoxLangString *) box)->value);
+    size_t length = VARSIZE(value);
+    VarChar *result = palloc(length);
+    memcpy(result, value, length);
+
+    PG_FREE_IF_COPY(box, 0);
+    PG_RETURN_VARCHAR_P(result);
+}
+
+
 PG_FUNCTION_INFO_V1(rdfbox_extract_derivated_from_short);
 Datum rdfbox_extract_derivated_from_short(PG_FUNCTION_ARGS)
 {
