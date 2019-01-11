@@ -690,44 +690,42 @@ Datum concat_string_string(PG_FUNCTION_ARGS)
 }
 
 
-PG_FUNCTION_INFO_V1(concat_rdfbox_string);
-Datum concat_rdfbox_string(PG_FUNCTION_ARGS)
-{
-    RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    Datum append = PG_GETARG_DATUM(1);
-    NullableDatum result = { .isNull = true };
-
-    if(box->type == XSD_STRING || box->type == RDF_LANGSTRING)
-    {
-        VarChar *value = rdfbox_get_string(box);
-        VarChar *merged = (VarChar *) DatumGetPointer(DirectFunctionCall2(concat_string_string, PointerGetDatum(value), append));
-        result = varchar_translate_and_free(merged, rdfbox_get_lang(box));
-    }
-
-    PG_FREE_IF_COPY(box, 0);
-
-    if(result.isNull)
-        PG_RETURN_NULL();
-
-    PG_RETURN_DATUM(result.datum);
-}
-
-
 PG_FUNCTION_INFO_V1(concat_rdfbox_rdfbox);
 Datum concat_rdfbox_rdfbox(PG_FUNCTION_ARGS)
 {
-    RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    RdfBox *append = PG_GETARG_RDFBOX_P(1);
+    RdfBox *beginBox = PG_GETARG_RDFBOX_P(0);
+    RdfBox *endBox = PG_GETARG_RDFBOX_P(1);
     NullableDatum result = { .isNull = true };
 
-    if(rdfbox_are_strings_compatible(box, append))
+    if((beginBox->type == XSD_STRING || beginBox->type == RDF_LANGSTRING) && (endBox->type == XSD_STRING || endBox->type == RDF_LANGSTRING))
     {
-        VarChar *string = rdfbox_get_string(append);
-        result = NullableFunctionCall2(concat_rdfbox_string, RdfBoxGetDatum(box), PointerGetDatum(string));
+        VarChar *begin = rdfbox_get_string(beginBox);
+        VarChar *end = rdfbox_get_string(endBox);
+        VarChar *lang = NULL;
+
+        if(beginBox->type == RDF_LANGSTRING && endBox->type == RDF_LANGSTRING)
+        {
+            VarChar *beginLang = rdfbox_get_lang(beginBox);
+            VarChar *endLang = rdfbox_get_lang(endBox);
+
+            if(memcmp(beginLang, endLang, Min(VARSIZE(beginLang), VARSIZE(endLang))) == 0)
+                lang = beginLang;
+        }
+
+
+        int32 beginSize = VARSIZE(begin) - VARHDRSZ;
+        int32 endSize = VARSIZE(end) - VARHDRSZ;
+
+        VarChar *merged = (VarChar *) palloc(VARHDRSZ + beginSize + endSize);
+        SET_VARSIZE(merged, VARHDRSZ + beginSize + endSize);
+        memcpy(VARDATA(merged), VARDATA(begin), beginSize);
+        memcpy(VARDATA(merged) + beginSize, VARDATA(end), endSize);
+
+        result = varchar_translate_and_free(merged, lang);
     }
 
-    PG_FREE_IF_COPY(box, 0);
-    PG_FREE_IF_COPY(append, 1);
+    PG_FREE_IF_COPY(beginBox, 0);
+    PG_FREE_IF_COPY(endBox, 1);
 
     if(result.isNull)
         PG_RETURN_NULL();

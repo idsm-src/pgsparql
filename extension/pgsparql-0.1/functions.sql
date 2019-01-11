@@ -46,14 +46,15 @@ CREATE FUNCTION strafter_rdfbox_rdfbox(rdfbox,rdfbox) RETURNS rdfbox AS 'MODULE_
 CREATE FUNCTION encode_for_uri_string(varchar) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION encode_for_uri_rdfbox(rdfbox) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION concat_string_string(varchar,varchar) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
-CREATE FUNCTION concat_rdfbox_string(rdfbox,varchar) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION concat_rdfbox_rdfbox(rdfbox,rdfbox) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION langmatches_string_string(varchar,varchar) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION langmatches_rdfbox_rdfbox(rdfbox,rdfbox) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 
 -- functions using regular expressions
 CREATE FUNCTION regex_string(varchar,varchar,varchar='') RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION regex_rdfbox(rdfbox,varchar,varchar='') RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION replace_string(varchar,varchar,varchar,varchar='') RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION replace_rdfbox(rdfbox,varchar,varchar,varchar='') RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
 
 -- functions on numerics
 CREATE FUNCTION abs_float(float4) RETURNS float4 AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE STRICT;
