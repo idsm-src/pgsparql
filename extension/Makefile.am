@@ -13,7 +13,8 @@ SQLSOURCES = \
 		pgsparql-0.1/arithmetic.sql \
 		pgsparql-0.1/comparison.sql \
 		pgsparql-0.1/functions.sql \
-		pgsparql-0.1/extract.sql
+		pgsparql-0.1/extract.sql \
+		pgsparql-0.1/aggregate.sql
 
 EXTRA_DIST = $(SQLSOURCES)
 MOSTLYCLEANFILES = pgsparql--0.1.sql
