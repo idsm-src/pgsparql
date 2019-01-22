@@ -20,12 +20,12 @@ dnl Initialize Libtool
 LT_INIT
 
 dnl check for postgresql
-AX_LIB_POSTGRESQL(9.2.0)
+AX_LIB_POSTGRESQL(10.0.0)
 
 libdir=$POSTGRESQL_LIBDIR
 
 dnl check for pcre2
-PKG_CHECK_MODULES([PCRE2], [libpcre2-8 >= 10.22])
+PKG_CHECK_MODULES([PCRE2], [libpcre2-8 >= 10.30])
 
 AC_CONFIG_FILES(Makefile src/Makefile extension/Makefile)
 AC_OUTPUT
