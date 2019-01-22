@@ -22,8 +22,6 @@ LT_INIT
 dnl check for postgresql
 AX_LIB_POSTGRESQL(10.0.0)
 
-libdir=$POSTGRESQL_LIBDIR
-
 dnl check for pcre2
 PKG_CHECK_MODULES([PCRE2], [libpcre2-8 >= 10.30])
 

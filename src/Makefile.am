@@ -1,13 +1,7 @@
-#######################################
-# The list of libraries we are building seperated by spaces.
-# The 'lib_' indicates that these build products will be installed
-# in the $(libdir) directory. For example /usr/lib
-lib_LTLIBRARIES = libpgsparql.la
+pglibdir = $(POSTGRESQL_LIBDIR)
+pglib_LTLIBRARIES = libpgsparql.la
 
-#######################################
-# Build information for each library
 
-# Sources for pgsparql
 libpgsparql_la_SOURCES = \
 		call.h \
 		constants.c \
@@ -60,9 +54,6 @@ libpgsparql_la_SOURCES = \
 		functions/string.c \
 		logical/ebv.c
 
-# Linker options libTestProgram
-libpgsparql_la_LDFLAGS = $(PCRE2_LIBS)
 
-# Compiler options. Here we are adding the include directory
-# to be searched for headers included in the source code.
+libpgsparql_la_LDFLAGS = $(PCRE2_LIBS)
 libpgsparql_la_CPPFLAGS = $(POSTGRESQL_CPPFLAGS) $(PCRE2_CFLAGS)
