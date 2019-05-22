@@ -1,4 +1,4 @@
-CREATE FUNCTION aggregate_extract(anyarray) RETURNS anyelement AS $$ select $1[1]; $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION aggregate_extract(anyarray) RETURNS anyelement AS $$ select $1[1]; $$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE STRICT;
 
 
 -- sum aggregate
@@ -7,13 +7,13 @@ CREATE FUNCTION aggregate_sum(anyarray, anyelement) RETURNS anyarray AS $$
     select case when $1 is null or $2 is null then array[$2]
                 when $1[1] is null then $1
                 else array[$1[1]+$2] end;
-    $$ LANGUAGE SQL IMMUTABLE;
+    $$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE;
 
 CREATE FUNCTION aggregate_sum(rdfbox[], rdfbox) RETURNS rdfbox[] AS $$
     select case when $1 is null or $2 is null then array[$2]
                 when $1[1] is null then $1
                 else array[add_rdfbox($1[1],$2)] end;
-    $$ LANGUAGE SQL IMMUTABLE;
+    $$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE;
 
 CREATE AGGREGATE sum(anyelement) (
     stype = anyarray,
@@ -35,21 +35,21 @@ CREATE TYPE aggregate_avg_rdfbox AS (
     count integer
 );
 
-CREATE FUNCTION aggregate_avg_extract(anyarray) RETURNS anyelement AS $$ select $1[1]/$1[2]; $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION aggregate_avg_extract(anyarray) RETURNS anyelement AS $$ select $1[1]/$1[2]; $$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE STRICT;
 
-CREATE FUNCTION aggregate_avg_extract(aggregate_avg_rdfbox) RETURNS rdfbox AS $$ select div_rdfbox($1.value, sparql.cast_as_rdfbox_from_integer($1.count)); $$ LANGUAGE SQL IMMUTABLE STRICT;
+CREATE FUNCTION aggregate_avg_extract(aggregate_avg_rdfbox) RETURNS rdfbox AS $$ select div_rdfbox($1.value, sparql.cast_as_rdfbox_from_integer($1.count)); $$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE STRICT;
 
 CREATE FUNCTION aggregate_avg(anyarray, anyelement) RETURNS anyarray AS $$
     select case when $1 is null or $2 is null then array[$2,1]
                 when $1[1] is null then $1
                 else array[$1[1]+$2,$1[2]+1] end;
-    $$ LANGUAGE SQL IMMUTABLE;
+    $$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE;
 
 CREATE FUNCTION aggregate_avg(aggregate_avg_rdfbox, rdfbox) RETURNS aggregate_avg_rdfbox AS $$
     select case when $1 is null or $2 is null then row($2,1)::aggregate_avg_rdfbox
                 when $1.value is null then $1
                 else row(add_rdfbox($1.value, $2), $1.count + 1)::aggregate_avg_rdfbox end;
-    $$ LANGUAGE SQL IMMUTABLE;
+    $$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE;
 
 CREATE AGGREGATE avg(anyelement) (
     stype = anyarray,
@@ -69,7 +69,7 @@ CREATE AGGREGATE avg(rdfbox) (
 CREATE FUNCTION aggregate_min(anyarray, anyelement) RETURNS anyarray AS $$
     select case when $1 is null or $2 is null or $2 < $1[1] then array[$2]
                 else $1 end;
-    $$ LANGUAGE SQL IMMUTABLE;
+    $$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE;
 
 CREATE AGGREGATE min(anyelement) (
     stype = anyarray,
@@ -83,7 +83,7 @@ CREATE AGGREGATE min(anyelement) (
 CREATE FUNCTION max_aggregate(anyarray, anyelement) RETURNS anyarray AS $$
     select case when $1 is null or $2 is null or $1[1] < $2 then array[$2]
                 else $1 end;
-    $$ LANGUAGE SQL IMMUTABLE;
+    $$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE;
 
 CREATE AGGREGATE max(anyelement) (
     stype = anyarray,
@@ -97,7 +97,7 @@ CREATE AGGREGATE max(anyelement) (
 CREATE FUNCTION aggregate_sample(anyarray, anyelement) RETURNS anyarray AS $$
     select case when $1 is null or $2 is null then array[$2]
                 else $1 end;
-    $$ LANGUAGE SQL IMMUTABLE;
+    $$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE;
 
 CREATE AGGREGATE sample(anyelement) (
     stype = anyarray,
@@ -112,7 +112,7 @@ CREATE FUNCTION aggregate_group_concat(varchar[], varchar, varchar) RETURNS varc
     select case when $1 is null or $2 is null then array[$2]
                 when $1[1] is null then $1
                 else array[concat($1[1],$3,$2)::varchar] end;
-    $$ LANGUAGE SQL IMMUTABLE;
+    $$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE;
 
 CREATE AGGREGATE group_concat(varchar, varchar) (
     stype = varchar[],
