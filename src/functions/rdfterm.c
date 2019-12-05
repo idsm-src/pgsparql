@@ -546,3 +546,11 @@ Datum iri_rdfbox(PG_FUNCTION_ARGS)
 
     PG_RETURN_DATUM(result);
 }
+
+
+PG_FUNCTION_INFO_V1(bnode);
+Datum bnode(PG_FUNCTION_ARGS)
+{
+    static int32 bnode_id = 0;
+    PG_RETURN_INT32(bnode_id++);
+}
