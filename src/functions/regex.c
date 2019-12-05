@@ -89,7 +89,7 @@ static __attribute__((destructor)) void destroy_contexts()
 static bool parse_flags(VarChar *flags, uint32_t *options)
 {
     char *data = VARDATA(flags);
-    *options = 0;
+    *options = PCRE2_UTF;
 
     for(int i = 0; i < VARSIZE(flags) - VARHDRSZ; i++)
     {
