@@ -501,17 +501,31 @@ PG_FUNCTION_INFO_V1(strbefore_rdfbox_string);
 Datum strbefore_rdfbox_string(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    Datum searched = PG_GETARG_DATUM(1);
+    VarChar *searched = PG_GETARG_VARCHAR_P(1);
     NullableDatum result = { .isNull = true };
 
     if(box->type == XSD_STRING || box->type == RDF_LANGSTRING)
     {
         VarChar *value = rdfbox_get_string(box);
-        VarChar *substr = (VarChar *) DatumGetPointer(DirectFunctionCall2(strbefore_string_string, PointerGetDatum(value), searched));
-        result = varchar_translate_and_free(substr, rdfbox_get_lang(box));
+        VarChar *lang = rdfbox_get_lang(box);
+
+        int32 length = varchar_contains(value, searched);
+
+        if(length == -1)
+        {
+            length = 0;
+            lang = NULL;
+        }
+
+        VarChar *substr = (VarChar *) palloc(VARHDRSZ + length);
+        SET_VARSIZE(substr, VARHDRSZ + length);
+        memcpy(VARDATA(substr), VARDATA(value), length);
+
+        result = varchar_translate_and_free(substr, lang);
     }
 
     PG_FREE_IF_COPY(box, 0);
+    PG_FREE_IF_COPY(searched, 1);
 
     if(result.isNull)
         PG_RETURN_NULL();
@@ -568,17 +582,30 @@ PG_FUNCTION_INFO_V1(strafter_rdfbox_string);
 Datum strafter_rdfbox_string(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    Datum searched = PG_GETARG_DATUM(1);
+    VarChar *searched = PG_GETARG_VARCHAR_P(1);
     NullableDatum result = { .isNull = true };
 
     if(box->type == XSD_STRING || box->type == RDF_LANGSTRING)
     {
         VarChar *value = rdfbox_get_string(box);
-        VarChar *substr = (VarChar *) DatumGetPointer(DirectFunctionCall2(strafter_string_string, PointerGetDatum(value), searched));
-        result = varchar_translate_and_free(substr, rdfbox_get_lang(box));
+        VarChar *lang = rdfbox_get_lang(box);
+
+        int32 pos = varchar_contains(value, searched);
+        int32 start = pos + VARSIZE(searched) - VARHDRSZ;
+        int32 length = pos != -1 ? VARSIZE(value) - VARHDRSZ - start : 0;
+
+        if(pos == -1)
+            lang = NULL;
+
+        VarChar *substr = (VarChar *) palloc(VARHDRSZ + length);
+        SET_VARSIZE(substr, VARHDRSZ + length);
+        memcpy(VARDATA(substr), VARDATA(value) + start, length);
+
+        result = varchar_translate_and_free(substr, lang);
     }
 
     PG_FREE_IF_COPY(box, 0);
+    PG_FREE_IF_COPY(searched, 1);
 
     if(result.isNull)
         PG_RETURN_NULL();
