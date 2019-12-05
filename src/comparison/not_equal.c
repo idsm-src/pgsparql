@@ -113,7 +113,7 @@ Datum not_equal_rdfbox(PG_FUNCTION_ARGS)
     }
     else
     {
-        result = BoolGetDatum(false);
+        result = BoolGetDatum(true);
     }
 
     PG_FREE_IF_COPY(left, 0);
