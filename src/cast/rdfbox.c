@@ -355,7 +355,12 @@ Datum cast_as_rdfbox_from_int_blanknode(PG_FUNCTION_ARGS)
     RdfBoxBlankNodeInt *result = (RdfBoxBlankNodeInt *) palloc0(sizeof(RdfBoxBlankNodeInt));
     SET_VARSIZE(result, sizeof(RdfBoxBlankNodeInt));
     result->header.type = BLANKNODE_INT;
-    result->value = PG_GETARG_INT64(0);
+
+    if(PG_NARGS() == 1)
+        result->value = PG_GETARG_INT64(0);
+    else
+        result->value = ((int64) PG_GETARG_INT32(0)) << 32 | PG_GETARG_INT32(1);
+
     PG_RETURN_RDFBOX_P(result);
 }
 
@@ -363,14 +368,31 @@ Datum cast_as_rdfbox_from_int_blanknode(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(cast_as_rdfbox_from_str_blanknode);
 Datum cast_as_rdfbox_from_str_blanknode(PG_FUNCTION_ARGS)
 {
-    VarChar *value = PG_GETARG_VARCHAR_P(0);
+    VarChar *value = PG_GETARG_VARCHAR_P(PG_NARGS() == 1 ? 0 : 1);
+    int32 reserved = PG_NARGS() == 1 ? 0 : 8;
     int32 size = VARSIZE(value);
 
-    RdfBoxBlankNodeStr *result = (RdfBoxBlankNodeStr *) palloc0(sizeof(RdfBoxBlankNodeStr) + size);
-    SET_VARSIZE(result, sizeof(RdfBoxBlankNodeStr) + size);
-    result->header.type = BLANKNODE_STR;
-    memcpy(result->value, value, size);
+    if(PG_NARGS() == 1)
+    {
+        if(size < VARHDRSZ + 8)
+            ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed string blank node")));
 
-    PG_FREE_IF_COPY(value, 0);
+        for(int i = 0; i < 8; i++)
+            if((VARDATA(value)[i] < '0' || VARDATA(value)[i] > '9') && (VARDATA(value)[i] < 'a' || VARDATA(value)[i] > 'f'))
+                ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed string blank node")));
+    }
+
+    RdfBoxBlankNodeStr *result = (RdfBoxBlankNodeStr *) palloc0(sizeof(RdfBoxBlankNodeStr) + size + reserved);
+    SET_VARSIZE(result, sizeof(RdfBoxBlankNodeStr) + size + reserved);
+    result->header.type = BLANKNODE_STR;
+
+    SET_VARSIZE(result->value, size + reserved);
+
+    if(PG_NARGS() != 1)
+        sprintf(result->value + VARHDRSZ, "%08x", PG_GETARG_INT32(0));
+
+    memcpy(result->value + VARHDRSZ + reserved, VARDATA(value), size - VARHDRSZ);
+
+    PG_FREE_IF_COPY(value, PG_NARGS() == 1 ? 0 : 1);
     PG_RETURN_RDFBOX_P(result);
 }

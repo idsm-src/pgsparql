@@ -415,6 +415,40 @@ Datum rdfbox_extract_int_blanknode(PG_FUNCTION_ARGS)
 }
 
 
+PG_FUNCTION_INFO_V1(rdfbox_extract_int_blanknode_segment);
+Datum rdfbox_extract_int_blanknode_segment(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+
+    if(box->type != BLANKNODE_INT)
+    {
+        PG_FREE_IF_COPY(box, 0);
+        PG_RETURN_NULL();
+    }
+
+    int32 result = ((RdfBoxBlankNodeInt *) box)->value >> 32;
+    PG_FREE_IF_COPY(box, 0);
+    PG_RETURN_INT32(result);
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_extract_int_blanknode_label);
+Datum rdfbox_extract_int_blanknode_label(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+
+    if(box->type != BLANKNODE_INT)
+    {
+        PG_FREE_IF_COPY(box, 0);
+        PG_RETURN_NULL();
+    }
+
+    int32 result = ((RdfBoxBlankNodeInt *) box)->value;
+    PG_FREE_IF_COPY(box, 0);
+    PG_RETURN_INT32(result);
+}
+
+
 PG_FUNCTION_INFO_V1(rdfbox_extract_str_blanknode);
 Datum rdfbox_extract_str_blanknode(PG_FUNCTION_ARGS)
 {
@@ -430,6 +464,51 @@ Datum rdfbox_extract_str_blanknode(PG_FUNCTION_ARGS)
     size_t length = VARSIZE(value);
     VarChar *result = palloc(length);
     memcpy(result, value, length);
+
+    PG_FREE_IF_COPY(box, 0);
+    PG_RETURN_VARCHAR_P(result);
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_extract_str_blanknode_segment);
+Datum rdfbox_extract_str_blanknode_segment(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+
+    if(box->type != BLANKNODE_STR)
+    {
+        PG_FREE_IF_COPY(box, 0);
+        PG_RETURN_NULL();
+    }
+
+    VarChar *value = (VarChar *) ((RdfBoxBlankNodeStr *) box)->value;
+
+    char segment[9];
+    memcpy(segment, VARDATA(value), 8);
+    segment[8] = '\0';
+    int32 result = strtol(segment, NULL, 16);
+
+    PG_FREE_IF_COPY(box, 0);
+    PG_RETURN_INT32(result);
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_extract_str_blanknode_label);
+Datum rdfbox_extract_str_blanknode_label(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+
+    if(box->type != BLANKNODE_STR)
+    {
+        PG_FREE_IF_COPY(box, 0);
+        PG_RETURN_NULL();
+    }
+
+    VarChar *value = (VarChar *) ((RdfBoxBlankNodeStr *) box)->value;
+    size_t length = VARSIZE(value) - 8;
+    VarChar *result = palloc(length);
+    SET_VARSIZE(result, length);
+    memcpy(VARDATA(result), VARDATA(value) + 8, length - VARHDRSZ);
 
     PG_FREE_IF_COPY(box, 0);
     PG_RETURN_VARCHAR_P(result);

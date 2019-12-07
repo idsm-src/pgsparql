@@ -5,6 +5,7 @@ dist_extension_DATA = \
 
 SQLSOURCES = \
 		pgsparql-0.1/header.sql \
+		pgsparql-0.1/blanknode.sql \
 		pgsparql-0.1/zoneddate.sql \
 		pgsparql-0.1/zoneddatetime.sql \
 		pgsparql-0.1/rdfbox.sql \
