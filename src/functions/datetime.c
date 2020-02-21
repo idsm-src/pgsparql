@@ -94,7 +94,7 @@ PG_FUNCTION_INFO_V1(year_rdfbox);
 Datum year_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    NullableDatum result = { .isNull = true };
+    NullableDatum result = { .isnull = true };
 
     switch(box->type)
     {
@@ -109,10 +109,10 @@ Datum year_rdfbox(PG_FUNCTION_ARGS)
 
     PG_FREE_IF_COPY(box, 0);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -141,7 +141,7 @@ PG_FUNCTION_INFO_V1(month_rdfbox);
 Datum month_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    NullableDatum result = { .isNull = true };
+    NullableDatum result = { .isnull = true };
 
     switch(box->type)
     {
@@ -156,10 +156,10 @@ Datum month_rdfbox(PG_FUNCTION_ARGS)
 
     PG_FREE_IF_COPY(box, 0);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -188,7 +188,7 @@ PG_FUNCTION_INFO_V1(day_rdfbox);
 Datum day_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    NullableDatum result = { .isNull = true };
+    NullableDatum result = { .isnull = true };
 
     switch(box->type)
     {
@@ -203,10 +203,10 @@ Datum day_rdfbox(PG_FUNCTION_ARGS)
 
     PG_FREE_IF_COPY(box, 0);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -225,17 +225,17 @@ PG_FUNCTION_INFO_V1(hours_rdfbox);
 Datum hours_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    NullableDatum result = { .isNull = true };
+    NullableDatum result = { .isnull = true };
 
     if(box->type == XSD_DATETIME)
         result = NullableFunctionCall1(hours_datetime, ZonedDateTimeGetDatum(&((RdfBoxDateTime *) box)->value));
 
     PG_FREE_IF_COPY(box, 0);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -254,17 +254,17 @@ PG_FUNCTION_INFO_V1(minutes_rdfbox);
 Datum minutes_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    NullableDatum result = { .isNull = true };
+    NullableDatum result = { .isnull = true };
 
     if(box->type == XSD_DATETIME)
         result = NullableFunctionCall1(minutes_datetime, ZonedDateTimeGetDatum(&((RdfBoxDateTime *) box)->value));
 
     PG_FREE_IF_COPY(box, 0);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -283,17 +283,17 @@ PG_FUNCTION_INFO_V1(seconds_rdfbox);
 Datum seconds_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    NullableDatum result = { .isNull = true };
+    NullableDatum result = { .isnull = true };
 
     if(box->type == XSD_DATETIME)
         result = NullableFunctionCall1(seconds_datetime, ZonedDateTimeGetDatum(&((RdfBoxDateTime *) box)->value));
 
     PG_FREE_IF_COPY(box, 0);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -325,7 +325,7 @@ PG_FUNCTION_INFO_V1(timezone_rdfbox);
 Datum timezone_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    NullableDatum result = { .isNull = true };
+    NullableDatum result = { .isnull = true };
 
     switch(box->type)
     {
@@ -340,10 +340,10 @@ Datum timezone_rdfbox(PG_FUNCTION_ARGS)
 
     PG_FREE_IF_COPY(box, 0);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -367,7 +367,7 @@ PG_FUNCTION_INFO_V1(tz_rdfbox);
 Datum tz_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    NullableDatum result = { .isNull = true };
+    NullableDatum result = { .isnull = true };
 
     switch(box->type)
     {
@@ -382,8 +382,8 @@ Datum tz_rdfbox(PG_FUNCTION_ARGS)
 
     PG_FREE_IF_COPY(box, 0);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }

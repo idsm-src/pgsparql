@@ -67,7 +67,7 @@ PG_FUNCTION_INFO_V1(str_rdfbox);
 Datum str_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    NullableDatum result = { .isNull = false };
+    NullableDatum result = { .isnull = false };
 
     switch(box->type)
     {
@@ -119,7 +119,7 @@ Datum str_rdfbox(PG_FUNCTION_ARGS)
 
             VarChar *copy = palloc(length);
             memcpy(copy, value, length);
-            result.datum = PointerGetDatum(copy);
+            result.value = PointerGetDatum(copy);
             break;
         }
 
@@ -130,7 +130,7 @@ Datum str_rdfbox(PG_FUNCTION_ARGS)
 
             VarChar *copy = palloc(length);
             memcpy(copy, value, length);
-            result.datum = PointerGetDatum(copy);
+            result.value = PointerGetDatum(copy);
             break;
         }
 
@@ -141,7 +141,7 @@ Datum str_rdfbox(PG_FUNCTION_ARGS)
 
             VarChar *copy = palloc(length);
             memcpy(copy, value, length);
-            result.datum = PointerGetDatum(copy);
+            result.value = PointerGetDatum(copy);
             break;
         }
 
@@ -152,21 +152,21 @@ Datum str_rdfbox(PG_FUNCTION_ARGS)
 
             VarChar *copy = palloc(length);
             memcpy(copy, value, length);
-            result.datum = PointerGetDatum(copy);
+            result.value = PointerGetDatum(copy);
             break;
         }
 
         default:
-            result.isNull = true;
+            result.isnull = true;
             break;
     }
 
     PG_FREE_IF_COPY(box, 0);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -176,7 +176,7 @@ Datum lang_rdfbox(PG_FUNCTION_ARGS)
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
 
     Datum result;
-    bool isNull = false;
+    bool isnull = false;
 
     if(box->type == RDF_LANGSTRING)
     {
@@ -196,12 +196,12 @@ Datum lang_rdfbox(PG_FUNCTION_ARGS)
     }
     else
     {
-        isNull = true;
+        isnull = true;
     }
 
     PG_FREE_IF_COPY(box, 0);
 
-    if(isNull)
+    if(isnull)
         PG_RETURN_NULL();
 
     PG_RETURN_DATUM(result);
@@ -214,7 +214,7 @@ Datum datatype_rdfbox(PG_FUNCTION_ARGS)
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
 
     Datum result;
-    bool isNull = false;
+    bool isnull = false;
 
     if(box->type == TYPED_LITERAL)
     {
@@ -232,12 +232,12 @@ Datum datatype_rdfbox(PG_FUNCTION_ARGS)
     }
     else
     {
-        isNull = true;
+        isnull = true;
     }
 
     PG_FREE_IF_COPY(box, 0);
 
-    if(isNull)
+    if(isnull)
         PG_RETURN_NULL();
 
     PG_RETURN_DATUM(result);
@@ -511,7 +511,7 @@ Datum iri_rdfbox(PG_FUNCTION_ARGS)
     text *base = PG_GETARG_TEXT_P(0);
     RdfBox *box = PG_GETARG_RDFBOX_P(1);
 
-    bool isNull = false;
+    bool isnull = false;
     Datum result;
 
     switch(box->type)
@@ -535,13 +535,13 @@ Datum iri_rdfbox(PG_FUNCTION_ARGS)
         }
 
         default:
-            isNull = true;
+            isnull = true;
     }
 
     PG_FREE_IF_COPY(base, 0);
     PG_FREE_IF_COPY(box, 1);
 
-    if(isNull)
+    if(isnull)
         PG_RETURN_NULL();
 
     PG_RETURN_DATUM(result);

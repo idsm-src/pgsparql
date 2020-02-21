@@ -243,87 +243,87 @@ Datum cast_as_rdfbox_from_typed_literal(PG_FUNCTION_ARGS)
     {
         NullableDatum retval = NullableFunctionCall1(cast_as_boolean_from_string, PointerGetDatum(value));
 
-        if(retval.isNull == false)
-            result = DatumGetRdfBox(DirectFunctionCall1(cast_as_rdfbox_from_boolean, retval.datum));
+        if(retval.isnull == false)
+            result = DatumGetRdfBox(DirectFunctionCall1(cast_as_rdfbox_from_boolean, retval.value));
     }
     else if(strncmp(XSD_SHORT_IRI, VARDATA(type), VARSIZE(type)) == 0)
     {
         NullableDatum retval = NullableFunctionCall1(cast_as_short_from_string, PointerGetDatum(value));
 
-        if(retval.isNull == false)
-            result = DatumGetRdfBox(DirectFunctionCall1(cast_as_rdfbox_from_short, retval.datum));
+        if(retval.isnull == false)
+            result = DatumGetRdfBox(DirectFunctionCall1(cast_as_rdfbox_from_short, retval.value));
     }
     else if(strncmp(XSD_INT_IRI, VARDATA(type), VARSIZE(type)) == 0)
     {
         NullableDatum retval = NullableFunctionCall1(cast_as_int_from_string, PointerGetDatum(value));
 
-        if(retval.isNull == false)
-            result = DatumGetRdfBox(DirectFunctionCall1(cast_as_rdfbox_from_int, retval.datum));
+        if(retval.isnull == false)
+            result = DatumGetRdfBox(DirectFunctionCall1(cast_as_rdfbox_from_int, retval.value));
     }
     else if(strncmp(XSD_LONG_IRI, VARDATA(type), VARSIZE(type)) == 0)
     {
         NullableDatum retval = NullableFunctionCall1(cast_as_long_from_string, PointerGetDatum(value));
 
-        if(retval.isNull == false)
-            result = DatumGetRdfBox(DirectFunctionCall1(cast_as_rdfbox_from_long, retval.datum));
+        if(retval.isnull == false)
+            result = DatumGetRdfBox(DirectFunctionCall1(cast_as_rdfbox_from_long, retval.value));
     }
     else if(strncmp(XSD_FLOAT_IRI, VARDATA(type), VARSIZE(type)) == 0)
     {
         NullableDatum retval = NullableFunctionCall1(cast_as_float_from_string, PointerGetDatum(value));
 
-        if(retval.isNull == false)
-            result = DatumGetRdfBox(DirectFunctionCall1(cast_as_rdfbox_from_float, retval.datum));
+        if(retval.isnull == false)
+            result = DatumGetRdfBox(DirectFunctionCall1(cast_as_rdfbox_from_float, retval.value));
     }
     else if(strncmp(XSD_DOUBLE_IRI, VARDATA(type), VARSIZE(type)) == 0)
     {
         NullableDatum retval = NullableFunctionCall1(cast_as_double_from_string, PointerGetDatum(value));
 
-        if(retval.isNull == false)
-            result = DatumGetRdfBox(DirectFunctionCall1(cast_as_rdfbox_from_double, retval.datum));
+        if(retval.isnull == false)
+            result = DatumGetRdfBox(DirectFunctionCall1(cast_as_rdfbox_from_double, retval.value));
     }
     else if(strncmp(XSD_INTEGER_IRI, VARDATA(type), VARSIZE(type)) == 0)
     {
         NullableDatum retval = NullableFunctionCall1(cast_as_integer_from_string, PointerGetDatum(value));
 
-        if(retval.isNull == false)
+        if(retval.isnull == false)
         {
-            result = DatumGetRdfBox(DirectFunctionCall1(cast_as_rdfbox_from_integer, retval.datum));
-            pfree(DatumGetNumeric(retval.datum));
+            result = DatumGetRdfBox(DirectFunctionCall1(cast_as_rdfbox_from_integer, retval.value));
+            pfree(DatumGetNumeric(retval.value));
         }
     }
     else if(strncmp(XSD_DECIMAL_IRI, VARDATA(type), VARSIZE(type)) == 0)
     {
         NullableDatum retval = NullableFunctionCall1(cast_as_decimal_from_string, PointerGetDatum(value));
 
-        if(retval.isNull == false)
+        if(retval.isnull == false)
         {
-            result = DatumGetRdfBox(DirectFunctionCall1(cast_as_rdfbox_from_decimal, retval.datum));
-            pfree(DatumGetNumeric(retval.datum));
+            result = DatumGetRdfBox(DirectFunctionCall1(cast_as_rdfbox_from_decimal, retval.value));
+            pfree(DatumGetNumeric(retval.value));
         }
     }
     else if(strncmp(XSD_DATETIME_IRI, VARDATA(type), VARSIZE(type)) == 0)
     {
         NullableDatum retval = NullableFunctionCall1(cast_as_datetime_from_string, PointerGetDatum(value));
 
-        if(retval.isNull == false)
+        if(retval.isnull == false)
         {
-            result = DatumGetRdfBox(DirectFunctionCall1(cast_as_rdfbox_from_datetime, retval.datum));
-            pfree(DatumGetZonedDateTime(retval.datum));
+            result = DatumGetRdfBox(DirectFunctionCall1(cast_as_rdfbox_from_datetime, retval.value));
+            pfree(DatumGetZonedDateTime(retval.value));
         }
     }
     else if(strncmp(XSD_DATE_IRI, VARDATA(type), VARSIZE(type)) == 0)
     {
         NullableDatum retval = NullableFunctionCall1(cast_as_date_from_string, PointerGetDatum(value));
 
-        if(retval.isNull == false)
-            result = DatumGetRdfBox(DirectFunctionCall1(cast_as_rdfbox_from_date, retval.datum));
+        if(retval.isnull == false)
+            result = DatumGetRdfBox(DirectFunctionCall1(cast_as_rdfbox_from_date, retval.value));
     }
     else if(strncmp(XSD_DAYTIMEDURATION_IRI, VARDATA(type), VARSIZE(type)) == 0)
     {
         NullableDatum retval = NullableFunctionCall1(cast_as_daytimeduration_from_string, PointerGetDatum(value));
 
-        if(retval.isNull == false)
-            result = DatumGetRdfBox(DirectFunctionCall1(cast_as_rdfbox_from_daytimeduration, retval.datum));
+        if(retval.isnull == false)
+            result = DatumGetRdfBox(DirectFunctionCall1(cast_as_rdfbox_from_daytimeduration, retval.value));
     }
     else if(strncmp(XSD_STRING_IRI, VARDATA(type), VARSIZE(type)) == 0)
     {

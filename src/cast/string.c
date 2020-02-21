@@ -126,7 +126,7 @@ PG_FUNCTION_INFO_V1(cast_as_string_from_rdfbox);
 Datum cast_as_string_from_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    NullableDatum result = { .isNull = false };
+    NullableDatum result = { .isnull = false };
 
     switch(box->type)
     {
@@ -178,7 +178,7 @@ Datum cast_as_string_from_rdfbox(PG_FUNCTION_ARGS)
 
             VarChar *copy = palloc(length);
             memcpy(copy, value, length);
-            result.datum = PointerGetDatum(copy);
+            result.value = PointerGetDatum(copy);
             break;
         }
 
@@ -189,19 +189,19 @@ Datum cast_as_string_from_rdfbox(PG_FUNCTION_ARGS)
 
             VarChar *copy = palloc(length);
             memcpy(copy, value, length);
-            result.datum = PointerGetDatum(copy);
+            result.value = PointerGetDatum(copy);
             break;
         }
 
         default:
-            result.isNull = true;
+            result.isnull = true;
             break;
     }
 
     PG_FREE_IF_COPY(box, 0);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }

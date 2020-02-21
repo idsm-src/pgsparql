@@ -100,12 +100,12 @@ PG_FUNCTION_INFO_V1(cast_as_boolean_from_rdfbox);
 Datum cast_as_boolean_from_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    NullableDatum result = { .isNull = false };
+    NullableDatum result = { .isnull = false };
 
     switch(box->type)
     {
         case XSD_BOOLEAN:
-            result.datum = BoolGetDatum(((RdfBoxBoolean *) box)->value);
+            result.value = BoolGetDatum(((RdfBoxBoolean *) box)->value);
             break;
 
         case XSD_SHORT:
@@ -138,14 +138,14 @@ Datum cast_as_boolean_from_rdfbox(PG_FUNCTION_ARGS)
             break;
 
         default:
-            result.isNull = true;
+            result.isnull = true;
             break;
     }
 
     PG_FREE_IF_COPY(box, 0);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }

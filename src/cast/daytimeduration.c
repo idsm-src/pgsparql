@@ -13,7 +13,7 @@ PG_FUNCTION_INFO_V1(cast_as_daytimeduration_from_string);
 Datum cast_as_daytimeduration_from_string(PG_FUNCTION_ARGS)
 {
     text *value = PG_GETARG_TEXT_P(0);
-    bool isNull = false;
+    bool isnull = false;
     Datum result;
 
     char *cstring = text_to_cstring(value);
@@ -27,14 +27,14 @@ Datum cast_as_daytimeduration_from_string(PG_FUNCTION_ARGS)
         if(sqlerrcode != ERRCODE_INVALID_TEXT_REPRESENTATION && sqlerrcode != ERRCODE_DATETIME_VALUE_OUT_OF_RANGE)
             PG_RE_THROW_EX();
 
-        isNull = true;
+        isnull = true;
     }
     PG_END_TRY_EX();
 
     pfree(cstring);
     PG_FREE_IF_COPY(value, 0);
 
-    if(isNull)
+    if(isnull)
         PG_RETURN_NULL();
 
     PG_RETURN_DATUM(result);
@@ -45,12 +45,12 @@ PG_FUNCTION_INFO_V1(cast_as_daytimeduration_from_rdfbox);
 Datum cast_as_daytimeduration_from_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    NullableDatum result = { .isNull = false };
+    NullableDatum result = { .isnull = false };
 
     switch(box->type)
     {
         case XSD_DAYTIMEDURATION:
-            result.datum = Int64GetDatum(((RdfBoxDayTimeDuration *) box)->value);
+            result.value = Int64GetDatum(((RdfBoxDayTimeDuration *) box)->value);
             break;
 
         case XSD_STRING:
@@ -58,14 +58,14 @@ Datum cast_as_daytimeduration_from_rdfbox(PG_FUNCTION_ARGS)
             break;
 
         default:
-            result.isNull = true;
+            result.isnull = true;
             break;
     }
 
     PG_FREE_IF_COPY(box, 0);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }

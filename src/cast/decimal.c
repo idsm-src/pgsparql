@@ -85,7 +85,7 @@ Datum cast_as_decimal_from_string(PG_FUNCTION_ARGS)
 {
     text *value = PG_GETARG_TEXT_P(0);
     char *cstring = text_to_cstring(value);
-    bool isNull = false;
+    bool isnull = false;
     Datum result;
 
     PG_TRY_EX();
@@ -101,7 +101,7 @@ Datum cast_as_decimal_from_string(PG_FUNCTION_ARGS)
         if(sqlerrcode != ERRCODE_INVALID_TEXT_REPRESENTATION)
             PG_RE_THROW_EX();
 
-        isNull = true;
+        isnull = true;
     }
     PG_END_TRY_EX();
 
@@ -109,7 +109,7 @@ Datum cast_as_decimal_from_string(PG_FUNCTION_ARGS)
     PG_FREE_IF_COPY(value, 0);
     pfree(cstring);
 
-    if(isNull)
+    if(isnull)
         PG_RETURN_NULL();
 
     PG_RETURN_DATUM(result);
@@ -120,7 +120,7 @@ PG_FUNCTION_INFO_V1(cast_as_decimal_from_rdfbox);
 Datum cast_as_decimal_from_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    NullableDatum result = { .isNull = false };
+    NullableDatum result = { .isnull = false };
 
     switch(box->type)
     {
@@ -156,7 +156,7 @@ Datum cast_as_decimal_from_rdfbox(PG_FUNCTION_ARGS)
 
                 Numeric copy = palloc(length);
                 memcpy(copy, value, length);
-                result.datum = NumericGetDatum(copy);
+                result.value = NumericGetDatum(copy);
             }
             break;
 
@@ -165,14 +165,14 @@ Datum cast_as_decimal_from_rdfbox(PG_FUNCTION_ARGS)
             break;
 
         default:
-            result.isNull = true;
+            result.isnull = true;
             break;
     }
 
     PG_FREE_IF_COPY(box, 0);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }

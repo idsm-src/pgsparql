@@ -72,7 +72,7 @@ PG_FUNCTION_INFO_V1(cast_as_short_from_integer);
 Datum cast_as_short_from_integer(PG_FUNCTION_ARGS)
 {
     Numeric value = PG_GETARG_NUMERIC(0);
-    bool isNull = false;
+    bool isnull = false;
     Datum result;
 
     PG_TRY_EX();
@@ -84,13 +84,13 @@ Datum cast_as_short_from_integer(PG_FUNCTION_ARGS)
         if(sqlerrcode != ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE)
             PG_RE_THROW_EX();
 
-        isNull = true;
+        isnull = true;
     }
     PG_END_TRY_EX();
 
     PG_FREE_IF_COPY(value, 0);
 
-    if(isNull)
+    if(isnull)
         PG_RETURN_NULL();
 
     PG_RETURN_DATUM(result);
@@ -101,7 +101,7 @@ PG_FUNCTION_INFO_V1(cast_as_short_from_decimal);
 Datum cast_as_short_from_decimal(PG_FUNCTION_ARGS)
 {
     Numeric value = PG_GETARG_NUMERIC(0);
-    bool isNull = false;
+    bool isnull = false;
     Datum result;
 
     Numeric truncated = DatumGetNumeric(DirectFunctionCall2(numeric_trunc, NumericGetDatum(value), Int32GetDatum(0)));
@@ -115,14 +115,14 @@ Datum cast_as_short_from_decimal(PG_FUNCTION_ARGS)
         if(sqlerrcode != ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE)
             PG_RE_THROW_EX();
 
-        isNull = true;
+        isnull = true;
     }
     PG_END_TRY_EX();
 
     pfree(truncated);
     PG_FREE_IF_COPY(value, 0);
 
-    if(isNull)
+    if(isnull)
         PG_RETURN_NULL();
 
     PG_RETURN_DATUM(result);
@@ -136,12 +136,12 @@ Datum cast_as_short_from_string(PG_FUNCTION_ARGS)
     int64 result;
 
     char *cstring = text_to_cstring(value);
-    bool isNull = !scanint8(cstring, true, &result);
+    bool isnull = !scanint8(cstring, true, &result);
 
     pfree(cstring);
     PG_FREE_IF_COPY(value, 0);
 
-    if(isNull || result < SHRT_MIN || result > SHRT_MAX)
+    if(isnull || result < SHRT_MIN || result > SHRT_MAX)
         PG_RETURN_NULL();
 
     PG_RETURN_INT16((int16) result);
@@ -152,7 +152,7 @@ PG_FUNCTION_INFO_V1(cast_as_short_from_rdfbox);
 Datum cast_as_short_from_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    NullableDatum result = { .isNull = false };
+    NullableDatum result = { .isnull = false };
 
     switch(box->type)
     {
@@ -161,7 +161,7 @@ Datum cast_as_short_from_rdfbox(PG_FUNCTION_ARGS)
             break;
 
         case XSD_SHORT:
-            result.datum = Int16GetDatum(((RdfBoxShort *) box)->value);
+            result.value = Int16GetDatum(((RdfBoxShort *) box)->value);
             break;
 
         case XSD_INT:
@@ -193,14 +193,14 @@ Datum cast_as_short_from_rdfbox(PG_FUNCTION_ARGS)
             break;
 
         default:
-            result.isNull = true;
+            result.isnull = true;
             break;
     }
 
     PG_FREE_IF_COPY(box, 0);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }

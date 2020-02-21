@@ -12,8 +12,8 @@ Datum not_less_than_rdfbox(PG_FUNCTION_ARGS)
 
     NullableDatum result = NullableFunctionCall2(not_greater_than_rdfbox, right, left);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }

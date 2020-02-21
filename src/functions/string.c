@@ -112,7 +112,7 @@ PG_FUNCTION_INFO_V1(strlen_rdfbox);
 Datum strlen_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    NullableDatum result = { .isNull = true };
+    NullableDatum result = { .isnull = true };
 
     if(box->type == XSD_STRING || box->type == RDF_LANGSTRING)
     {
@@ -122,10 +122,10 @@ Datum strlen_rdfbox(PG_FUNCTION_ARGS)
 
     PG_FREE_IF_COPY(box, 0);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -154,7 +154,7 @@ Datum substr_no_len_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
     Datum start = PG_GETARG_DATUM(1);
-    NullableDatum result = { .isNull = true };
+    NullableDatum result = { .isnull = true };
 
     if(box->type == XSD_STRING || box->type == RDF_LANGSTRING)
     {
@@ -165,10 +165,10 @@ Datum substr_no_len_rdfbox(PG_FUNCTION_ARGS)
 
     PG_FREE_IF_COPY(box, 0);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -215,7 +215,7 @@ Datum substr_rdfbox(PG_FUNCTION_ARGS)
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
     Datum start = PG_GETARG_DATUM(1);
     Datum length = PG_GETARG_DATUM(2);
-    NullableDatum result = { .isNull = true };
+    NullableDatum result = { .isnull = true };
 
     if(box->type == XSD_STRING || box->type == RDF_LANGSTRING)
     {
@@ -226,10 +226,10 @@ Datum substr_rdfbox(PG_FUNCTION_ARGS)
 
     PG_FREE_IF_COPY(box, 0);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -250,7 +250,7 @@ Datum ucase_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
     Datum searched = PG_GETARG_DATUM(1);
-    NullableDatum result = { .isNull = true };
+    NullableDatum result = { .isnull = true };
 
     if(box->type == XSD_STRING || box->type == RDF_LANGSTRING)
     {
@@ -261,10 +261,10 @@ Datum ucase_rdfbox(PG_FUNCTION_ARGS)
 
     PG_FREE_IF_COPY(box, 0);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -285,7 +285,7 @@ Datum lcase_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
     Datum searched = PG_GETARG_DATUM(1);
-    NullableDatum result = { .isNull = true };
+    NullableDatum result = { .isnull = true };
 
     if(box->type == XSD_STRING || box->type == RDF_LANGSTRING)
     {
@@ -296,10 +296,10 @@ Datum lcase_rdfbox(PG_FUNCTION_ARGS)
 
     PG_FREE_IF_COPY(box, 0);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -320,7 +320,7 @@ Datum strstarts_rdfbox_string(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
     Datum start = PG_GETARG_DATUM(1);
-    NullableDatum result = { .isNull = true };
+    NullableDatum result = { .isnull = true };
 
     if(box->type == XSD_STRING || box->type == RDF_LANGSTRING)
     {
@@ -330,10 +330,10 @@ Datum strstarts_rdfbox_string(PG_FUNCTION_ARGS)
 
     PG_FREE_IF_COPY(box, 0);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -342,7 +342,7 @@ Datum strstarts_rdfbox_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
     RdfBox *start = PG_GETARG_RDFBOX_P(1);
-    NullableDatum result = { .isNull = true };
+    NullableDatum result = { .isnull = true };
 
     if(rdfbox_are_strings_compatible(box, start))
     {
@@ -354,10 +354,10 @@ Datum strstarts_rdfbox_rdfbox(PG_FUNCTION_ARGS)
     PG_FREE_IF_COPY(box, 0);
     PG_FREE_IF_COPY(start, 1);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -378,7 +378,7 @@ Datum strends_rdfbox_string(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
     Datum end = PG_GETARG_DATUM(1);
-    NullableDatum result = { .isNull = true };
+    NullableDatum result = { .isnull = true };
 
     if(box->type == XSD_STRING || box->type == RDF_LANGSTRING)
     {
@@ -388,10 +388,10 @@ Datum strends_rdfbox_string(PG_FUNCTION_ARGS)
 
     PG_FREE_IF_COPY(box, 0);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -400,7 +400,7 @@ Datum strends_rdfbox_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
     RdfBox *end = PG_GETARG_RDFBOX_P(1);
-    NullableDatum result = { .isNull = true };
+    NullableDatum result = { .isnull = true };
 
     if(rdfbox_are_strings_compatible(box, end))
     {
@@ -412,10 +412,10 @@ Datum strends_rdfbox_rdfbox(PG_FUNCTION_ARGS)
     PG_FREE_IF_COPY(box, 0);
     PG_FREE_IF_COPY(end, 1);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -436,7 +436,7 @@ Datum contains_rdfbox_string(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
     Datum searched = PG_GETARG_DATUM(1);
-    NullableDatum result = { .isNull = true };
+    NullableDatum result = { .isnull = true };
 
     if(box->type == XSD_STRING || box->type == RDF_LANGSTRING)
     {
@@ -446,10 +446,10 @@ Datum contains_rdfbox_string(PG_FUNCTION_ARGS)
 
     PG_FREE_IF_COPY(box, 0);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -458,7 +458,7 @@ Datum contains_rdfbox_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
     RdfBox *searched = PG_GETARG_RDFBOX_P(1);
-    NullableDatum result = { .isNull = true };
+    NullableDatum result = { .isnull = true };
 
     if(rdfbox_are_strings_compatible(box, searched))
     {
@@ -470,10 +470,10 @@ Datum contains_rdfbox_rdfbox(PG_FUNCTION_ARGS)
     PG_FREE_IF_COPY(box, 0);
     PG_FREE_IF_COPY(searched, 1);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -502,7 +502,7 @@ Datum strbefore_rdfbox_string(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
     VarChar *searched = PG_GETARG_VARCHAR_P(1);
-    NullableDatum result = { .isNull = true };
+    NullableDatum result = { .isnull = true };
 
     if(box->type == XSD_STRING || box->type == RDF_LANGSTRING)
     {
@@ -527,10 +527,10 @@ Datum strbefore_rdfbox_string(PG_FUNCTION_ARGS)
     PG_FREE_IF_COPY(box, 0);
     PG_FREE_IF_COPY(searched, 1);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -539,7 +539,7 @@ Datum strbefore_rdfbox_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
     RdfBox *searched = PG_GETARG_RDFBOX_P(1);
-    NullableDatum result = { .isNull = true };
+    NullableDatum result = { .isnull = true };
 
     if(rdfbox_are_strings_compatible(box, searched))
     {
@@ -550,10 +550,10 @@ Datum strbefore_rdfbox_rdfbox(PG_FUNCTION_ARGS)
     PG_FREE_IF_COPY(box, 0);
     PG_FREE_IF_COPY(searched, 1);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -583,7 +583,7 @@ Datum strafter_rdfbox_string(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
     VarChar *searched = PG_GETARG_VARCHAR_P(1);
-    NullableDatum result = { .isNull = true };
+    NullableDatum result = { .isnull = true };
 
     if(box->type == XSD_STRING || box->type == RDF_LANGSTRING)
     {
@@ -607,10 +607,10 @@ Datum strafter_rdfbox_string(PG_FUNCTION_ARGS)
     PG_FREE_IF_COPY(box, 0);
     PG_FREE_IF_COPY(searched, 1);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -619,7 +619,7 @@ Datum strafter_rdfbox_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
     RdfBox *searched = PG_GETARG_RDFBOX_P(1);
-    NullableDatum result = { .isNull = true };
+    NullableDatum result = { .isnull = true };
 
     if(rdfbox_are_strings_compatible(box, searched))
     {
@@ -630,10 +630,10 @@ Datum strafter_rdfbox_rdfbox(PG_FUNCTION_ARGS)
     PG_FREE_IF_COPY(box, 0);
     PG_FREE_IF_COPY(searched, 1);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -680,7 +680,7 @@ PG_FUNCTION_INFO_V1(encode_for_uri_rdfbox);
 Datum encode_for_uri_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    NullableDatum result = { .isNull = true };
+    NullableDatum result = { .isnull = true };
 
     if(box->type == XSD_STRING || box->type == RDF_LANGSTRING)
     {
@@ -690,10 +690,10 @@ Datum encode_for_uri_rdfbox(PG_FUNCTION_ARGS)
 
     PG_FREE_IF_COPY(box, 0);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -722,7 +722,7 @@ Datum concat_rdfbox_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *beginBox = PG_GETARG_RDFBOX_P(0);
     RdfBox *endBox = PG_GETARG_RDFBOX_P(1);
-    NullableDatum result = { .isNull = true };
+    NullableDatum result = { .isnull = true };
 
     if((beginBox->type == XSD_STRING || beginBox->type == RDF_LANGSTRING) && (endBox->type == XSD_STRING || endBox->type == RDF_LANGSTRING))
     {
@@ -754,10 +754,10 @@ Datum concat_rdfbox_rdfbox(PG_FUNCTION_ARGS)
     PG_FREE_IF_COPY(beginBox, 0);
     PG_FREE_IF_COPY(endBox, 1);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -796,7 +796,7 @@ Datum langmatches_rdfbox_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *lang = PG_GETARG_RDFBOX_P(0);
     RdfBox *pattern = PG_GETARG_RDFBOX_P(1);
-    NullableDatum result = { .isNull = true };
+    NullableDatum result = { .isnull = true };
 
     if(lang->type == XSD_STRING && pattern->type == XSD_STRING)
         result = NullableFunctionCall2(langmatches_string_string, PointerGetDatum(rdfbox_get_string(lang)),
@@ -805,8 +805,8 @@ Datum langmatches_rdfbox_rdfbox(PG_FUNCTION_ARGS)
     PG_FREE_IF_COPY(lang, 0);
     PG_FREE_IF_COPY(pattern, 1);
 
-    if(result.isNull)
+    if(result.isnull)
         PG_RETURN_NULL();
 
-    PG_RETURN_DATUM(result.datum);
+    PG_RETURN_DATUM(result.value);
 }
