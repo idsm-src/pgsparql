@@ -2,6 +2,7 @@
 #include <utils/builtins.h>
 #include <utils/timestamp.h>
 #include <math.h>
+#include "pgsparql.h"
 #include "daytimeduration.h"
 
 
@@ -178,7 +179,7 @@ Datum daytimeduration_output(PG_FUNCTION_ARGS)
 
     if(days > 0)
     {
-        str = pg_ltostr(str, days);
+        str = pg_ultostr(str, days);
         *str++ = 'D';
     }
 
@@ -187,19 +188,19 @@ Datum daytimeduration_output(PG_FUNCTION_ARGS)
 
     if(hours > 0)
     {
-        str = pg_ltostr(str, hours);
+        str = pg_ultostr(str, hours);
         *str++ = 'H';
     }
 
     if(minutes > 0)
     {
-        str = pg_ltostr(str, minutes);
+        str = pg_ultostr(str, minutes);
         *str++ = 'M';
     }
 
     if(seconds > 0)
     {
-        str = pg_ltostr(str, seconds);
+        str = pg_ultostr(str, seconds);
 
         if(useconds == 0)
             *str++ = 'S';
@@ -220,7 +221,7 @@ Datum daytimeduration_output(PG_FUNCTION_ARGS)
             length--;
         }
 
-        str = pg_ltostr_zeropad(str, useconds, length);
+        str = pg_ultostr_zeropad(str, useconds, length);
         *str++ = 'S';
     }
 

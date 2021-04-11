@@ -2,6 +2,7 @@
 #include <miscadmin.h>
 #include <utils/datetime.h>
 #include <utils/builtins.h>
+#include "pgsparql.h"
 #include "date.h"
 #include "timezone.h"
 
@@ -167,11 +168,11 @@ Datum zoneddate_output(PG_FUNCTION_ARGS)
     if(tm.tm_year <= 0)
         *str++ = '-';
 
-    str = pg_ltostr_zeropad(str, (tm.tm_year > 0) ? tm.tm_year : -(tm.tm_year - 1), 4);
+    str = pg_ultostr_zeropad(str, (tm.tm_year > 0) ? tm.tm_year : -(tm.tm_year - 1), 4);
     *str++ = '-';
-    str = pg_ltostr_zeropad(str, tm.tm_mon, 2);
+    str = pg_ultostr_zeropad(str, tm.tm_mon, 2);
     *str++ = '-';
-    str = pg_ltostr_zeropad(str, tm.tm_mday, 2);
+    str = pg_ultostr_zeropad(str, tm.tm_mday, 2);
 
     if(date.zone != ZONE_UNSPECIFIED)
     {
@@ -182,9 +183,9 @@ Datum zoneddate_output(PG_FUNCTION_ARGS)
             int minutes = value - hours * MINS_PER_HOUR;
 
             *str++ = (date.zone >= 0 ? '+' : '-');
-            str = pg_ltostr_zeropad(str, hours, 2);
+            str = pg_ultostr_zeropad(str, hours, 2);
             *str++ = ':';
-            str = pg_ltostr_zeropad(str, minutes, 2);
+            str = pg_ultostr_zeropad(str, minutes, 2);
         }
         else
         {

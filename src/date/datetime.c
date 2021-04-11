@@ -2,6 +2,7 @@
 #include <miscadmin.h>
 #include <utils/datetime.h>
 #include <utils/builtins.h>
+#include "pgsparql.h"
 #include "datetime.h"
 #include "timezone.h"
 
@@ -190,17 +191,17 @@ Datum zoneddatetime_output(PG_FUNCTION_ARGS)
     if(tm.tm_year <= 0)
         *str++ = '-';
 
-    str = pg_ltostr_zeropad(str, (tm.tm_year > 0) ? tm.tm_year : -(tm.tm_year - 1), 4);
+    str = pg_ultostr_zeropad(str, (tm.tm_year > 0) ? tm.tm_year : -(tm.tm_year - 1), 4);
     *str++ = '-';
-    str = pg_ltostr_zeropad(str, tm.tm_mon, 2);
+    str = pg_ultostr_zeropad(str, tm.tm_mon, 2);
     *str++ = '-';
-    str = pg_ltostr_zeropad(str, tm.tm_mday, 2);
+    str = pg_ultostr_zeropad(str, tm.tm_mday, 2);
     *str++ = 'T';
-    str = pg_ltostr_zeropad(str, tm.tm_hour, 2);
+    str = pg_ultostr_zeropad(str, tm.tm_hour, 2);
     *str++ = ':';
-    str = pg_ltostr_zeropad(str, tm.tm_min, 2);
+    str = pg_ultostr_zeropad(str, tm.tm_min, 2);
     *str++ = ':';
-    str = pg_ltostr_zeropad(str, tm.tm_sec, 2);
+    str = pg_ultostr_zeropad(str, tm.tm_sec, 2);
 
     if(fsec)
     {
@@ -213,7 +214,7 @@ Datum zoneddatetime_output(PG_FUNCTION_ARGS)
             length--;
         }
 
-        str = pg_ltostr_zeropad(str, fsec, length);
+        str = pg_ultostr_zeropad(str, fsec, length);
     }
 
     if(date->zone != ZONE_UNSPECIFIED)
@@ -225,9 +226,9 @@ Datum zoneddatetime_output(PG_FUNCTION_ARGS)
             int minutes = value - hours * MINS_PER_HOUR;
 
             *str++ = (tz <= 0 ? '+' : '-');
-            str = pg_ltostr_zeropad(str, hours, 2);
+            str = pg_ultostr_zeropad(str, hours, 2);
             *str++ = ':';
-            str = pg_ltostr_zeropad(str, minutes, 2);
+            str = pg_ultostr_zeropad(str, minutes, 2);
         }
         else
         {

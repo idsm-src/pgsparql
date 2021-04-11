@@ -1,6 +1,7 @@
 #include <postgres.h>
 #include <utils/builtins.h>
 #include <utils/datetime.h>
+#include "pgsparql.h"
 #include "cast/cast.h"
 #include "date/date.h"
 #include "date/datetime.h"
@@ -58,9 +59,9 @@ static text *timezone_to_text(int64 zone)
         int minutes = value - hours * MINS_PER_HOUR;
 
         *str++ = (zone >= 0 ? '+' : '-');
-        str = pg_ltostr_zeropad(str, hours, 2);
+        str = pg_ultostr_zeropad(str, hours, 2);
         *str++ = ':';
-        str = pg_ltostr_zeropad(str, minutes, 2);
+        str = pg_ultostr_zeropad(str, minutes, 2);
     }
 
     *str = '\0';

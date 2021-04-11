@@ -7,6 +7,7 @@ libpgsparql_la_SOURCES = \
 		constants.c \
 		constants.h \
 		pgsparql.c \
+		pgsparql.h \
 		rdfbox.c \
 		rdfbox.h \
 		try-catch.h \
