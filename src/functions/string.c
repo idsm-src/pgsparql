@@ -63,6 +63,9 @@ static NullableDatum varchar_translate_and_free(VarChar *value, VarChar *lang)
 
 static int32 varchar_contains(VarChar *value, VarChar *searched)
 {
+    if(VARSIZE(value) < VARSIZE(searched))
+        return -1;
+
     for(int i = 0; i <= (int) (VARSIZE(value) - VARSIZE(searched)); i++)
     {
         bool result = true;
