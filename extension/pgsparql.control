@@ -1,6 +1,6 @@
 # pgsparql extension
 comment = 'Auxiliary functions for the IOCB SPARQL to SQL translator'
-default_version = '0.1'
+default_version = '1.0'
 module_pathname = '$libdir/libpgsparql'
 schema = sparql
 requires = 'uuid-ossp,pgcrypto'

@@ -1,24 +1,24 @@
 extensiondir = $(POSTGRESQL_SHAREDIR)/extension
 dist_extension_DATA = \
 		pgsparql.control  \
-		pgsparql--0.1.sql
+		pgsparql--1.0.sql
 
 SQLSOURCES = \
-		pgsparql-0.1/header.sql \
-		pgsparql-0.1/blanknode.sql \
-		pgsparql-0.1/zoneddate.sql \
-		pgsparql-0.1/zoneddatetime.sql \
-		pgsparql-0.1/rdfbox.sql \
-		pgsparql-0.1/cast.sql \
-		pgsparql-0.1/logical.sql \
-		pgsparql-0.1/arithmetic.sql \
-		pgsparql-0.1/comparison.sql \
-		pgsparql-0.1/functions.sql \
-		pgsparql-0.1/extract.sql \
-		pgsparql-0.1/aggregate.sql
+		pgsparql/header.sql \
+		pgsparql/blanknode.sql \
+		pgsparql/zoneddate.sql \
+		pgsparql/zoneddatetime.sql \
+		pgsparql/rdfbox.sql \
+		pgsparql/cast.sql \
+		pgsparql/logical.sql \
+		pgsparql/arithmetic.sql \
+		pgsparql/comparison.sql \
+		pgsparql/functions.sql \
+		pgsparql/extract.sql \
+		pgsparql/aggregate.sql
 
 EXTRA_DIST = $(SQLSOURCES)
-MOSTLYCLEANFILES = pgsparql--0.1.sql
+MOSTLYCLEANFILES = pgsparql--1.0.sql
 
-pgsparql--0.1.sql : $(SQLSOURCES)
-		for F in $(SQLSOURCES); do cat $(srcdir)/$$F; echo -e '\n\n'; done > pgsparql--0.1.sql
+pgsparql--1.0.sql : $(SQLSOURCES)
+		for F in $(SQLSOURCES); do cat $(srcdir)/$$F; echo -e '\n\n'; done > pgsparql--1.0.sql
