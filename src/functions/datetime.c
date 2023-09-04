@@ -2,19 +2,11 @@
 #include <utils/builtins.h>
 #include <utils/datetime.h>
 #include "pgsparql.h"
-#include "cast/cast.h"
-#include "date/date.h"
-#include "date/datetime.h"
-#include "date/timezone.h"
 #include "call.h"
-#include "rdfbox.h"
-
-
-#define PG_GETARG_DATETIME() (PG_NARGS() == 1 ? *PG_GETARG_ZONEDDATETIME_P(0) : \
-        (ZonedDateTime) { .value = PG_GETARG_TIMESTAMPTZ(0), .zone = PG_GETARG_INT32(1) })
-
-#define PG_GETARG_DATE() (PG_NARGS() == 1 ? PG_GETARG_ZONEDDATE(0) : \
-                    (ZonedDate) { .value = PG_GETARG_DATEADT(0), .zone = PG_GETARG_INT32(1) })
+#include "types/date.h"
+#include "types/datetime.h"
+#include "types/timezone.h"
+#include "rdfbox/rdfbox.h"
 
 
 static void datetime_decompose(ZonedDateTime *date, struct pg_tm *tm, fsec_t *fsec)
@@ -77,7 +69,7 @@ Datum year_datetime(PG_FUNCTION_ARGS)
     struct pg_tm tm;
     fsec_t fsec;
     datetime_decompose(&date, &tm, &fsec);
-    PG_RETURN_DATUM(DirectFunctionCall1(cast_as_decimal_from_int, Int32GetDatum(tm.tm_year)));
+    PG_RETURN_DATUM(DirectFunctionCall1(int4_numeric, Int32GetDatum(tm.tm_year)));
 }
 
 
@@ -87,7 +79,7 @@ Datum year_date(PG_FUNCTION_ARGS)
     ZonedDate date = PG_GETARG_DATE();
     struct pg_tm tm;
     date_decompose(&date, &tm);
-    PG_RETURN_DATUM(DirectFunctionCall1(cast_as_decimal_from_int, Int32GetDatum(tm.tm_year)));
+    PG_RETURN_DATUM(DirectFunctionCall1(int4_numeric, Int32GetDatum(tm.tm_year)));
 }
 
 
@@ -95,25 +87,18 @@ PG_FUNCTION_INFO_V1(year_rdfbox);
 Datum year_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    NullableDatum result = { .isnull = true };
 
     switch(box->type)
     {
         case XSD_DATETIME:
-            result = NullableFunctionCall1(year_datetime, ZonedDateTimeGetDatum(&((RdfBoxDateTime *) box)->value));
-            break;
+            PG_RETURN(NullableFunctionCall1(year_datetime, ZonedDateTimeGetDatum(RdfBoxGetZonedDateTime(box))));
 
         case XSD_DATE:
-            result = NullableFunctionCall1(year_date, ZonedDateGetDatum(((RdfBoxDate *) box)->value));
-            break;
+            PG_RETURN(NullableFunctionCall1(year_date, ZonedDateGetDatum(RdfBoxGetZonedDate(box))));
+
+        default:
+            PG_RETURN_NULL();
     }
-
-    PG_FREE_IF_COPY(box, 0);
-
-    if(result.isnull)
-        PG_RETURN_NULL();
-
-    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -124,7 +109,7 @@ Datum month_datetime(PG_FUNCTION_ARGS)
     struct pg_tm tm;
     fsec_t fsec;
     datetime_decompose(&date, &tm, &fsec);
-    PG_RETURN_DATUM(DirectFunctionCall1(cast_as_decimal_from_int, Int32GetDatum(tm.tm_mon)));
+    PG_RETURN_DATUM(DirectFunctionCall1(int4_numeric, Int32GetDatum(tm.tm_mon)));
 }
 
 
@@ -134,7 +119,7 @@ Datum month_date(PG_FUNCTION_ARGS)
     ZonedDate date = PG_GETARG_DATE();
     struct pg_tm tm;
     date_decompose(&date, &tm);
-    PG_RETURN_DATUM(DirectFunctionCall1(cast_as_decimal_from_int, Int32GetDatum(tm.tm_mon)));
+    PG_RETURN_DATUM(DirectFunctionCall1(int4_numeric, Int32GetDatum(tm.tm_mon)));
 }
 
 
@@ -142,25 +127,18 @@ PG_FUNCTION_INFO_V1(month_rdfbox);
 Datum month_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    NullableDatum result = { .isnull = true };
 
     switch(box->type)
     {
         case XSD_DATETIME:
-            result = NullableFunctionCall1(month_datetime, ZonedDateTimeGetDatum(&((RdfBoxDateTime *) box)->value));
-            break;
+            PG_RETURN(NullableFunctionCall1(month_datetime, ZonedDateTimeGetDatum(RdfBoxGetZonedDateTime(box))));
 
         case XSD_DATE:
-            result = NullableFunctionCall1(month_date, ZonedDateGetDatum(((RdfBoxDate *) box)->value));
-            break;
+            PG_RETURN(NullableFunctionCall1(month_date, ZonedDateGetDatum(RdfBoxGetZonedDate(box))));
+
+        default:
+            PG_RETURN_NULL();
     }
-
-    PG_FREE_IF_COPY(box, 0);
-
-    if(result.isnull)
-        PG_RETURN_NULL();
-
-    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -171,7 +149,7 @@ Datum day_datetime(PG_FUNCTION_ARGS)
     struct pg_tm tm;
     fsec_t fsec;
     datetime_decompose(&date, &tm, &fsec);
-    PG_RETURN_DATUM(DirectFunctionCall1(cast_as_decimal_from_int, Int32GetDatum(tm.tm_mday)));
+    PG_RETURN_DATUM(DirectFunctionCall1(int4_numeric, Int32GetDatum(tm.tm_mday)));
 }
 
 
@@ -181,7 +159,7 @@ Datum day_date(PG_FUNCTION_ARGS)
     ZonedDate date = PG_GETARG_DATE();
     struct pg_tm tm;
     date_decompose(&date, &tm);
-    PG_RETURN_DATUM(DirectFunctionCall1(cast_as_decimal_from_int, Int32GetDatum(tm.tm_mday)));
+    PG_RETURN_DATUM(DirectFunctionCall1(int4_numeric, Int32GetDatum(tm.tm_mday)));
 }
 
 
@@ -189,25 +167,18 @@ PG_FUNCTION_INFO_V1(day_rdfbox);
 Datum day_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    NullableDatum result = { .isnull = true };
 
     switch(box->type)
     {
         case XSD_DATETIME:
-            result = NullableFunctionCall1(day_datetime, ZonedDateTimeGetDatum(&((RdfBoxDateTime *) box)->value));
-            break;
+            PG_RETURN(NullableFunctionCall1(day_datetime, ZonedDateTimeGetDatum(RdfBoxGetZonedDateTime(box))));
 
         case XSD_DATE:
-            result = NullableFunctionCall1(day_date, ZonedDateGetDatum(((RdfBoxDate *) box)->value));
-            break;
+            PG_RETURN(NullableFunctionCall1(day_date, ZonedDateGetDatum(RdfBoxGetZonedDate(box))));
+
+        default:
+            PG_RETURN_NULL();
     }
-
-    PG_FREE_IF_COPY(box, 0);
-
-    if(result.isnull)
-        PG_RETURN_NULL();
-
-    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -218,7 +189,7 @@ Datum hours_datetime(PG_FUNCTION_ARGS)
     struct pg_tm tm;
     fsec_t fsec;
     datetime_decompose(&date, &tm, &fsec);
-    PG_RETURN_DATUM(DirectFunctionCall1(cast_as_decimal_from_int, Int32GetDatum(tm.tm_hour)));
+    PG_RETURN_DATUM(DirectFunctionCall1(int4_numeric, Int32GetDatum(tm.tm_hour)));
 }
 
 
@@ -226,17 +197,15 @@ PG_FUNCTION_INFO_V1(hours_rdfbox);
 Datum hours_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    NullableDatum result = { .isnull = true };
 
-    if(box->type == XSD_DATETIME)
-        result = NullableFunctionCall1(hours_datetime, ZonedDateTimeGetDatum(&((RdfBoxDateTime *) box)->value));
+    switch(box->type)
+    {
+        case XSD_DATETIME:
+            PG_RETURN(NullableFunctionCall1(hours_datetime, ZonedDateTimeGetDatum(RdfBoxGetZonedDateTime(box))));
 
-    PG_FREE_IF_COPY(box, 0);
-
-    if(result.isnull)
-        PG_RETURN_NULL();
-
-    PG_RETURN_DATUM(result.value);
+        default:
+            PG_RETURN_NULL();
+    }
 }
 
 
@@ -247,7 +216,7 @@ Datum minutes_datetime(PG_FUNCTION_ARGS)
     struct pg_tm tm;
     fsec_t fsec;
     datetime_decompose(&date, &tm, &fsec);
-    PG_RETURN_DATUM(DirectFunctionCall1(cast_as_decimal_from_int, Int32GetDatum(tm.tm_min)));
+    PG_RETURN_DATUM(DirectFunctionCall1(int4_numeric, Int32GetDatum(tm.tm_min)));
 }
 
 
@@ -255,17 +224,15 @@ PG_FUNCTION_INFO_V1(minutes_rdfbox);
 Datum minutes_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    NullableDatum result = { .isnull = true };
 
-    if(box->type == XSD_DATETIME)
-        result = NullableFunctionCall1(minutes_datetime, ZonedDateTimeGetDatum(&((RdfBoxDateTime *) box)->value));
+    switch(box->type)
+    {
+        case XSD_DATETIME:
+            PG_RETURN(NullableFunctionCall1(minutes_datetime, ZonedDateTimeGetDatum(RdfBoxGetZonedDateTime(box))));
 
-    PG_FREE_IF_COPY(box, 0);
-
-    if(result.isnull)
-        PG_RETURN_NULL();
-
-    PG_RETURN_DATUM(result.value);
+        default:
+            PG_RETURN_NULL();
+    }
 }
 
 
@@ -276,7 +243,7 @@ Datum seconds_datetime(PG_FUNCTION_ARGS)
     struct pg_tm tm;
     fsec_t fsec;
     datetime_decompose(&date, &tm, &fsec);
-    PG_RETURN_DATUM(DirectFunctionCall1(cast_as_decimal_from_double, Float8GetDatum(tm.tm_sec + (double) fsec / USECS_PER_SEC)));
+    PG_RETURN_DATUM(DirectFunctionCall1(float8_numeric, Float8GetDatum(tm.tm_sec + (double) fsec / USECS_PER_SEC)));
 }
 
 
@@ -284,17 +251,15 @@ PG_FUNCTION_INFO_V1(seconds_rdfbox);
 Datum seconds_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    NullableDatum result = { .isnull = true };
 
-    if(box->type == XSD_DATETIME)
-        result = NullableFunctionCall1(seconds_datetime, ZonedDateTimeGetDatum(&((RdfBoxDateTime *) box)->value));
+    switch(box->type)
+    {
+        case XSD_DATETIME:
+            PG_RETURN(NullableFunctionCall1(seconds_datetime, ZonedDateTimeGetDatum(RdfBoxGetZonedDateTime(box))));
 
-    PG_FREE_IF_COPY(box, 0);
-
-    if(result.isnull)
-        PG_RETURN_NULL();
-
-    PG_RETURN_DATUM(result.value);
+        default:
+            PG_RETURN_NULL();
+    }
 }
 
 
@@ -326,25 +291,18 @@ PG_FUNCTION_INFO_V1(timezone_rdfbox);
 Datum timezone_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    NullableDatum result = { .isnull = true };
 
     switch(box->type)
     {
         case XSD_DATETIME:
-            result = NullableFunctionCall1(timezone_datetime, ZonedDateTimeGetDatum(&((RdfBoxDateTime *) box)->value));
-            break;
+            PG_RETURN(NullableFunctionCall1(timezone_datetime, ZonedDateTimeGetDatum(RdfBoxGetZonedDateTime(box))));
 
         case XSD_DATE:
-            result = NullableFunctionCall1(timezone_date, ZonedDateGetDatum(((RdfBoxDate *) box)->value));
-            break;
+            PG_RETURN(NullableFunctionCall1(timezone_date, ZonedDateGetDatum(RdfBoxGetZonedDate(box))));
+
+        default:
+            PG_RETURN_NULL();
     }
-
-    PG_FREE_IF_COPY(box, 0);
-
-    if(result.isnull)
-        PG_RETURN_NULL();
-
-    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -352,7 +310,7 @@ PG_FUNCTION_INFO_V1(tz_datetime);
 Datum tz_datetime(PG_FUNCTION_ARGS)
 {
     ZonedDateTime date = PG_GETARG_DATETIME();
-    PG_RETURN_POINTER(timezone_to_text(date.zone));
+    PG_RETURN_TEXT_P(timezone_to_text(date.zone));
 }
 
 
@@ -360,7 +318,7 @@ PG_FUNCTION_INFO_V1(tz_date);
 Datum tz_date(PG_FUNCTION_ARGS)
 {
     ZonedDate date = PG_GETARG_DATE();
-    PG_RETURN_POINTER(timezone_to_text(date.zone));
+    PG_RETURN_TEXT_P(timezone_to_text(date.zone));
 }
 
 
@@ -368,23 +326,16 @@ PG_FUNCTION_INFO_V1(tz_rdfbox);
 Datum tz_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    NullableDatum result = { .isnull = true };
 
     switch(box->type)
     {
         case XSD_DATETIME:
-            result = NullableFunctionCall1(tz_datetime, ZonedDateTimeGetDatum(&((RdfBoxDateTime *) box)->value));
-            break;
+            PG_RETURN(NullableFunctionCall1(tz_datetime, ZonedDateTimeGetDatum(RdfBoxGetZonedDateTime(box))));
 
         case XSD_DATE:
-            result = NullableFunctionCall1(tz_date, ZonedDateGetDatum(((RdfBoxDate *) box)->value));
-            break;
+            PG_RETURN(NullableFunctionCall1(tz_date, ZonedDateGetDatum(RdfBoxGetZonedDate(box))));
+
+        default:
+            PG_RETURN_NULL();
     }
-
-    PG_FREE_IF_COPY(box, 0);
-
-    if(result.isnull)
-        PG_RETURN_NULL();
-
-    PG_RETURN_DATUM(result.value);
 }

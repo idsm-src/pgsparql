@@ -5,46 +5,21 @@
 #include <fmgr.h>
 
 
-#if PG_VERSION_NUM < 120000
-typedef struct
-{
-    Datum value;
-    bool isnull;
-} NullableDatum;
-#endif
+#define PG_RETURN(result) do { NullableDatum x = result; if(x.isnull) PG_RETURN_NULL(); else PG_RETURN_DATUM(x.value); } while(0)
 
 
 static inline NullableDatum NullableFunctionCall1(PGFunction func, Datum arg1)
 {
-    #if PG_VERSION_NUM < 120000
-    FunctionCallInfoData fcinfo;
-    InitFunctionCallInfoData(fcinfo, NULL, 1, InvalidOid, NULL, NULL);
-
-    fcinfo.arg[0] = arg1;
-    fcinfo.argnull[0] = false;
-    #elif PG_VERSION_NUM < 130000
-    FunctionCallInfoBaseData fcinfo;
-    InitFunctionCallInfoData(fcinfo, NULL, 1, InvalidOid, NULL, NULL);
-
-    fcinfo.args[0].value = arg1;
-    fcinfo.args[0].isnull = false;
-    #else
     LOCAL_FCINFO(fcinfo, 1);
     InitFunctionCallInfoData(*fcinfo, NULL, 1, InvalidOid, NULL, NULL);
 
     fcinfo->args[0].value = arg1;
     fcinfo->args[0].isnull = false;
-    #endif
 
     NullableDatum result;
 
-    #if PG_VERSION_NUM < 130000
-    result.value = (*func) (&fcinfo);
-    result.isnull = fcinfo.isnull;
-    #else
     result.value = (*func) (fcinfo);
     result.isnull = fcinfo->isnull;
-    #endif
 
     return result;
 }
@@ -52,25 +27,6 @@ static inline NullableDatum NullableFunctionCall1(PGFunction func, Datum arg1)
 
 static inline NullableDatum NullableFunctionCall2(PGFunction func, Datum arg1, Datum arg2)
 {
-    #if PG_VERSION_NUM < 120000
-    FunctionCallInfoData fcinfo;
-    InitFunctionCallInfoData(fcinfo, NULL, 2, InvalidOid, NULL, NULL);
-
-    fcinfo.arg[0] = arg1;
-    fcinfo.argnull[0] = false;
-
-    fcinfo.arg[1] = arg2;
-    fcinfo.argnull[1] = false;
-    #elif PG_VERSION_NUM < 130000
-    FunctionCallInfoBaseData fcinfo;
-    InitFunctionCallInfoData(fcinfo, NULL, 2, InvalidOid, NULL, NULL);
-
-    fcinfo.args[0].value = arg1;
-    fcinfo.args[0].isnull = false;
-
-    fcinfo.args[1].value = arg2;
-    fcinfo.args[1].isnull = false;
-    #else
     LOCAL_FCINFO(fcinfo, 2);
     InitFunctionCallInfoData(*fcinfo, NULL, 2, InvalidOid, NULL, NULL);
 
@@ -79,17 +35,34 @@ static inline NullableDatum NullableFunctionCall2(PGFunction func, Datum arg1, D
 
     fcinfo->args[1].value = arg2;
     fcinfo->args[1].isnull = false;
-    #endif
 
     NullableDatum result;
 
-    #if PG_VERSION_NUM < 130000
-    result.value = (*func) (&fcinfo);
-    result.isnull = fcinfo.isnull;
-    #else
     result.value = (*func) (fcinfo);
     result.isnull = fcinfo->isnull;
-    #endif
+
+    return result;
+}
+
+
+static inline NullableDatum NullableFunctionCall3(PGFunction func, Datum arg1, Datum arg2, Datum arg3)
+{
+    LOCAL_FCINFO(fcinfo, 3);
+    InitFunctionCallInfoData(*fcinfo, NULL, 3, InvalidOid, NULL, NULL);
+
+    fcinfo->args[0].value = arg1;
+    fcinfo->args[0].isnull = false;
+
+    fcinfo->args[1].value = arg2;
+    fcinfo->args[1].isnull = false;
+
+    fcinfo->args[2].value = arg3;
+    fcinfo->args[2].isnull = false;
+
+    NullableDatum result;
+
+    result.value = (*func) (fcinfo);
+    result.isnull = fcinfo->isnull;
 
     return result;
 }

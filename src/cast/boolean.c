@@ -4,10 +4,9 @@
  */
 #include <postgres.h>
 #include <utils/builtins.h>
-#include <utils/numeric.h>
-#include "rdfbox.h"
 #include "call.h"
 #include "constants.h"
+#include "rdfbox/rdfbox.h"
 
 
 PG_FUNCTION_INFO_V1(cast_as_boolean_from_short);
@@ -34,6 +33,15 @@ Datum cast_as_boolean_from_long(PG_FUNCTION_ARGS)
 }
 
 
+PG_FUNCTION_INFO_V1(cast_as_boolean_from_decimal);
+Datum cast_as_boolean_from_decimal(PG_FUNCTION_ARGS)
+{
+    Datum value = PG_GETARG_DATUM(0);
+    Datum result = DirectFunctionCall2(numeric_ne, value, NumericGetDatum(get_zero()));
+    PG_RETURN_DATUM(result);
+}
+
+
 PG_FUNCTION_INFO_V1(cast_as_boolean_from_float);
 Datum cast_as_boolean_from_float(PG_FUNCTION_ARGS)
 {
@@ -50,49 +58,26 @@ Datum cast_as_boolean_from_double(PG_FUNCTION_ARGS)
 }
 
 
-PG_FUNCTION_INFO_V1(cast_as_boolean_from_decimal);
-Datum cast_as_boolean_from_decimal(PG_FUNCTION_ARGS)
-{
-    Numeric value = PG_GETARG_NUMERIC(0);
-    bool isNonZero = DatumGetBool(DirectFunctionCall2(numeric_ne, NumericGetDatum(value), NumericGetDatum(get_zero())));
-    PG_FREE_IF_COPY(value, 0);
-    PG_RETURN_BOOL(isNonZero);
-}
-
-
 PG_FUNCTION_INFO_V1(cast_as_boolean_from_string);
 Datum cast_as_boolean_from_string(PG_FUNCTION_ARGS)
 {
-    VarChar *value = PG_GETARG_VARCHAR_P(0);
+    VarChar *value = PG_GETARG_VARCHAR_PP(0);
 
-    size_t length = VARSIZE(value) - VARHDRSZ;
-    char *data = VARDATA(value);
+    char *data = VARDATA_ANY(value);
+    int length = VARSIZE_ANY_EXHDR(value);
 
-    while(length > 0 && *data == ' ')
-    {
-        data++;
+    while(length > 0 && isspace((unsigned char) *data))
+        length--, data++;
+
+    while(length > 0 && isspace((unsigned char) data[length - 1]))
         length--;
-    }
-
-    while(length > 0 && data[length - 1] == ' ')
-        length--;
-
-    bool isNull = false;
-    bool result;
 
     if((length == 4 && strncmp(data, "true", length) == 0) || (length == 1 && data[0] == '1'))
-        result = true;
+        PG_RETURN_BOOL(true);
     else if((length == 5 && strncmp(data, "false", length) == 0) || (length == 1 && data[0] == '0'))
-        result = false;
+        PG_RETURN_BOOL(false);
     else
-        isNull = true;
-
-    PG_FREE_IF_COPY(value, 0);
-
-    if(isNull)
         PG_RETURN_NULL();
-
-    PG_RETURN_BOOL(result);
 }
 
 
@@ -100,52 +85,35 @@ PG_FUNCTION_INFO_V1(cast_as_boolean_from_rdfbox);
 Datum cast_as_boolean_from_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    NullableDatum result = { .isnull = false };
 
     switch(box->type)
     {
         case XSD_BOOLEAN:
-            result.value = BoolGetDatum(((RdfBoxBoolean *) box)->value);
-            break;
+            PG_RETURN_BOOL(RdfBoxGetBool(box));
 
         case XSD_SHORT:
-            result = NullableFunctionCall1(cast_as_boolean_from_short, Int16GetDatum(((RdfBoxShort *) box)->value));
-            break;
+            PG_RETURN(NullableFunctionCall1(cast_as_boolean_from_short, Int16GetDatum(RdfBoxGetInt16(box))));
 
         case XSD_INT:
-            result = NullableFunctionCall1(cast_as_boolean_from_int, Int32GetDatum(((RdfBoxInt *) box)->value));
-            break;
+            PG_RETURN(NullableFunctionCall1(cast_as_boolean_from_int, Int32GetDatum(RdfBoxGetInt32(box))));
 
         case XSD_LONG:
-            result = NullableFunctionCall1(cast_as_boolean_from_long, Int64GetDatum(((RdfBoxLong *) box)->value));
-            break;
-
-        case XSD_FLOAT:
-            result = NullableFunctionCall1(cast_as_boolean_from_float, Float4GetDatum(((RdfBoxFloat *) box)->value));
-            break;
-
-        case XSD_DOUBLE:
-            result = NullableFunctionCall1(cast_as_boolean_from_double, Float8GetDatum(((RdfBoxDouble *) box)->value));
-            break;
+            PG_RETURN(NullableFunctionCall1(cast_as_boolean_from_long, Int64GetDatum(RdfBoxGetInt64(box))));
 
         case XSD_INTEGER:
         case XSD_DECIMAL:
-            result = NullableFunctionCall1(cast_as_boolean_from_decimal, NumericGetDatum(((RdfBoxDecinal *) box)->value));
-            break;
+            PG_RETURN(NullableFunctionCall1(cast_as_boolean_from_decimal, NumericGetDatum(RdfBoxGetNumeric(box))));
+
+        case XSD_FLOAT:
+            PG_RETURN(NullableFunctionCall1(cast_as_boolean_from_float, Float4GetDatum(RdfBoxGetFloat4(box))));
+
+        case XSD_DOUBLE:
+            PG_RETURN(NullableFunctionCall1(cast_as_boolean_from_double, Float8GetDatum(RdfBoxGetFloat8(box))));
 
         case XSD_STRING:
-            result = NullableFunctionCall1(cast_as_boolean_from_string, PointerGetDatum(((RdfBoxString *) box)->value));
-            break;
+            PG_RETURN(NullableFunctionCall1(cast_as_boolean_from_string, PointerGetDatum(RdfBoxGetVarChar(box))));
 
         default:
-            result.isnull = true;
-            break;
+            PG_RETURN_NULL();
     }
-
-    PG_FREE_IF_COPY(box, 0);
-
-    if(result.isnull)
-        PG_RETURN_NULL();
-
-    PG_RETURN_DATUM(result.value);
 }

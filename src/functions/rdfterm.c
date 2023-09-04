@@ -1,13 +1,29 @@
 #include <postgres.h>
+#include <pcre2.h>
+#include <utils/datum.h>
 #include <utils/builtins.h>
 #include <utils/numeric.h>
-#include "cast/cast.h"
+#include <utils/formatting.h>
 #include "call.h"
-#include "rdfbox.h"
-#include "xsd.h"
+#include "cast/cast.h"
+#include "rdfbox/rdfbox.h"
+#include "rdfbox/syntax.h"
+#include "rdfbox/xsd.h"
 
 
-static const char *rdfbox_types[] = {
+typedef struct
+{
+    char *scheme;
+    char *authority;
+    char *path;
+    char *query;
+    char *fragment;
+}
+IriComponents;
+
+
+static const char *rdfbox_types[] =
+{
         XSD_BOOLEAN_IRI,
         XSD_SHORT_IRI,
         XSD_INT_IRI,
@@ -20,7 +36,8 @@ static const char *rdfbox_types[] = {
         XSD_DATE_IRI,
         XSD_DAYTIMEDURATION_IRI,
         XSD_STRING_IRI,
-        "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString" };
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString"
+};
 
 
 PG_FUNCTION_INFO_V1(is_iri_rdfbox);
@@ -28,7 +45,6 @@ Datum is_iri_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
     bool result = box->type == IRI;
-    PG_FREE_IF_COPY(box, 0);
     PG_RETURN_BOOL(result);
 }
 
@@ -37,8 +53,7 @@ PG_FUNCTION_INFO_V1(is_blank_rdfbox);
 Datum is_blank_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    bool result = box->type == BLANKNODE_INT || box->type == BLANKNODE_STR;
-    PG_FREE_IF_COPY(box, 0);
+    bool result = box->type == IBLANKNODE || box->type == SBLANKNODE;
     PG_RETURN_BOOL(result);
 }
 
@@ -48,7 +63,6 @@ Datum is_literal_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
     bool result = rdfbox_is_literal(box);
-    PG_FREE_IF_COPY(box, 0);
     PG_RETURN_BOOL(result);
 }
 
@@ -58,7 +72,6 @@ Datum is_numeric_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
     bool result = rdfbox_is_numeric(box);
-    PG_FREE_IF_COPY(box, 0);
     PG_RETURN_BOOL(result);
 }
 
@@ -67,106 +80,49 @@ PG_FUNCTION_INFO_V1(str_rdfbox);
 Datum str_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    NullableDatum result = { .isnull = false };
 
     switch(box->type)
     {
         case XSD_BOOLEAN:
-            result = NullableFunctionCall1(cast_as_string_from_boolean, BoolGetDatum(((RdfBoxBoolean *) box)->value));
-            break;
+            PG_RETURN(NullableFunctionCall1(cast_as_string_from_boolean, BoolGetDatum(RdfBoxGetBool(box))));
 
         case XSD_SHORT:
-            result = NullableFunctionCall1(cast_as_string_from_short, Int16GetDatum(((RdfBoxShort *) box)->value));
-            break;
+            PG_RETURN(NullableFunctionCall1(cast_as_string_from_short, Int16GetDatum(RdfBoxGetInt16(box))));
 
         case XSD_INT:
-            result = NullableFunctionCall1(cast_as_string_from_int, Int32GetDatum(((RdfBoxInt *) box)->value));
-            break;
+            PG_RETURN(NullableFunctionCall1(cast_as_string_from_int, Int32GetDatum(RdfBoxGetInt32(box))));
 
         case XSD_LONG:
-            result = NullableFunctionCall1(cast_as_string_from_long, Int64GetDatum(((RdfBoxLong *) box)->value));
-            break;
-
-        case XSD_FLOAT:
-            result = NullableFunctionCall1(cast_as_string_from_float, Float4GetDatum(((RdfBoxFloat *) box)->value));
-            break;
-
-        case XSD_DOUBLE:
-            result = NullableFunctionCall1(cast_as_string_from_double, Float8GetDatum(((RdfBoxDouble *) box)->value));
-            break;
+            PG_RETURN(NullableFunctionCall1(cast_as_string_from_long, Int64GetDatum(RdfBoxGetInt64(box))));
 
         case XSD_INTEGER:
         case XSD_DECIMAL:
-            result = NullableFunctionCall1(cast_as_string_from_decimal, NumericGetDatum(((RdfBoxDecinal *) box)->value));
-            break;
+            PG_RETURN(NullableFunctionCall1(cast_as_string_from_decimal, NumericGetDatum(RdfBoxGetNumeric(box))));
+
+        case XSD_FLOAT:
+            PG_RETURN(NullableFunctionCall1(cast_as_string_from_float, Float4GetDatum(RdfBoxGetFloat4(box))));
+
+        case XSD_DOUBLE:
+            PG_RETURN(NullableFunctionCall1(cast_as_string_from_double, Float8GetDatum(RdfBoxGetFloat8(box))));
 
         case XSD_DATETIME:
-            result = NullableFunctionCall1(cast_as_string_from_datetime, ZonedDateTimeGetDatum(&((RdfBoxDateTime *) box)->value));
-            break;
+            PG_RETURN(NullableFunctionCall1(cast_as_string_from_datetime, ZonedDateTimeGetDatum(RdfBoxGetZonedDateTime(box))));
 
         case XSD_DATE:
-            result = NullableFunctionCall1(cast_as_string_from_date, ZonedDateGetDatum(((RdfBoxDate *) box)->value));
-            break;
+            PG_RETURN(NullableFunctionCall1(cast_as_string_from_date, ZonedDateGetDatum(RdfBoxGetZonedDate(box))));
 
         case XSD_DAYTIMEDURATION:
-            result = NullableFunctionCall1(cast_as_string_from_daytimeduration, Int64GetDatum(((RdfBoxDayTimeDuration *) box)->value));
-            break;
+            PG_RETURN(NullableFunctionCall1(cast_as_string_from_daytimeduration, Int64GetDatum(RdfBoxGetInt64(box))));
 
         case XSD_STRING:
-        {
-            VarChar *value = (VarChar *) ((RdfBoxString *) box)->value;
-            size_t length = VARSIZE(value);
-
-            VarChar *copy = palloc(length);
-            memcpy(copy, value, length);
-            result.value = PointerGetDatum(copy);
-            break;
-        }
-
-        case RDF_LANGSTRING:
-        {
-            VarChar *value = (VarChar *) ((RdfBoxLangString *) box)->value;
-            size_t length = VARSIZE(value);
-
-            VarChar *copy = palloc(length);
-            memcpy(copy, value, length);
-            result.value = PointerGetDatum(copy);
-            break;
-        }
-
-        case TYPED_LITERAL:
-        {
-            VarChar *value = (VarChar *) ((RdfBoxTypedLiteral *) box)->value;
-            size_t length = VARSIZE(value);
-
-            VarChar *copy = palloc(length);
-            memcpy(copy, value, length);
-            result.value = PointerGetDatum(copy);
-            break;
-        }
-
         case IRI:
-        {
-            VarChar *value = (VarChar *) ((RdfBoxIri *) box)->value;
-            size_t length = VARSIZE(value);
-
-            VarChar *copy = palloc(length);
-            memcpy(copy, value, length);
-            result.value = PointerGetDatum(copy);
-            break;
-        }
+        case RDF_LANGSTRING:
+        case TYPED_LITERAL:
+            PG_RETURN_VARCHAR_P(RdfBoxGetVarChar(box));
 
         default:
-            result.isnull = true;
-            break;
+            PG_RETURN_NULL();
     }
-
-    PG_FREE_IF_COPY(box, 0);
-
-    if(result.isnull)
-        PG_RETURN_NULL();
-
-    PG_RETURN_DATUM(result.value);
 }
 
 
@@ -175,36 +131,21 @@ Datum lang_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
 
-    Datum result;
-    bool isnull = false;
-
     if(box->type == RDF_LANGSTRING)
     {
-        VarChar *value = (VarChar *) ((RdfBoxLangString *) box)->value;
-        VarChar *lang = (VarChar *) (((RdfBoxLangString *) box)->value + VARSIZE(value));
-
-        VarChar *copy = palloc(VARSIZE(lang));
-        memcpy(copy, lang, VARSIZE(lang));
-
-        result = PointerGetDatum(copy);
+        PG_RETURN_VARCHAR_P(RdfBoxGetAttachment(box));
     }
     else if(rdfbox_is_literal(box))
     {
-        VarChar *copy = palloc(VARHDRSZ);
-        SET_VARSIZE(copy, VARHDRSZ);
-        result = PointerGetDatum(copy);
+        VarChar *empty = palloc(VARHDRSZ);
+        SET_VARSIZE(empty, VARHDRSZ);
+
+        PG_RETURN_VARCHAR_P(empty);
     }
     else
     {
-        isnull = true;
-    }
-
-    PG_FREE_IF_COPY(box, 0);
-
-    if(isnull)
         PG_RETURN_NULL();
-
-    PG_RETURN_DATUM(result);
+    }
 }
 
 
@@ -213,63 +154,12 @@ Datum datatype_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
 
-    Datum result;
-    bool isnull = false;
-
     if(box->type == TYPED_LITERAL)
-    {
-        VarChar *value = (VarChar *) ((RdfBoxTypedLiteral *) box)->value;
-        VarChar *type = (VarChar *) (((RdfBoxTypedLiteral *) box)->value + VARSIZE(value));
-
-        VarChar *copy = palloc(VARSIZE(type));
-        memcpy(copy, type, VARSIZE(type));
-
-        result = PointerGetDatum(copy);
-    }
+        PG_RETURN_VARCHAR_P(RdfBoxGetAttachment(box));
     else if(rdfbox_is_literal(box))
-    {
-        result = PointerGetDatum(cstring_to_text(rdfbox_types[box->type]));
-    }
+        PG_RETURN_TEXT_P(cstring_to_text(rdfbox_types[box->type]));
     else
-    {
-        isnull = true;
-    }
-
-    PG_FREE_IF_COPY(box, 0);
-
-    if(isnull)
         PG_RETURN_NULL();
-
-    PG_RETURN_DATUM(result);
-}
-
-
-typedef struct
-{
-    char *scheme;
-    char *authority;
-    char *path;
-    char *query;
-    char *fragment;
-} IriComponents;
-
-
-static void iri_free(IriComponents *iri)
-{
-    if(iri->scheme != NULL)
-        pfree(iri->scheme);
-
-    if(iri->authority != NULL)
-        pfree(iri->authority);
-
-    if(iri->path != NULL)
-        pfree(iri->path);
-
-    if(iri->query != NULL)
-        pfree(iri->query);
-
-    if(iri->fragment != NULL)
-        pfree(iri->fragment);
 }
 
 
@@ -413,7 +303,6 @@ static char *iri_remove_dot_segments(char *path)
         }
     }
 
-    pfree(data);
     return result;
 }
 
@@ -421,14 +310,17 @@ static char *iri_remove_dot_segments(char *path)
 PG_FUNCTION_INFO_V1(iri_string);
 Datum iri_string(PG_FUNCTION_ARGS)
 {
-    text *baseArg = PG_GETARG_TEXT_P(0);
-    text *iriArg = PG_GETARG_TEXT_P(1);
+    text *base_value = PG_GETARG_TEXT_PP(0);
+    text *iri_value = PG_GETARG_TEXT_PP(1);
 
-    char *baseString = text_to_cstring(baseArg);
-    char *iriString = text_to_cstring(iriArg);
+    if(!check_iri_reference(VARDATA_ANY(iri_value), VARSIZE_ANY_EXHDR(iri_value)))
+        PG_RETURN_NULL();
 
-    IriComponents base = iri_parse(baseString);
-    IriComponents iri = iri_parse(iriString);
+    char *base_string = text_to_cstring(base_value);
+    char *iri_string = text_to_cstring(iri_value);
+
+    IriComponents base = iri_parse(base_string);
+    IriComponents iri = iri_parse(iri_string);
     IriComponents result;
 
     if(iri.scheme != NULL)
@@ -467,7 +359,6 @@ Datum iri_string(PG_FUNCTION_ARGS)
                 {
                     char *path = iri_merge_path((base.authority != NULL && base.path[0] == '\0') ? "/" : base.path, iri.path);
                     result.path = iri_remove_dot_segments(path);
-                    pfree(path);
                 }
 
                 result.query = iri.query;
@@ -481,25 +372,14 @@ Datum iri_string(PG_FUNCTION_ARGS)
 
     result.fragment = iri.fragment;
 
-
     result.scheme = result.scheme != NULL ? result.scheme : "";
     result.authority = result.authority != NULL ? result.authority : "";
     result.path = result.path != NULL ? result.path : "";
     result.query = result.query != NULL ? result.query : "";
     result.fragment = result.fragment != NULL ? result.fragment : "";
 
-    char *absolute =  psprintf("%s%s%s%s%s", result.scheme, result.authority, result.path, result.query, result.fragment);
+    char *absolute = psprintf("%s%s%s%s%s", result.scheme, result.authority, result.path, result.query, result.fragment);
     Datum datum = PointerGetDatum(cstring_to_text(absolute));
-
-
-    iri_free(&base);
-    iri_free(&iri);
-    pfree(baseString);
-    pfree(iriString);
-    pfree(result.path);
-    pfree(absolute);
-    PG_FREE_IF_COPY(baseArg, 0);
-    PG_FREE_IF_COPY(iriArg, 1);
 
     PG_RETURN_DATUM(datum);
 }
@@ -508,43 +388,20 @@ Datum iri_string(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(iri_rdfbox);
 Datum iri_rdfbox(PG_FUNCTION_ARGS)
 {
-    text *base = PG_GETARG_TEXT_P(0);
+    Datum base = PG_GETARG_DATUM(0);
     RdfBox *box = PG_GETARG_RDFBOX_P(1);
-
-    bool isnull = false;
-    Datum result;
 
     switch(box->type)
     {
         case XSD_STRING:
-        {
-            VarChar *value = (VarChar *) ((RdfBoxString *) box)->value;
-            result = DirectFunctionCall2(iri_string, PointerGetDatum(base), PointerGetDatum(value));
-            break;
-        }
+            PG_RETURN(NullableFunctionCall2(iri_string, base, PointerGetDatum(RdfBoxGetVarChar(box))));
 
         case IRI:
-        {
-            VarChar *value = (VarChar *) ((RdfBoxIri *) box)->value;
-            size_t length = VARSIZE(value);
-
-            VarChar *copy = palloc(length);
-            memcpy(copy, value, length);
-            result = PointerGetDatum(copy);
-            break;
-        }
+            PG_RETURN_VARCHAR_P(RdfBoxGetVarChar(box));
 
         default:
-            isnull = true;
+            PG_RETURN_NULL();
     }
-
-    PG_FREE_IF_COPY(base, 0);
-    PG_FREE_IF_COPY(box, 1);
-
-    if(isnull)
-        PG_RETURN_NULL();
-
-    PG_RETURN_DATUM(result);
 }
 
 
@@ -553,4 +410,123 @@ Datum bnode(PG_FUNCTION_ARGS)
 {
     static int32 bnode_id = 0;
     PG_RETURN_INT32(bnode_id++);
+}
+
+
+PG_FUNCTION_INFO_V1(strdt_string);
+Datum strdt_string(PG_FUNCTION_ARGS)
+{
+    VarChar *value = PG_GETARG_VARCHAR_PP(0);
+    VarChar *type = PG_GETARG_VARCHAR_PP(1);
+
+    char *type_data = VARDATA_ANY(type);
+    int type_size = VARSIZE_ANY_EXHDR(type);
+
+    RdfBox *result = NULL;
+
+    if(sizeof(XSD_BOOLEAN_IRI) == type_size + 1 && strncmp(XSD_BOOLEAN_IRI, type_data, type_size) == 0)
+    {
+        NullableDatum retval = NullableFunctionCall1(cast_as_boolean_from_string, PointerGetDatum(value));
+
+        if(retval.isnull == false)
+            result = GetBooleanRdfBox(DatumGetBool(retval.value));
+    }
+    else if(sizeof(XSD_SHORT_IRI) == type_size + 1 && strncmp(XSD_SHORT_IRI, type_data, type_size) == 0)
+    {
+        NullableDatum retval = NullableFunctionCall1(cast_as_short_from_string, PointerGetDatum(value));
+
+        if(retval.isnull == false)
+            result = GetShortRdfBox(DatumGetInt16(retval.value));
+    }
+    else if(sizeof(XSD_INT_IRI) == type_size + 1 && strncmp(XSD_INT_IRI, type_data, type_size) == 0)
+    {
+        NullableDatum retval = NullableFunctionCall1(cast_as_int_from_string, PointerGetDatum(value));
+
+        if(retval.isnull == false)
+            result = GetIntRdfBox(DatumGetInt32(retval.value));
+    }
+    else if(sizeof(XSD_LONG_IRI) == type_size + 1 && strncmp(XSD_LONG_IRI, type_data, type_size) == 0)
+    {
+        NullableDatum retval = NullableFunctionCall1(cast_as_long_from_string, PointerGetDatum(value));
+
+        if(retval.isnull == false)
+            result = GetLongRdfBox(DatumGetInt64(retval.value));
+    }
+    else if(sizeof(XSD_FLOAT_IRI) == type_size + 1 && strncmp(XSD_FLOAT_IRI, type_data, type_size) == 0)
+    {
+        NullableDatum retval = NullableFunctionCall1(cast_as_float_from_string, PointerGetDatum(value));
+
+        if(retval.isnull == false)
+            result = GetFloatRdfBox(DatumGetFloat4(retval.value));
+    }
+    else if(sizeof(XSD_DOUBLE_IRI) == type_size + 1 && strncmp(XSD_DOUBLE_IRI, type_data, type_size) == 0)
+    {
+        NullableDatum retval = NullableFunctionCall1(cast_as_double_from_string, PointerGetDatum(value));
+
+        if(retval.isnull == false)
+            result = GetDoubleRdfBox(DatumGetFloat8(retval.value));
+    }
+    else if(sizeof(XSD_INTEGER_IRI) == type_size + 1 && strncmp(XSD_INTEGER_IRI, type_data, type_size) == 0)
+    {
+        NullableDatum retval = NullableFunctionCall1(cast_as_integer_from_string, PointerGetDatum(value));
+
+        if(retval.isnull == false)
+            result = GetIntegerRdfBox(DatumGetNumeric(retval.value));
+    }
+    else if(sizeof(XSD_DECIMAL_IRI) == type_size + 1 && strncmp(XSD_DECIMAL_IRI, type_data, type_size) == 0)
+    {
+        NullableDatum retval = NullableFunctionCall1(cast_as_decimal_from_string, PointerGetDatum(value));
+
+        if(retval.isnull == false)
+            result = GetDecimalRdfBox(DatumGetNumeric(retval.value));
+    }
+    else if(sizeof(XSD_DATETIME_IRI) == type_size + 1 && strncmp(XSD_DATETIME_IRI, type_data, type_size) == 0)
+    {
+        NullableDatum retval = NullableFunctionCall1(cast_as_datetime_from_string, PointerGetDatum(value));
+
+        if(retval.isnull == false)
+            result = GetDateTimeRdfBox(DatumGetZonedDateTime(retval.value));
+    }
+    else if(sizeof(XSD_DATE_IRI) == type_size + 1 && strncmp(XSD_DATE_IRI, type_data, type_size) == 0)
+    {
+        NullableDatum retval = NullableFunctionCall1(cast_as_date_from_string, PointerGetDatum(value));
+
+        if(retval.isnull == false)
+            result = GetDateRdfBox(DatumGetZonedDate(retval.value));
+    }
+    else if(sizeof(XSD_DAYTIMEDURATION_IRI) == type_size + 1 && strncmp(XSD_DAYTIMEDURATION_IRI, type_data, type_size) == 0)
+    {
+        NullableDatum retval = NullableFunctionCall1(cast_as_daytimeduration_from_string, PointerGetDatum(value));
+
+        if(retval.isnull == false)
+            result = GetDayTimeDurationRdfBox(DatumGetInt64(retval.value));
+    }
+    else if(sizeof(XSD_STRING_IRI) == type_size + 1 && strncmp(XSD_STRING_IRI, type_data, type_size) == 0)
+    {
+        result = GetStringRdfBox(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value));
+    }
+
+    if(result == NULL)
+    {
+        if(!check_iri(type_data, type_size))
+            PG_RETURN_NULL();
+
+        result = GetTypedLiteralRdfBox(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value), type_data, type_size);
+    }
+
+    PG_RETURN_RDFBOX_P(result);
+}
+
+
+PG_FUNCTION_INFO_V1(strlang_string);
+Datum strlang_string(PG_FUNCTION_ARGS)
+{
+    VarChar *value = PG_GETARG_VARCHAR_PP(0);
+    VarChar *lang = PG_GETARG_VARCHAR_PP(1);
+
+    if(!check_language_tag(VARDATA_ANY(lang), VARSIZE_ANY_EXHDR(lang)))
+        PG_RETURN_NULL();
+
+    Datum lcase_lang = CStringGetTextDatum(asc_tolower(VARDATA_ANY(lang), VARSIZE_ANY_EXHDR(lang)));
+    PG_RETURN_RDFBOX_P(GetLangStringRdfBox(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value), VARDATA_ANY(lcase_lang), VARSIZE_ANY_EXHDR(lcase_lang)));
 }

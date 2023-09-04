@@ -3,71 +3,70 @@
  * https://www.w3.org/TR/xpath-functions/#casting-to-datetimes
  */
 #include <postgres.h>
+#include <utils/datum.h>
 #include <utils/builtins.h>
-#include "date/datetime.h"
-#include "date/date.h"
-#include "date/timezone.h"
-#include "rdfbox.h"
 #include "call.h"
 #include "try-catch.h"
+#include "rdfbox/rdfbox.h"
+#include "types/date.h"
+#include "types/datetime.h"
+#include "types/timezone.h"
 
 
 PG_FUNCTION_INFO_V1(cast_as_date_from_datetime);
 Datum cast_as_date_from_datetime(PG_FUNCTION_ARGS)
 {
-    ZonedDateTime date = PG_NARGS() == 1 ? *PG_GETARG_ZONEDDATETIME_P(0) :
-            (ZonedDateTime) { .value = PG_GETARG_TIMESTAMPTZ(0), .zone = PG_GETARG_INT32(1) };
+    ZonedDateTime datetime = PG_GETARG_DATETIME();
+    NullableDatum result = { .isnull = false };
 
-    if(date.zone != ZONE_UNSPECIFIED)
-        date.value += date.zone * USECS_PER_SEC;
+    PG_TRY_EX();
+    {
+        TimestampTz value = datetime.value;
 
-    ZonedDate result = { .value = date.value / USECS_PER_DAY, .zone = date.zone };
-    PG_RETURN_ZONEDDATE(result);
-}
+        if(datetime.zone != ZONE_UNSPECIFIED)
+        {
+            value += datetime.zone * USECS_PER_SEC;
 
+            if((datetime.value > 0 && datetime.zone > 0 && value < 0) || (datetime.value < 0 && datetime.zone < 0 && value > 0))
+                ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE)));
+        }
 
-PG_FUNCTION_INFO_V1(cast_as_plain_date_from_datetime);
-Datum cast_as_plain_date_from_datetime(PG_FUNCTION_ARGS)
-{
-    ZonedDateTime date = PG_NARGS() == 1 ? *PG_GETARG_ZONEDDATETIME_P(0) :
-            (ZonedDateTime) { .value = PG_GETARG_TIMESTAMPTZ(0), .zone = PG_GETARG_INT32(1) };
+        DateADT date = DatumGetDateADT(DirectFunctionCall1(timestamp_date, TimestampTzGetDatum(value)));
+        result.value = ZonedDateGetDatum((ZonedDate) { .value = date, .zone = datetime.zone });
+    }
+    PG_CATCH_EX();
+    {
+        if(sqlerrcode != ERRCODE_DATETIME_VALUE_OUT_OF_RANGE)
+            PG_RE_THROW_EX();
 
-    if(date.zone != ZONE_UNSPECIFIED)
-        date.value += date.zone * USECS_PER_SEC;
+        result.isnull = true;
+    }
+    PG_END_TRY_EX();
 
-    PG_RETURN_DATEADT(date.value / USECS_PER_DAY);
+    PG_RETURN(result);
 }
 
 
 PG_FUNCTION_INFO_V1(cast_as_date_from_string);
 Datum cast_as_date_from_string(PG_FUNCTION_ARGS)
 {
-    text *value = PG_GETARG_TEXT_P(0);
-    bool isnull = false;
-    Datum result;
-
-    char *cstring = text_to_cstring(value);
+    text *value = PG_GETARG_TEXT_PP(0);
+    NullableDatum result = { .isnull = false };
 
     PG_TRY_EX();
     {
-        result = DirectFunctionCall1(zoneddate_input, CStringGetDatum(cstring));
+        result = NullableFunctionCall1(zoneddate_input, CStringGetDatum(text_to_cstring(value)));
     }
     PG_CATCH_EX();
     {
         if(sqlerrcode != ERRCODE_INVALID_TEXT_REPRESENTATION && sqlerrcode != ERRCODE_DATETIME_VALUE_OUT_OF_RANGE)
             PG_RE_THROW_EX();
 
-        isnull = true;
+        result.isnull = true;
     }
     PG_END_TRY_EX();
 
-    pfree(cstring);
-    PG_FREE_IF_COPY(value, 0);
-
-    if(isnull)
-        PG_RETURN_NULL();
-
-    PG_RETURN_DATUM(result);
+    PG_RETURN(result);
 }
 
 
@@ -75,33 +74,54 @@ PG_FUNCTION_INFO_V1(cast_as_date_from_rdfbox);
 Datum cast_as_date_from_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    NullableDatum result = { .isnull = false };
 
     switch(box->type)
     {
         case XSD_DATETIME:
-            result = NullableFunctionCall1(cast_as_date_from_datetime, ZonedDateTimeGetDatum(&((RdfBoxDateTime *) box)->value));
-            break;
+            PG_RETURN(NullableFunctionCall1(cast_as_date_from_datetime, ZonedDateTimeGetDatum(RdfBoxGetZonedDateTime(box))));
 
         case XSD_DATE:
-            result.value = ZonedDateGetDatum(((RdfBoxDate *) box)->value);
-            break;
+            PG_RETURN_ZONEDDATE(RdfBoxGetZonedDate(box));
 
         case XSD_STRING:
-            result = NullableFunctionCall1(cast_as_date_from_string, PointerGetDatum(((RdfBoxString *) box)->value));
-            break;
+            PG_RETURN(NullableFunctionCall1(cast_as_date_from_string, PointerGetDatum(RdfBoxGetVarChar(box))));
 
         default:
-            result.isnull = true;
-            break;
+            PG_RETURN_NULL();
     }
+}
 
-    PG_FREE_IF_COPY(box, 0);
 
-    if(result.isnull)
-        PG_RETURN_NULL();
+PG_FUNCTION_INFO_V1(cast_as_plain_date_from_datetime);
+Datum cast_as_plain_date_from_datetime(PG_FUNCTION_ARGS)
+{
+    ZonedDateTime datetime = PG_GETARG_DATETIME();
+    NullableDatum result = { .isnull = false };
 
-    PG_RETURN_DATUM(result.value);
+    PG_TRY_EX();
+    {
+        TimestampTz value = datetime.value;
+
+        if(datetime.zone != ZONE_UNSPECIFIED)
+        {
+            value += datetime.zone * USECS_PER_SEC;
+
+            if((datetime.value > 0 && datetime.zone > 0 && value < 0) || (datetime.value < 0 && datetime.zone < 0 && value > 0))
+                ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE)));
+        }
+
+        result.value = DirectFunctionCall1(timestamp_date, TimestampTzGetDatum(value));
+    }
+    PG_CATCH_EX();
+    {
+        if(sqlerrcode != ERRCODE_DATETIME_VALUE_OUT_OF_RANGE)
+            PG_RE_THROW_EX();
+
+        result.isnull = true;
+    }
+    PG_END_TRY_EX();
+
+    PG_RETURN(result);
 }
 
 
@@ -109,27 +129,16 @@ PG_FUNCTION_INFO_V1(cast_as_plain_date_from_rdfbox);
 Datum cast_as_plain_date_from_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    NullableDatum result = { .isnull = false };
 
     switch(box->type)
     {
         case XSD_DATETIME:
-            result = NullableFunctionCall1(cast_as_plain_date_from_datetime, ZonedDateTimeGetDatum(&((RdfBoxDateTime *) box)->value));
-            break;
+            PG_RETURN(NullableFunctionCall1(cast_as_plain_date_from_datetime, ZonedDateTimeGetDatum(RdfBoxGetZonedDateTime(box))));
 
         case XSD_DATE:
-            result.value = DateADTGetDatum(((RdfBoxDate *) box)->value.value);
-            break;
+            PG_RETURN_DATEADT(RdfBoxGetZonedDate(box).value);
 
         default:
-            result.isnull = true;
-            break;
+            PG_RETURN_NULL();
     }
-
-    PG_FREE_IF_COPY(box, 0);
-
-    if(result.isnull)
-        PG_RETURN_NULL();
-
-    PG_RETURN_DATUM(result.value);
 }
