@@ -2,6 +2,9 @@
 #define RDFBOX_RDFBOX_H_
 
 #include <postgres.h>
+#if PG_VERSION_NUM >= 160000
+#include <varatt.h>
+#endif
 #include <utils/numeric.h>
 #include "types/date.h"
 #include "types/datetime.h"

@@ -2,6 +2,9 @@
 #define COMPARE_H_
 
 #include <postgres.h>
+#if PG_VERSION_NUM >= 160000
+#include <varatt.h>
+#endif
 #include <utils/varlena.h>
 #include <catalog/pg_collation.h>
 

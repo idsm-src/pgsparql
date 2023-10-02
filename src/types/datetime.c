@@ -150,8 +150,12 @@ Datum zoneddatetime_input(PG_FUNCTION_ARGS)
     fsec_t fsec;
     int tz;
 
+    #if PG_VERSION_NUM >= 160000
+    DateTimeErrorExtra extra;
+    int derr = DecodeDateTime(field, ftype, 4, &dtype, &tm, &fsec, &tz, &extra);
+    #else
     int derr = DecodeDateTime(field, ftype, 4, &dtype, &tm, &fsec, &tz);
-
+    #endif
 
     if(derr != 0 || dtype != DTK_DATE)
         ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed zoneddatetime literal")));
