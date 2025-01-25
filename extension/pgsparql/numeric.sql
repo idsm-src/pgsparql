@@ -33,7 +33,7 @@ CREATE OPERATOR + (
     leftarg = decimal,
     rightarg = decimal,
     procedure = numeric_add,
-    commutator = +
+    commutator = operator(@extschema@.+)
 );
 
 CREATE OPERATOR - (
@@ -46,7 +46,7 @@ CREATE OPERATOR * (
     leftarg = decimal,
     rightarg = decimal,
     procedure = numeric_mul,
-    commutator = *
+    commutator = operator(@extschema@.*)
 );
 
 CREATE OPERATOR / (
@@ -59,8 +59,8 @@ CREATE OPERATOR = (
     leftarg = float4,
     rightarg = float4,
     procedure = float_is_equal_to,
-    commutator = =,
-    negator = !=,
+    commutator = operator(@extschema@.=),
+    negator = operator(@extschema@.!=),
     hashes, merges
 );
 
@@ -68,8 +68,8 @@ CREATE OPERATOR != (
     leftarg = float4,
     rightarg = float4,
     procedure = float_is_not_equal_to,
-    commutator = !=,
-    negator = =,
+    commutator = operator(@extschema@.!=),
+    negator = operator(@extschema@.=),
     hashes, merges
 );
 
@@ -77,7 +77,7 @@ CREATE OPERATOR < (
     leftarg = float4,
     rightarg = float4,
     procedure = float_is_less_than,
-    commutator = >,
+    commutator = operator(@extschema@.>),
     hashes, merges
 );
 
@@ -85,7 +85,7 @@ CREATE OPERATOR > (
     leftarg = float4,
     rightarg = float4,
     procedure = float_is_greater_than,
-    commutator = <,
+    commutator = operator(@extschema@.<),
     hashes, merges
 );
 
@@ -93,7 +93,7 @@ CREATE OPERATOR >= (
     leftarg = float4,
     rightarg = float4,
     procedure = float_is_not_less_than,
-    commutator = <=,
+    commutator = operator(@extschema@.<=),
     hashes, merges
 );
 
@@ -101,7 +101,7 @@ CREATE OPERATOR <= (
     leftarg = float4,
     rightarg = float4,
     procedure = float_is_not_greater_than,
-    commutator = >=,
+    commutator = operator(@extschema@.>=),
     hashes, merges
 );
 
@@ -114,7 +114,7 @@ CREATE OPERATOR + (
     leftarg = float4,
     rightarg = float4,
     procedure = float_add,
-    commutator = +
+    commutator = operator(@extschema@.+)
 );
 
 CREATE OPERATOR - (
@@ -127,7 +127,7 @@ CREATE OPERATOR * (
     leftarg = float4,
     rightarg = float4,
     procedure = float_mul,
-    commutator = *
+    commutator = operator(@extschema@.*)
 );
 
 CREATE OPERATOR / (
@@ -140,8 +140,8 @@ CREATE OPERATOR = (
     leftarg = float8,
     rightarg = float8,
     procedure = double_is_equal_to,
-    commutator = =,
-    negator = !=,
+    commutator = operator(@extschema@.=),
+    negator = operator(@extschema@.!=),
     hashes, merges
 );
 
@@ -149,8 +149,8 @@ CREATE OPERATOR != (
     leftarg = float8,
     rightarg = float8,
     procedure = double_is_not_equal_to,
-    commutator = !=,
-    negator = =,
+    commutator = operator(@extschema@.!=),
+    negator = operator(@extschema@.=),
     hashes, merges
 );
 
@@ -158,7 +158,7 @@ CREATE OPERATOR < (
     leftarg = float8,
     rightarg = float8,
     procedure = double_is_less_than,
-    commutator = >,
+    commutator = operator(@extschema@.>),
     hashes, merges
 );
 
@@ -166,7 +166,7 @@ CREATE OPERATOR > (
     leftarg = float8,
     rightarg = float8,
     procedure = double_is_greater_than,
-    commutator = <,
+    commutator = operator(@extschema@.<),
     hashes, merges
 );
 
@@ -174,7 +174,7 @@ CREATE OPERATOR >= (
     leftarg = float8,
     rightarg = float8,
     procedure = double_is_not_less_than,
-    commutator = <=,
+    commutator = operator(@extschema@.<=),
     hashes, merges
 );
 
@@ -182,7 +182,7 @@ CREATE OPERATOR <= (
     leftarg = float8,
     rightarg = float8,
     procedure = double_is_not_greater_than,
-    commutator = >=,
+    commutator = operator(@extschema@.>=),
     hashes, merges
 );
 
@@ -195,7 +195,7 @@ CREATE OPERATOR + (
     leftarg = float8,
     rightarg = float8,
     procedure = double_add,
-    commutator = +
+    commutator = operator(@extschema@.+)
 );
 
 CREATE OPERATOR - (
@@ -208,7 +208,7 @@ CREATE OPERATOR * (
     leftarg = float8,
     rightarg = float8,
     procedure = double_mul,
-    commutator = *
+    commutator = operator(@extschema@.*)
 );
 
 CREATE OPERATOR / (
