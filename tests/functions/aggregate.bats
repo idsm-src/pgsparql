@@ -37,11 +37,11 @@ load ../psql_tests.bash
 }
 
 @test "sparql.sum_decimal(x) from (values (NULL::decimal), ('2'::decimal), ('3'::decimal), (NULL::decimal)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+  expect_output '"5.0"^^<http://www.w3.org/2001/XMLSchema#decimal>'
 }
 
 @test "sparql.sum_decimal(x) from (values ('1'::decimal), ('2'::decimal), ('3'::decimal), ('4'::decimal)) as tab(x)" {
-  expect_output '"10"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+  expect_output '"10.0"^^<http://www.w3.org/2001/XMLSchema#decimal>'
 }
 
 
@@ -59,11 +59,11 @@ load ../psql_tests.bash
 }
 
 @test "sparql.sum_float(x) from (values (NULL::float4), ('2'::float4), ('3'::float4), (NULL::float4)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"5.0E0"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "sparql.sum_float(x) from (values ('1'::float4), ('2'::float4), ('3'::float4), ('4'::float4)) as tab(x)" {
-  expect_output '"10"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"1.0E1"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 
@@ -81,11 +81,11 @@ load ../psql_tests.bash
 }
 
 @test "sparql.sum_double(x) from (values (NULL::float8), ('2'::float8), ('3'::float8), (NULL::float8)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"5.0E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.sum_double(x) from (values ('1'::float8), ('2'::float8), ('3'::float8), ('4'::float8)) as tab(x)" {
-  expect_output '"10"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"1.0E1"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 
@@ -139,31 +139,31 @@ load ../psql_tests.bash
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_double('2'::float8)), (sparql.rdfbox_create_from_double('3'::float8)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"5.0E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_double('2'::float8)), (sparql.rdfbox_create_from_float('3'::float4)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"5.0E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_double('2'::float8)), (sparql.rdfbox_create_from_decimal('3'::decimal)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"5.0E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_double('2'::float8)), (sparql.rdfbox_create_from_integer('3'::decimal)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"5.0E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_double('2'::float8)), (sparql.rdfbox_create_from_long('3'::int8)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"5.0E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_double('2'::float8)), (sparql.rdfbox_create_from_int('3'::int4)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"5.0E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_double('2'::float8)), (sparql.rdfbox_create_from_short('3'::int2)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"5.0E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_float('2'::float4)), (sparql.rdfbox_create_from_string('3'::varchar)), (NULL::sparql.rdfbox)) as tab(x)" {
@@ -171,31 +171,31 @@ load ../psql_tests.bash
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_float('2'::float4)), (sparql.rdfbox_create_from_double('3'::float8)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"5.0E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_float('2'::float4)), (sparql.rdfbox_create_from_float('3'::float4)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"5.0E0"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_float('2'::float4)), (sparql.rdfbox_create_from_decimal('3'::decimal)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"5.0E0"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_float('2'::float4)), (sparql.rdfbox_create_from_integer('3'::decimal)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"5.0E0"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_float('2'::float4)), (sparql.rdfbox_create_from_long('3'::int8)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"5.0E0"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_float('2'::float4)), (sparql.rdfbox_create_from_int('3'::int4)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"5.0E0"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_float('2'::float4)), (sparql.rdfbox_create_from_short('3'::int2)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"5.0E0"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_decimal('2'::decimal)), (sparql.rdfbox_create_from_string('3'::varchar)), (NULL::sparql.rdfbox)) as tab(x)" {
@@ -203,31 +203,31 @@ load ../psql_tests.bash
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_decimal('2'::decimal)), (sparql.rdfbox_create_from_double('3'::float8)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"5.0E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_decimal('2'::decimal)), (sparql.rdfbox_create_from_float('3'::float4)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"5.0E0"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_decimal('2'::decimal)), (sparql.rdfbox_create_from_decimal('3'::decimal)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+  expect_output '"5.0"^^<http://www.w3.org/2001/XMLSchema#decimal>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_decimal('2'::decimal)), (sparql.rdfbox_create_from_integer('3'::decimal)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+  expect_output '"5.0"^^<http://www.w3.org/2001/XMLSchema#decimal>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_decimal('2'::decimal)), (sparql.rdfbox_create_from_long('3'::int8)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+  expect_output '"5.0"^^<http://www.w3.org/2001/XMLSchema#decimal>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_decimal('2'::decimal)), (sparql.rdfbox_create_from_int('3'::int4)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+  expect_output '"5.0"^^<http://www.w3.org/2001/XMLSchema#decimal>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_decimal('2'::decimal)), (sparql.rdfbox_create_from_short('3'::int2)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+  expect_output '"5.0"^^<http://www.w3.org/2001/XMLSchema#decimal>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_integer('2'::decimal)), (sparql.rdfbox_create_from_string('3'::varchar)), (NULL::sparql.rdfbox)) as tab(x)" {
@@ -235,15 +235,15 @@ load ../psql_tests.bash
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_integer('2'::decimal)), (sparql.rdfbox_create_from_double('3'::float8)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"5.0E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_integer('2'::decimal)), (sparql.rdfbox_create_from_float('3'::float4)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"5.0E0"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_integer('2'::decimal)), (sparql.rdfbox_create_from_decimal('3'::decimal)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+  expect_output '"5.0"^^<http://www.w3.org/2001/XMLSchema#decimal>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_integer('2'::decimal)), (sparql.rdfbox_create_from_integer('3'::decimal)), (NULL::sparql.rdfbox)) as tab(x)" {
@@ -267,15 +267,15 @@ load ../psql_tests.bash
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_long('2'::int8)), (sparql.rdfbox_create_from_double('3'::float8)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"5.0E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_long('2'::int8)), (sparql.rdfbox_create_from_float('3'::float4)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"5.0E0"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_long('2'::int8)), (sparql.rdfbox_create_from_decimal('3'::decimal)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+  expect_output '"5.0"^^<http://www.w3.org/2001/XMLSchema#decimal>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_long('2'::int8)), (sparql.rdfbox_create_from_integer('3'::decimal)), (NULL::sparql.rdfbox)) as tab(x)" {
@@ -299,15 +299,15 @@ load ../psql_tests.bash
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_int('2'::int4)), (sparql.rdfbox_create_from_double('3'::float8)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"5.0E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_int('2'::int4)), (sparql.rdfbox_create_from_float('3'::float4)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"5.0E0"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_int('2'::int4)), (sparql.rdfbox_create_from_decimal('3'::decimal)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+  expect_output '"5.0"^^<http://www.w3.org/2001/XMLSchema#decimal>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_int('2'::int4)), (sparql.rdfbox_create_from_integer('3'::decimal)), (NULL::sparql.rdfbox)) as tab(x)" {
@@ -331,15 +331,15 @@ load ../psql_tests.bash
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_short('2'::int2)), (sparql.rdfbox_create_from_double('3'::float8)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"5.0E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_short('2'::int2)), (sparql.rdfbox_create_from_float('3'::float4)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"5.0E0"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_short('2'::int2)), (sparql.rdfbox_create_from_decimal('3'::decimal)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+  expect_output '"5.0"^^<http://www.w3.org/2001/XMLSchema#decimal>'
 }
 
 @test "sparql.sum_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_short('2'::int2)), (sparql.rdfbox_create_from_integer('3'::decimal)), (NULL::sparql.rdfbox)) as tab(x)" {
@@ -417,11 +417,11 @@ load ../psql_tests.bash
 }
 
 @test "sparql.avg_float(x) from (values (NULL::float4), ('2'::float4), ('3'::float4), (NULL::float4)) as tab(x)" {
-  expect_output '"2.5"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"2.5E0"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "sparql.avg_float(x) from (values ('1'::float4), ('2'::float4), ('3'::float4), ('4'::float4)) as tab(x)" {
-  expect_output '"2.5"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"2.5E0"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 
@@ -439,11 +439,11 @@ load ../psql_tests.bash
 }
 
 @test "sparql.avg_double(x) from (values (NULL::float8), ('2'::float8), ('3'::float8), (NULL::float8)) as tab(x)" {
-  expect_output '"2.5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"2.5E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.avg_double(x) from (values ('1'::float8), ('2'::float8), ('3'::float8), ('4'::float8)) as tab(x)" {
-  expect_output '"2.5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"2.5E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 
@@ -497,31 +497,31 @@ load ../psql_tests.bash
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_double('2'::float8)), (sparql.rdfbox_create_from_double('3'::float8)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"2.5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"2.5E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_double('2'::float8)), (sparql.rdfbox_create_from_float('3'::float4)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"2.5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"2.5E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_double('2'::float8)), (sparql.rdfbox_create_from_decimal('3'::decimal)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"2.5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"2.5E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_double('2'::float8)), (sparql.rdfbox_create_from_integer('3'::decimal)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"2.5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"2.5E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_double('2'::float8)), (sparql.rdfbox_create_from_long('3'::int8)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"2.5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"2.5E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_double('2'::float8)), (sparql.rdfbox_create_from_int('3'::int4)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"2.5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"2.5E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_double('2'::float8)), (sparql.rdfbox_create_from_short('3'::int2)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"2.5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"2.5E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_float('2'::float4)), (sparql.rdfbox_create_from_string('3'::varchar)), (NULL::sparql.rdfbox)) as tab(x)" {
@@ -529,31 +529,31 @@ load ../psql_tests.bash
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_float('2'::float4)), (sparql.rdfbox_create_from_double('3'::float8)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"2.5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"2.5E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_float('2'::float4)), (sparql.rdfbox_create_from_float('3'::float4)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"2.5"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"2.5E0"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_float('2'::float4)), (sparql.rdfbox_create_from_decimal('3'::decimal)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"2.5"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"2.5E0"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_float('2'::float4)), (sparql.rdfbox_create_from_integer('3'::decimal)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"2.5"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"2.5E0"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_float('2'::float4)), (sparql.rdfbox_create_from_long('3'::int8)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"2.5"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"2.5E0"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_float('2'::float4)), (sparql.rdfbox_create_from_int('3'::int4)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"2.5"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"2.5E0"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_float('2'::float4)), (sparql.rdfbox_create_from_short('3'::int2)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"2.5"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"2.5E0"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_decimal('2'::decimal)), (sparql.rdfbox_create_from_string('3'::varchar)), (NULL::sparql.rdfbox)) as tab(x)" {
@@ -561,11 +561,11 @@ load ../psql_tests.bash
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_decimal('2'::decimal)), (sparql.rdfbox_create_from_double('3'::float8)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"2.5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"2.5E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_decimal('2'::decimal)), (sparql.rdfbox_create_from_float('3'::float4)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"2.5"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"2.5E0"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_decimal('2'::decimal)), (sparql.rdfbox_create_from_decimal('3'::decimal)), (NULL::sparql.rdfbox)) as tab(x)" {
@@ -593,11 +593,11 @@ load ../psql_tests.bash
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_integer('2'::decimal)), (sparql.rdfbox_create_from_double('3'::float8)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"2.5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"2.5E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_integer('2'::decimal)), (sparql.rdfbox_create_from_float('3'::float4)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"2.5"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"2.5E0"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_integer('2'::decimal)), (sparql.rdfbox_create_from_decimal('3'::decimal)), (NULL::sparql.rdfbox)) as tab(x)" {
@@ -625,11 +625,11 @@ load ../psql_tests.bash
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_long('2'::int8)), (sparql.rdfbox_create_from_double('3'::float8)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"2.5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"2.5E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_long('2'::int8)), (sparql.rdfbox_create_from_float('3'::float4)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"2.5"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"2.5E0"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_long('2'::int8)), (sparql.rdfbox_create_from_decimal('3'::decimal)), (NULL::sparql.rdfbox)) as tab(x)" {
@@ -657,11 +657,11 @@ load ../psql_tests.bash
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_int('2'::int4)), (sparql.rdfbox_create_from_double('3'::float8)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"2.5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"2.5E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_int('2'::int4)), (sparql.rdfbox_create_from_float('3'::float4)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"2.5"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"2.5E0"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_int('2'::int4)), (sparql.rdfbox_create_from_decimal('3'::decimal)), (NULL::sparql.rdfbox)) as tab(x)" {
@@ -689,11 +689,11 @@ load ../psql_tests.bash
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_short('2'::int2)), (sparql.rdfbox_create_from_double('3'::float8)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"2.5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"2.5E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_short('2'::int2)), (sparql.rdfbox_create_from_float('3'::float4)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"2.5"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"2.5E0"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "sparql.avg_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_short('2'::int2)), (sparql.rdfbox_create_from_decimal('3'::decimal)), (NULL::sparql.rdfbox)) as tab(x)" {
@@ -775,11 +775,11 @@ load ../psql_tests.bash
 }
 
 @test "sparql.min_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_float('NaN'::float4)), (sparql.rdfbox_create_from_float('4'::float4)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"4"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"4.0E0"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "sparql.min_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_float('2'::float4)), (sparql.rdfbox_create_from_float('NaN'::float4)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"2"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"2.0E0"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "sparql.min_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_double('NaN'::float8)), (sparql.rdfbox_create_from_double('NaN'::float8)), (NULL::sparql.rdfbox)) as tab(x)" {
@@ -787,11 +787,11 @@ load ../psql_tests.bash
 }
 
 @test "sparql.min_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_double('NaN'::float8)), (sparql.rdfbox_create_from_double('4'::float8)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"4"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"4.0E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.min_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_double('2'::float8)), (sparql.rdfbox_create_from_double('NaN'::float8)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"2"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"2.0E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.min_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_float('NaN'::float4)), (sparql.rdfbox_create_from_double('NaN'::float8)), (NULL::sparql.rdfbox)) as tab(x)" {
@@ -917,15 +917,15 @@ load ../psql_tests.bash
 }
 
 @test "sparql.max_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_decimal('-14'::decimal)), (sparql.rdfbox_create_from_int('-14'::int4)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"-14"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+  expect_output '"-14.0"^^<http://www.w3.org/2001/XMLSchema#decimal>'
 }
 
 @test "sparql.max_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_integer('-4'::decimal)), (sparql.rdfbox_create_from_float('-4'::float4)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"-4"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"-4.0E0"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "sparql.max_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_integer('-2'::decimal)), (sparql.rdfbox_create_from_double('4'::float8)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"4"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"4.0E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.max_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_float('NaN'::float4)), (sparql.rdfbox_create_from_float('NaN'::float4)), (NULL::sparql.rdfbox)) as tab(x)" {
@@ -1013,7 +1013,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.max_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_string('2'::varchar)), (sparql.rdfbox_create_from_double('4'::float8)), (NULL::sparql.rdfbox)) as tab(x)" {
-  expect_output '"4"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"4.0E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.max_rdfbox(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_string('b'::varchar)), (sparql.rdfbox_create_from_langstring('b'::varchar, 'en'::varchar)), (NULL::sparql.rdfbox)) as tab(x)" {

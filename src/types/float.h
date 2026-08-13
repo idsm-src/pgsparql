@@ -2,10 +2,24 @@
 #define TYPES_FLOAT_H_
 
 #include <postgres.h>
-#include <fmgr.h>
+#if PG_VERSION_NUM >= 160000
+#include <varatt.h>
+#endif
 
 
-Datum float_input(PG_FUNCTION_ARGS);
-Datum float_output(PG_FUNCTION_ARGS);
+#define FLOAT_MAXLEN 16
+
+
+float4 float_parse(char *data, int size);
+int float_print(float4 value, char *buffer);
+
+
+static inline VarChar *float_as_varchar(float4 value)
+{
+    VarChar *result = (VarChar *) palloc0(VARHDRSZ + FLOAT_MAXLEN);
+    int size = float_print(value, VARDATA(result));
+    SET_VARSIZE(result, VARHDRSZ + size);
+    return result;
+}
 
 #endif /* TYPES_FLOAT_H_ */

@@ -18,7 +18,7 @@ dnl Initialize Libtool
 LT_INIT
 
 dnl check for postgresql
-AX_LIB_POSTGRESQL(12.0.0)
+AX_LIB_POSTGRESQL(15.0.0)
 
 dnl check for pcre2
 PKG_CHECK_MODULES([PCRE2], [libpcre2-8 >= 10.30])

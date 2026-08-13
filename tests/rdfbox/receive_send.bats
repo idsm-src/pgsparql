@@ -31,11 +31,11 @@ load ../psql_tests.bash
 }
 
 @test "'1.300'::sparql.rdfbox" {
-  expect_receive_output '"1.3"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+  expect_receive_output '"1.300"^^<http://www.w3.org/2001/XMLSchema#decimal>'
 }
 
 @test "'1.0e6'::sparql.rdfbox" {
-  expect_receive_output '"1000000"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_receive_output '"1.0e6"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "'true'::sparql.rdfbox" {
@@ -61,11 +61,11 @@ load ../psql_tests.bash
 }
 
 @test "'\"1\"^^<http://www.w3.org/2001/XMLSchema#boolean>'::sparql.rdfbox" {
-  expect_receive_output '"true"^^<http://www.w3.org/2001/XMLSchema#boolean>'
+  expect_receive_output '"1"^^<http://www.w3.org/2001/XMLSchema#boolean>'
 }
 
 @test "'\"0\"^^<http://www.w3.org/2001/XMLSchema#boolean>'::sparql.rdfbox" {
-  expect_receive_output '"false"^^<http://www.w3.org/2001/XMLSchema#boolean>'
+  expect_receive_output '"0"^^<http://www.w3.org/2001/XMLSchema#boolean>'
 }
 
 @test "'\"TRUE\"^^<http://www.w3.org/2001/XMLSchema#boolean>'::sparql.rdfbox" {
@@ -83,7 +83,7 @@ load ../psql_tests.bash
 #
 
 @test "'\"+3\"^^<http://www.w3.org/2001/XMLSchema#short>'::sparql.rdfbox" {
-  expect_receive_output '"3"^^<http://www.w3.org/2001/XMLSchema#short>'
+  expect_receive_output '"+3"^^<http://www.w3.org/2001/XMLSchema#short>'
 }
 
 @test "'\"122\"^^<http://www.w3.org/2001/XMLSchema#short>'::sparql.rdfbox" {
@@ -113,7 +113,7 @@ load ../psql_tests.bash
 #
 
 @test "'\"+3\"^^<http://www.w3.org/2001/XMLSchema#int>'::sparql.rdfbox" {
-  expect_receive_output '"3"^^<http://www.w3.org/2001/XMLSchema#int>'
+  expect_receive_output '"+3"^^<http://www.w3.org/2001/XMLSchema#int>'
 }
 
 @test "'\"122\"^^<http://www.w3.org/2001/XMLSchema#int>'::sparql.rdfbox" {
@@ -143,7 +143,7 @@ load ../psql_tests.bash
 #
 
 @test "'\"+3\"^^<http://www.w3.org/2001/XMLSchema#long>'::sparql.rdfbox" {
-  expect_receive_output '"3"^^<http://www.w3.org/2001/XMLSchema#long>'
+  expect_receive_output '"+3"^^<http://www.w3.org/2001/XMLSchema#long>'
 }
 
 @test "'\"122\"^^<http://www.w3.org/2001/XMLSchema#long>'::sparql.rdfbox" {
@@ -177,7 +177,7 @@ load ../psql_tests.bash
 }
 
 @test "'\"00122\"^^<http://www.w3.org/2001/XMLSchema#integer>'::sparql.rdfbox" {
-  expect_receive_output '"122"^^<http://www.w3.org/2001/XMLSchema#integer>'
+  expect_receive_output '"00122"^^<http://www.w3.org/2001/XMLSchema#integer>'
 }
 
 @test "'\"0\"^^<http://www.w3.org/2001/XMLSchema#integer>'::sparql.rdfbox" {
@@ -185,7 +185,7 @@ load ../psql_tests.bash
 }
 
 @test "'\"+3\"^^<http://www.w3.org/2001/XMLSchema#integer>'::sparql.rdfbox" {
-  expect_receive_output '"3"^^<http://www.w3.org/2001/XMLSchema#integer>'
+  expect_receive_output '"+3"^^<http://www.w3.org/2001/XMLSchema#integer>'
 }
 
 @test "'\"-3\"^^<http://www.w3.org/2001/XMLSchema#integer>'::sparql.rdfbox" {
@@ -207,15 +207,15 @@ load ../psql_tests.bash
 #
 
 @test "'\"3.0\"^^<http://www.w3.org/2001/XMLSchema#decimal>'::sparql.rdfbox" {
-  expect_receive_output '"3"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+  expect_receive_output '"3.0"^^<http://www.w3.org/2001/XMLSchema#decimal>'
 }
 
 @test "'\"-3.0\"^^<http://www.w3.org/2001/XMLSchema#decimal>'::sparql.rdfbox" {
-  expect_receive_output '"-3"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+  expect_receive_output '"-3.0"^^<http://www.w3.org/2001/XMLSchema#decimal>'
 }
 
 @test "'\"+3.5\"^^<http://www.w3.org/2001/XMLSchema#decimal>'::sparql.rdfbox" {
-  expect_receive_output '"3.5"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+  expect_receive_output '"+3.5"^^<http://www.w3.org/2001/XMLSchema#decimal>'
 }
 
 @test "'\"3\"^^<http://www.w3.org/2001/XMLSchema#decimal>'::sparql.rdfbox" {
@@ -223,11 +223,11 @@ load ../psql_tests.bash
 }
 
 @test "'\".3\"^^<http://www.w3.org/2001/XMLSchema#decimal>'::sparql.rdfbox" {
-  expect_receive_output '"0.3"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+  expect_receive_output '".3"^^<http://www.w3.org/2001/XMLSchema#decimal>'
 }
 
 @test "'\"3.\"^^<http://www.w3.org/2001/XMLSchema#decimal>'::sparql.rdfbox" {
-  expect_receive_output '"3"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+  expect_receive_output '"3."^^<http://www.w3.org/2001/XMLSchema#decimal>'
 }
 
 @test "'\"0\"^^<http://www.w3.org/2001/XMLSchema#decimal>'::sparql.rdfbox" {
@@ -235,15 +235,15 @@ load ../psql_tests.bash
 }
 
 @test "'\"-.3\"^^<http://www.w3.org/2001/XMLSchema#decimal>'::sparql.rdfbox" {
-  expect_receive_output '"-0.3"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+  expect_receive_output '"-.3"^^<http://www.w3.org/2001/XMLSchema#decimal>'
 }
 
 @test "'\"0003.0\"^^<http://www.w3.org/2001/XMLSchema#decimal>'::sparql.rdfbox" {
-  expect_receive_output '"3"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+  expect_receive_output '"0003.0"^^<http://www.w3.org/2001/XMLSchema#decimal>'
 }
 
 @test "'\"3.0000\"^^<http://www.w3.org/2001/XMLSchema#decimal>'::sparql.rdfbox" {
-  expect_receive_output '"3"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+  expect_receive_output '"3.0000"^^<http://www.w3.org/2001/XMLSchema#decimal>'
 }
 
 @test "'\"3,5\"^^<http://www.w3.org/2001/XMLSchema#decimal>'::sparql.rdfbox" {
@@ -257,15 +257,15 @@ load ../psql_tests.bash
 #
 
 @test "'\"-3E2\"^^<http://www.w3.org/2001/XMLSchema#float>'::sparql.rdfbox" {
-  expect_receive_output '"-300"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_receive_output '"-3E2"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "'\"4268.22752E11\"^^<http://www.w3.org/2001/XMLSchema#float>'::sparql.rdfbox" {
-  expect_receive_output '"4.2682274e+14"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_receive_output '"4268.22752E11"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "'\"+24.3e-3\"^^<http://www.w3.org/2001/XMLSchema#float>'::sparql.rdfbox" {
-  expect_receive_output '"0.0243"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_receive_output '"+24.3e-3"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "'\"12\"^^<http://www.w3.org/2001/XMLSchema#float>'::sparql.rdfbox" {
@@ -273,7 +273,7 @@ load ../psql_tests.bash
 }
 
 @test "'\"+3.5\"^^<http://www.w3.org/2001/XMLSchema#float>'::sparql.rdfbox" {
-  expect_receive_output '"3.5"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_receive_output '"+3.5"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "'\"-INF\"^^<http://www.w3.org/2001/XMLSchema#float>'::sparql.rdfbox" {
@@ -307,15 +307,15 @@ load ../psql_tests.bash
 #
 
 @test "'\"-3E2\"^^<http://www.w3.org/2001/XMLSchema#double>'::sparql.rdfbox" {
-  expect_receive_output '"-300"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_receive_output '"-3E2"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "'\"4268.22752E11\"^^<http://www.w3.org/2001/XMLSchema#double>'::sparql.rdfbox" {
-  expect_receive_output '"426822752000000"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_receive_output '"4268.22752E11"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "'\"+24.3e-3\"^^<http://www.w3.org/2001/XMLSchema#double>'::sparql.rdfbox" {
-  expect_receive_output '"0.0243"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_receive_output '"+24.3e-3"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "'\"12\"^^<http://www.w3.org/2001/XMLSchema#double>'::sparql.rdfbox" {
@@ -323,7 +323,7 @@ load ../psql_tests.bash
 }
 
 @test "'\"+3.5\"^^<http://www.w3.org/2001/XMLSchema#double>'::sparql.rdfbox" {
-  expect_receive_output '"3.5"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_receive_output '"+3.5"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "'\"-INF\"^^<http://www.w3.org/2001/XMLSchema#double>'::sparql.rdfbox" {
@@ -449,15 +449,15 @@ load ../psql_tests.bash
 }
 
 @test "'\"PT120M\"^^<http://www.w3.org/2001/XMLSchema#dayTimeDuration>'::sparql.rdfbox" {
-  expect_receive_output '"PT2H"^^<http://www.w3.org/2001/XMLSchema#dayTimeDuration>'
+  expect_receive_output '"PT120M"^^<http://www.w3.org/2001/XMLSchema#dayTimeDuration>'
 }
 
 @test "'\"P0DT1H\"^^<http://www.w3.org/2001/XMLSchema#dayTimeDuration>'::sparql.rdfbox" {
-  expect_receive_output '"PT1H"^^<http://www.w3.org/2001/XMLSchema#dayTimeDuration>'
+  expect_receive_output '"P0DT1H"^^<http://www.w3.org/2001/XMLSchema#dayTimeDuration>'
 }
 
 @test "'\"P0D\"^^<http://www.w3.org/2001/XMLSchema#dayTimeDuration>'::sparql.rdfbox" {
-  expect_receive_output '"PT0S"^^<http://www.w3.org/2001/XMLSchema#dayTimeDuration>'
+  expect_receive_output '"P0D"^^<http://www.w3.org/2001/XMLSchema#dayTimeDuration>'
 }
 
 @test "'\"-P60D\"^^<http://www.w3.org/2001/XMLSchema#dayTimeDuration>'::sparql.rdfbox" {

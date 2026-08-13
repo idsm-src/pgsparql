@@ -1,123 +1,133 @@
 #include <postgres.h>
 #include <fmgr.h>
-#include <utils/builtins.h>
 #include <utils/float.h>
+#include "ryu/ryu.h"
+#include "types/parser.h"
 #include "types/double.h"
 
 
-PG_FUNCTION_INFO_V1(double_input);
-Datum double_input(PG_FUNCTION_ARGS)
+float8 double_parse(char *data, int size)
 {
-    char *input = PG_GETARG_CSTRING(0);
+    float8 result;
+    int pos = 0;
 
-    while(*input != '\0' && isspace((unsigned char) *input))
-        input++;
+    while(pos < size && xsd_isspace(data[pos]))
+        pos++;
 
-    if(*input == '\0')
-        ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed double literal")));
-
-    float8 value = 0;
-    char *endptr = input;;
-
-    if(isdigit((unsigned char) *input) || *input == '.' || ((*input == '+' || *input == '-') && isdigit((unsigned char) *(input + 1))))
+    if(pos + 2 < size && !memcmp(data + pos, "NaN", 3))
     {
+        pos += 3;
+        result = get_float8_nan();
+    }
+    else if(pos + 2 < size && !memcmp(data + pos, "INF", 3))
+    {
+        pos += 3;
+        result = get_float8_infinity();
+    }
+    else if(pos + 3 < size && !memcmp(data + pos, "+INF", 4))
+    {
+        pos += 4;
+        result = get_float8_infinity();
+    }
+    else if(pos + 3 < size && !memcmp(data + pos, "-INF", 4))
+    {
+        pos += 4;
+        result = -get_float8_infinity();
+    }
+    else
+    {
+        int begin = pos;
+
+        if(pos < size && (data[pos] == '-' || data[pos] == '+'))
+            pos++;
+
+        int num_pos = pos;
+
+        while(pos < size && xsd_isdigit(data[pos]))
+            pos++;
+
+        if(pos < size && data[pos] == '.')
+            pos++;
+
+        while(pos < size && xsd_isdigit(data[pos]))
+            pos++;
+
+        if(pos - num_pos == (data[num_pos] == '.'))
+            ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed xsd:double literal")));
+
+        if(pos < size && (data[pos] == 'e' || data[pos] == 'E'))
+        {
+            pos++;
+
+            if(pos < size && (data[pos] == '-' || data[pos] == '+'))
+                pos++;
+
+            if(pos == size || !xsd_isdigit(data[pos]))
+                ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed xsd:double literal")));
+
+            while(pos < size && xsd_isdigit(data[pos]))
+                pos++;
+        }
+
+        char *buffer = palloc(pos - begin + 1);
+        memcpy(buffer, data + begin, pos - begin);
+        buffer[pos - begin] = '\0';
+
+        char *endptr = buffer;
         errno = 0;
-        value = strtod(input, &endptr);
 
-        if(endptr == input || (errno != 0 && errno != ERANGE))
-            ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed double literal")));
-    }
-    else if(strncmp(input, "NaN", 3) == 0)
-    {
-        value = get_float8_nan();
-        endptr = input + 3;
-    }
-    else if(strncmp(input, "INF", 3) == 0)
-    {
-        value = get_float8_infinity();
-        endptr = input + 3;
-    }
-    else if(strncmp(input, "+INF", 4) == 0)
-    {
-        value = get_float8_infinity();
-        endptr = input + 4;
-    }
-    else if(strncmp(input, "-INF", 4) == 0)
-    {
-        value = -get_float8_infinity();
-        endptr = input + 4;
+        result = strtod(buffer, &endptr);
+
+        if(endptr == buffer || (errno != 0 && errno != ERANGE))
+            elog(ERROR, "unexpected error while parsing xsd:double");
     }
 
-    while(*endptr != '\0' && isspace((unsigned char) *endptr))
-        endptr++;
+    while(pos < size && xsd_isspace(data[pos]))
+        pos++;
 
-    if(*endptr != '\0')
-        ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed double literal")));
+    if(pos != size)
+        ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed xsd:double literal")));
 
-    PG_RETURN_FLOAT8(value);
+    return result;
 }
 
 
-PG_FUNCTION_INFO_V1(double_output);
-Datum double_output(PG_FUNCTION_ARGS)
+int double_print(float8 value, char *buffer)
 {
-    Datum value = PG_GETARG_DATUM(0);
-
-    if(isfinite(DatumGetFloat8(value)))
-        PG_RETURN_DATUM(DirectFunctionCall1(float8out, value));
-    else if(isnan(DatumGetFloat8(value)))
-        PG_RETURN_CSTRING(pstrdup("NaN"));
-    else if(DatumGetFloat8(value) > 0)
-        PG_RETURN_CSTRING(pstrdup("INF"));
-    else
-        PG_RETURN_CSTRING(pstrdup("-INF"));
+    return d2s_buffered_n(value, buffer, true);
 }
 
 
 PG_FUNCTION_INFO_V1(double_uminus);
 Datum double_uminus(PG_FUNCTION_ARGS)
 {
-    float8 arg = PG_GETARG_FLOAT8(0);
-
-    PG_RETURN_FLOAT8(-arg);
+    PG_RETURN_FLOAT8(-PG_GETARG_FLOAT8(0));
 }
 
 
 PG_FUNCTION_INFO_V1(double_add);
 Datum double_add(PG_FUNCTION_ARGS)
 {
-    float8 left = PG_GETARG_FLOAT8(0);
-    float8 right = PG_GETARG_FLOAT8(1);
-
-    PG_RETURN_FLOAT8(left + right);
+    PG_RETURN_FLOAT8(PG_GETARG_FLOAT8(0) + PG_GETARG_FLOAT8(1));
 }
 
 
 PG_FUNCTION_INFO_V1(double_sub);
 Datum double_sub(PG_FUNCTION_ARGS)
 {
-    float8 left = PG_GETARG_FLOAT8(0);
-    float8 right = PG_GETARG_FLOAT8(1);
-
-    PG_RETURN_FLOAT8(left - right);
+    PG_RETURN_FLOAT8(PG_GETARG_FLOAT8(0) - PG_GETARG_FLOAT8(1));
 }
 
 
 PG_FUNCTION_INFO_V1(double_mul);
 Datum double_mul(PG_FUNCTION_ARGS)
 {
-    float8 left = PG_GETARG_FLOAT8(0);
-    float8 right = PG_GETARG_FLOAT8(1);
-
-    PG_RETURN_FLOAT8(left * right);
+    PG_RETURN_FLOAT8(PG_GETARG_FLOAT8(0) * PG_GETARG_FLOAT8(1));
 }
 
 
 PG_FUNCTION_INFO_V1(double_div);
 Datum double_div(PG_FUNCTION_ARGS)
 {
-    float8 left = PG_GETARG_FLOAT8(0);
-    float8 right = PG_GETARG_FLOAT8(1);
-
-    PG_RETURN_FLOAT8(left / right);
+    PG_RETURN_FLOAT8(PG_GETARG_FLOAT8(0) / PG_GETARG_FLOAT8(1));
 }

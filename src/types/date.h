@@ -2,6 +2,9 @@
 #define TYPES_DATE_H_
 
 #include <postgres.h>
+#if PG_VERSION_NUM >= 160000
+#include <varatt.h>
+#endif
 #include <fmgr.h>
 #include <utils/date.h>
 
@@ -51,10 +54,25 @@ static inline Datum ZonedDateGetDatum(ZonedDate val)
 }
 
 
+#define DATE_MAXLEN 19
+
 #define PG_GETARG_ZONEDDATE(X) DatumGetZonedDate(PG_GETARG_DATUM(X))
 #define PG_RETURN_ZONEDDATE(X) return ZonedDateGetDatum(X)
 
 #define PG_GETARG_DATE() (PG_NARGS() == 1 ? PG_GETARG_ZONEDDATE(0) : (ZonedDate) { .value = PG_GETARG_DATEADT(0), .zone = PG_GETARG_INT32(1) })
+
+
+ZonedDate date_parse(char *data, int size);
+int date_print(ZonedDate value, char *buffer);
+
+
+static inline VarChar *date_as_varchar(ZonedDate value)
+{
+    VarChar *result = (VarChar *) palloc0(VARHDRSZ + DATE_MAXLEN);
+    int size = date_print(value, VARDATA(result));
+    SET_VARSIZE(result, VARHDRSZ + size);
+    return result;
+}
 
 
 Datum zoneddate_input(PG_FUNCTION_ARGS);

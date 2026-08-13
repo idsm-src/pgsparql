@@ -5,10 +5,22 @@
 #include <utils/numeric.h>
 #include <utils/formatting.h>
 #include "call.h"
+#include "try-catch.h"
 #include "cast/cast.h"
 #include "rdfbox/rdfbox.h"
 #include "rdfbox/syntax.h"
 #include "rdfbox/xsd.h"
+#include "types/boolean.h"
+#include "types/short.h"
+#include "types/int.h"
+#include "types/long.h"
+#include "types/integer.h"
+#include "types/decimal.h"
+#include "types/float.h"
+#include "types/double.h"
+#include "types/integer.h"
+#include "types/decimal.h"
+#include "types/daytimeduration.h"
 
 
 typedef struct
@@ -38,6 +50,15 @@ static const char *rdfbox_types[] =
         XSD_STRING_IRI,
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString"
 };
+
+
+static bool varchar_equals(VarChar* arg1, VarChar* arg2)
+{
+        size_t len1 = VARSIZE_ANY_EXHDR(arg1);
+        size_t len2 = VARSIZE_ANY_EXHDR(arg2);
+
+        return len1 == len2 && !memcmp(VARDATA_ANY(arg1), VARDATA_ANY(arg2), len1);
+}
 
 
 PG_FUNCTION_INFO_V1(is_iri_rdfbox);
@@ -76,6 +97,85 @@ Datum is_numeric_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+PG_FUNCTION_INFO_V1(str_boolean);
+Datum str_boolean(PG_FUNCTION_ARGS)
+{
+    PG_RETURN_VARCHAR_P(boolean_as_varchar(PG_GETARG_BOOL(0)));
+}
+
+
+PG_FUNCTION_INFO_V1(str_short);
+Datum str_short(PG_FUNCTION_ARGS)
+{
+    PG_RETURN_VARCHAR_P(short_as_varchar(PG_GETARG_INT16(0)));
+}
+
+
+PG_FUNCTION_INFO_V1(str_int);
+Datum str_int(PG_FUNCTION_ARGS)
+{
+    PG_RETURN_VARCHAR_P(int_as_varchar(PG_GETARG_INT32(0)));
+}
+
+
+PG_FUNCTION_INFO_V1(str_long);
+Datum str_long(PG_FUNCTION_ARGS)
+{
+    PG_RETURN_VARCHAR_P(long_as_varchar(PG_GETARG_INT64(0)));
+}
+
+
+PG_FUNCTION_INFO_V1(str_integer);
+Datum str_integer(PG_FUNCTION_ARGS)
+{
+    PG_RETURN_VARCHAR_P(integer_as_varchar(PG_GETARG_NUMERIC(0)));
+}
+
+
+PG_FUNCTION_INFO_V1(str_decimal);
+Datum str_decimal(PG_FUNCTION_ARGS)
+{
+    PG_RETURN_VARCHAR_P(decimal_as_varchar(PG_GETARG_NUMERIC(0)));
+}
+
+
+PG_FUNCTION_INFO_V1(str_float);
+Datum str_float(PG_FUNCTION_ARGS)
+{
+    PG_RETURN_VARCHAR_P(float_as_varchar(PG_GETARG_FLOAT4(0)));
+}
+
+
+PG_FUNCTION_INFO_V1(str_double);
+Datum str_double(PG_FUNCTION_ARGS)
+{
+    PG_RETURN_VARCHAR_P(double_as_varchar(PG_GETARG_FLOAT8(0)));
+}
+
+
+PG_FUNCTION_INFO_V1(str_datetime);
+Datum str_datetime(PG_FUNCTION_ARGS)
+{
+    ZonedDateTime value = PG_NARGS() == 1 ? *PG_GETARG_ZONEDDATETIME_P(0) : (ZonedDateTime) { .value = PG_GETARG_TIMESTAMPTZ(0), .zone = PG_GETARG_INT32(1) };
+    PG_RETURN_VARCHAR_P(datetime_as_varchar(&value));
+}
+
+
+PG_FUNCTION_INFO_V1(str_date);
+Datum str_date(PG_FUNCTION_ARGS)
+{
+    ZonedDate value = PG_NARGS() == 1 ? PG_GETARG_ZONEDDATE(0) : (ZonedDate) { .value = PG_GETARG_DATEADT(0), .zone = PG_GETARG_INT32(1) };
+    PG_RETURN_VARCHAR_P(date_as_varchar(value));
+}
+
+
+PG_FUNCTION_INFO_V1(str_daytimeduration);
+Datum str_daytimeduration(PG_FUNCTION_ARGS)
+{
+    PG_RETURN_VARCHAR_P(daytimeduration_as_varchar(PG_GETARG_INT64(0)));
+}
+
+
 PG_FUNCTION_INFO_V1(str_rdfbox);
 Datum str_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -84,35 +184,70 @@ Datum str_rdfbox(PG_FUNCTION_ARGS)
     switch(box->type)
     {
         case XSD_BOOLEAN:
-            PG_RETURN(NullableFunctionCall1(cast_as_string_from_boolean, BoolGetDatum(RdfBoxGetBool(box))));
+            if(box->lexical)
+                PG_RETURN_VARCHAR_P(RdfBoxGetBoolLexical(box));
+            else
+                PG_RETURN_VARCHAR_P(boolean_as_varchar(RdfBoxGetBool(box)));
 
         case XSD_SHORT:
-            PG_RETURN(NullableFunctionCall1(cast_as_string_from_short, Int16GetDatum(RdfBoxGetInt16(box))));
+            if(box->lexical)
+                PG_RETURN_VARCHAR_P(RdfBoxGetInt16Lexical(box));
+            else
+                PG_RETURN_VARCHAR_P(short_as_varchar(RdfBoxGetInt16(box)));
 
         case XSD_INT:
-            PG_RETURN(NullableFunctionCall1(cast_as_string_from_int, Int32GetDatum(RdfBoxGetInt32(box))));
+            if(box->lexical)
+                PG_RETURN_VARCHAR_P(RdfBoxGetInt32Lexical(box));
+            else
+                PG_RETURN_VARCHAR_P(int_as_varchar(RdfBoxGetInt32(box)));
 
         case XSD_LONG:
-            PG_RETURN(NullableFunctionCall1(cast_as_string_from_long, Int64GetDatum(RdfBoxGetInt64(box))));
+            if(box->lexical)
+                PG_RETURN_VARCHAR_P(RdfBoxGetInt64Lexical(box));
+            else
+                PG_RETURN_VARCHAR_P(long_as_varchar(RdfBoxGetInt64(box)));
 
         case XSD_INTEGER:
+            if(box->lexical)
+                PG_RETURN_VARCHAR_P(RdfBoxGetAttachment(box));
+            else
+                PG_RETURN_VARCHAR_P(integer_as_varchar(RdfBoxGetNumeric(box)));
+
         case XSD_DECIMAL:
-            PG_RETURN(NullableFunctionCall1(cast_as_string_from_decimal, NumericGetDatum(RdfBoxGetNumeric(box))));
+            if(box->lexical)
+                PG_RETURN_VARCHAR_P(RdfBoxGetAttachment(box));
+            else
+                PG_RETURN_VARCHAR_P(decimal_as_varchar(RdfBoxGetNumeric(box)));
 
         case XSD_FLOAT:
-            PG_RETURN(NullableFunctionCall1(cast_as_string_from_float, Float4GetDatum(RdfBoxGetFloat4(box))));
+            if(box->lexical)
+                PG_RETURN_VARCHAR_P(RdfBoxGetFloat4Lexical(box));
+            else
+                PG_RETURN_VARCHAR_P(float_as_varchar(RdfBoxGetFloat4(box)));
 
         case XSD_DOUBLE:
-            PG_RETURN(NullableFunctionCall1(cast_as_string_from_double, Float8GetDatum(RdfBoxGetFloat8(box))));
+            if(box->lexical)
+                PG_RETURN_VARCHAR_P(RdfBoxGetFloat8Lexical(box));
+            else
+                PG_RETURN_VARCHAR_P(double_as_varchar(RdfBoxGetFloat8(box)));
 
         case XSD_DATETIME:
-            PG_RETURN(NullableFunctionCall1(cast_as_string_from_datetime, ZonedDateTimeGetDatum(RdfBoxGetZonedDateTime(box))));
+            if(box->lexical)
+                PG_RETURN_VARCHAR_P(RdfBoxGetZonedDateTimeLexical(box));
+            else
+                PG_RETURN_VARCHAR_P(datetime_as_varchar(RdfBoxGetZonedDateTime(box)));
 
         case XSD_DATE:
-            PG_RETURN(NullableFunctionCall1(cast_as_string_from_date, ZonedDateGetDatum(RdfBoxGetZonedDate(box))));
+            if(box->lexical)
+                PG_RETURN_VARCHAR_P(RdfBoxGetZonedDateLexical(box));
+            else
+                PG_RETURN_VARCHAR_P(date_as_varchar(RdfBoxGetZonedDate(box)));
 
         case XSD_DAYTIMEDURATION:
-            PG_RETURN(NullableFunctionCall1(cast_as_string_from_daytimeduration, Int64GetDatum(RdfBoxGetInt64(box))));
+            if(box->lexical)
+                PG_RETURN_VARCHAR_P(RdfBoxGetInt64Lexical(box));
+            else
+                PG_RETURN_VARCHAR_P(daytimeduration_as_varchar(RdfBoxGetInt64(box)));
 
         case XSD_STRING:
         case IRI:
@@ -419,99 +554,145 @@ Datum strdt_string(PG_FUNCTION_ARGS)
     VarChar *value = PG_GETARG_VARCHAR_PP(0);
     VarChar *type = PG_GETARG_VARCHAR_PP(1);
 
+    char *data = VARDATA_ANY(value);
+    int size = VARSIZE_ANY_EXHDR(value);
+
     char *type_data = VARDATA_ANY(type);
     int type_size = VARSIZE_ANY_EXHDR(type);
 
     RdfBox *result = NULL;
 
-    if(sizeof(XSD_BOOLEAN_IRI) == type_size + 1 && strncmp(XSD_BOOLEAN_IRI, type_data, type_size) == 0)
-    {
-        NullableDatum retval = NullableFunctionCall1(cast_as_boolean_from_string, PointerGetDatum(value));
 
-        if(retval.isnull == false)
-            result = GetBooleanRdfBox(DatumGetBool(retval.value));
-    }
-    else if(sizeof(XSD_SHORT_IRI) == type_size + 1 && strncmp(XSD_SHORT_IRI, type_data, type_size) == 0)
+    PG_TRY_EX();
     {
-        NullableDatum retval = NullableFunctionCall1(cast_as_short_from_string, PointerGetDatum(value));
+        if(sizeof(XSD_BOOLEAN_IRI) == type_size + 1 && strncmp(XSD_BOOLEAN_IRI, type_data, type_size) == 0)
+        {
+            bool val = boolean_parse(data, size);
+            char buffer[BOOLEAN_MAXLEN];
 
-        if(retval.isnull == false)
-            result = GetShortRdfBox(DatumGetInt16(retval.value));
-    }
-    else if(sizeof(XSD_INT_IRI) == type_size + 1 && strncmp(XSD_INT_IRI, type_data, type_size) == 0)
-    {
-        NullableDatum retval = NullableFunctionCall1(cast_as_int_from_string, PointerGetDatum(value));
+            if(boolean_print(val, buffer) == size && !memcmp(data, buffer, size))
+                result = GetBooleanRdfBox(val);
+            else
+                result = GetBooleanRdfBoxWithLexical(val, data, size);
+        }
+        else if(sizeof(XSD_SHORT_IRI) == type_size + 1 && strncmp(XSD_SHORT_IRI, type_data, type_size) == 0)
+        {
+            int16 val = short_parse(data, size);
+            char buffer[SHORT_MAXLEN];
 
-        if(retval.isnull == false)
-            result = GetIntRdfBox(DatumGetInt32(retval.value));
-    }
-    else if(sizeof(XSD_LONG_IRI) == type_size + 1 && strncmp(XSD_LONG_IRI, type_data, type_size) == 0)
-    {
-        NullableDatum retval = NullableFunctionCall1(cast_as_long_from_string, PointerGetDatum(value));
+            if(short_print(val, buffer) == size && !memcmp(data, buffer, size))
+                result = GetShortRdfBox(val);
+            else
+                result = GetShortRdfBoxWithLexical(val, data, size);
+        }
+        else if(sizeof(XSD_INT_IRI) == type_size + 1 && strncmp(XSD_INT_IRI, type_data, type_size) == 0)
+        {
+            int32 val = int_parse(data, size);
+            char buffer[INT_MAXLEN];
 
-        if(retval.isnull == false)
-            result = GetLongRdfBox(DatumGetInt64(retval.value));
-    }
-    else if(sizeof(XSD_FLOAT_IRI) == type_size + 1 && strncmp(XSD_FLOAT_IRI, type_data, type_size) == 0)
-    {
-        NullableDatum retval = NullableFunctionCall1(cast_as_float_from_string, PointerGetDatum(value));
+            if(int_print(val, buffer) == size && !memcmp(data, buffer, size))
+                result = GetIntRdfBox(val);
+            else
+                result = GetIntRdfBoxWithLexical(val, data, size);
+        }
+        else if(sizeof(XSD_LONG_IRI) == type_size + 1 && strncmp(XSD_LONG_IRI, type_data, type_size) == 0)
+        {
+            int64 val = long_parse(data, size);
+            char buffer[LONG_MAXLEN];
 
-        if(retval.isnull == false)
-            result = GetFloatRdfBox(DatumGetFloat4(retval.value));
-    }
-    else if(sizeof(XSD_DOUBLE_IRI) == type_size + 1 && strncmp(XSD_DOUBLE_IRI, type_data, type_size) == 0)
-    {
-        NullableDatum retval = NullableFunctionCall1(cast_as_double_from_string, PointerGetDatum(value));
+            if(long_print(val, buffer) == size && !memcmp(data, buffer, size))
+                result = GetLongRdfBox(val);
+            else
+                result = GetLongRdfBoxWithLexical(val, data, size);
+        }
+        else if(sizeof(XSD_FLOAT_IRI) == type_size + 1 && strncmp(XSD_FLOAT_IRI, type_data, type_size) == 0)
+        {
+            float4 val = float_parse(data, size);
+            char buffer[FLOAT_MAXLEN];
 
-        if(retval.isnull == false)
-            result = GetDoubleRdfBox(DatumGetFloat8(retval.value));
-    }
-    else if(sizeof(XSD_INTEGER_IRI) == type_size + 1 && strncmp(XSD_INTEGER_IRI, type_data, type_size) == 0)
-    {
-        NullableDatum retval = NullableFunctionCall1(cast_as_integer_from_string, PointerGetDatum(value));
+            if(float_print(val, buffer) == size && !memcmp(data, buffer, size))
+                result = GetFloatRdfBox(val);
+            else
+                result = GetFloatRdfBoxWithLexical(val, data, size);
+        }
+        else if(sizeof(XSD_DOUBLE_IRI) == type_size + 1 && strncmp(XSD_DOUBLE_IRI, type_data, type_size) == 0)
+        {
+            float8 val = double_parse(data, size);
+            char buffer[DOUBLE_MAXLEN];
 
-        if(retval.isnull == false)
-            result = GetIntegerRdfBox(DatumGetNumeric(retval.value));
-    }
-    else if(sizeof(XSD_DECIMAL_IRI) == type_size + 1 && strncmp(XSD_DECIMAL_IRI, type_data, type_size) == 0)
-    {
-        NullableDatum retval = NullableFunctionCall1(cast_as_decimal_from_string, PointerGetDatum(value));
+            if(double_print(val, buffer) == size && !memcmp(data, buffer, size))
+                result = GetDoubleRdfBox(val);
+            else
+                result = GetDoubleRdfBoxWithLexical(val, data, size);
+        }
+        else if(sizeof(XSD_INTEGER_IRI) == type_size + 1 && strncmp(XSD_INTEGER_IRI, type_data, type_size) == 0)
+        {
+            Numeric val = integer_parse(data, size);
 
-        if(retval.isnull == false)
-            result = GetDecimalRdfBox(DatumGetNumeric(retval.value));
-    }
-    else if(sizeof(XSD_DATETIME_IRI) == type_size + 1 && strncmp(XSD_DATETIME_IRI, type_data, type_size) == 0)
-    {
-        NullableDatum retval = NullableFunctionCall1(cast_as_datetime_from_string, PointerGetDatum(value));
+            if(varchar_equals(value, integer_as_varchar(val)))
+                result = GetIntegerRdfBox(val);
+            else
+                result = GetIntegerRdfBoxWithLexical(val, data, size);
+        }
+        else if(sizeof(XSD_DECIMAL_IRI) == type_size + 1 && strncmp(XSD_DECIMAL_IRI, type_data, type_size) == 0)
+        {
+            Numeric val = decimal_parse(data, size);
 
-        if(retval.isnull == false)
-            result = GetDateTimeRdfBox(DatumGetZonedDateTime(retval.value));
-    }
-    else if(sizeof(XSD_DATE_IRI) == type_size + 1 && strncmp(XSD_DATE_IRI, type_data, type_size) == 0)
-    {
-        NullableDatum retval = NullableFunctionCall1(cast_as_date_from_string, PointerGetDatum(value));
+            if(varchar_equals(value, decimal_as_varchar(val)))
+                result = GetDecimalRdfBox(val);
+            else
+                result = GetDecimalRdfBoxWithLexical(val, data, size);
+        }
+        else if(sizeof(XSD_DATETIME_IRI) == type_size + 1 && strncmp(XSD_DATETIME_IRI, type_data, type_size) == 0)
+        {
+            ZonedDateTime *val = datetime_parse(data, size);
+            char buffer[DATETIME_MAXLEN];
 
-        if(retval.isnull == false)
-            result = GetDateRdfBox(DatumGetZonedDate(retval.value));
-    }
-    else if(sizeof(XSD_DAYTIMEDURATION_IRI) == type_size + 1 && strncmp(XSD_DAYTIMEDURATION_IRI, type_data, type_size) == 0)
-    {
-        NullableDatum retval = NullableFunctionCall1(cast_as_daytimeduration_from_string, PointerGetDatum(value));
+            if(datetime_print(val, buffer) == size && !memcmp(data, buffer, size))
+                result = GetDateTimeRdfBox(val);
+            else
+                result = GetDateTimeRdfBoxWithLexical(val, data, size);
+        }
+        else if(sizeof(XSD_DATE_IRI) == type_size + 1 && strncmp(XSD_DATE_IRI, type_data, type_size) == 0)
+        {
+            ZonedDate val = date_parse(data, size);
+            char buffer[DATE_MAXLEN];
 
-        if(retval.isnull == false)
-            result = GetDayTimeDurationRdfBox(DatumGetInt64(retval.value));
+            if(date_print(val, buffer) == size && !memcmp(data, buffer, size))
+                result = GetDateRdfBox(val);
+            else
+                result = GetDateRdfBoxWithLexical(val, data, size);
+        }
+        else if(sizeof(XSD_DAYTIMEDURATION_IRI) == type_size + 1 && strncmp(XSD_DAYTIMEDURATION_IRI, type_data, type_size) == 0)
+        {
+            int64 val = daytimeduration_parse(data, size);
+            char buffer[DAYTIMEDURATION_MAXLEN];
+
+            if(daytimeduration_print(val, buffer) == size && !memcmp(data, buffer, size))
+                result = GetDayTimeDurationRdfBox(val);
+            else
+                result = GetDayTimeDurationRdfBoxWithLexical(val, data, size);
+        }
+        else if(sizeof(XSD_STRING_IRI) == type_size + 1 && strncmp(XSD_STRING_IRI, type_data, type_size) == 0)
+        {
+            result = GetStringRdfBox(data, size);
+        }
     }
-    else if(sizeof(XSD_STRING_IRI) == type_size + 1 && strncmp(XSD_STRING_IRI, type_data, type_size) == 0)
+    PG_CATCH_EX();
     {
-        result = GetStringRdfBox(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value));
+        if(sqlerrcode != ERRCODE_INVALID_TEXT_REPRESENTATION && sqlerrcode != ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE && sqlerrcode != ERRCODE_DATETIME_VALUE_OUT_OF_RANGE)
+            PG_RE_THROW_EX();
+
+        result = GetTypedLiteralRdfBox(data, size, type_data, type_size);
     }
+    PG_END_TRY_EX();
 
     if(result == NULL)
     {
         if(!check_iri(type_data, type_size))
             PG_RETURN_NULL();
 
-        result = GetTypedLiteralRdfBox(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value), type_data, type_size);
+        result = GetTypedLiteralRdfBox(data, size, type_data, type_size);
     }
 
     PG_RETURN_RDFBOX_P(result);

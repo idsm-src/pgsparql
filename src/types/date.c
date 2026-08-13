@@ -3,98 +3,95 @@
 #include <utils/datetime.h>
 #include "pgsparql.h"
 #include "types/date.h"
+#include "types/parser.h"
 #include "types/timezone.h"
 
 
-static void read_input_digits(char **input, int required_length, bool exact_length, bool opening_zero)
+static void read_input_digits(char *data, int size, int *pos, int required_length, bool exact_length, bool opening_zero)
 {
-    char *str = *input;
+    int tmp = *pos;
 
-    while(isdigit((unsigned char) *str))
-        str++;
+    while(tmp < size && xsd_isdigit(data[tmp]))
+        tmp++;
 
-    if(str - *input < required_length || (exact_length && str - *input > required_length))
-        ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed zoneddate literal")));
+    if(tmp - *pos < required_length || (exact_length && tmp - *pos > required_length))
+        ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed xsd:date literal")));
 
-    if(opening_zero && str - *input > required_length && **input == '0')
-        ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed zoneddate literal")));
+    if(opening_zero && tmp - *pos > required_length && data[*pos] == '0')
+        ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed xsd:date literal")));
 
-    *input = str;
+    *pos = tmp;
 }
 
 
-static void read_input_char(char **input, char required_char)
+static void read_input_char(char *data, int size, int *pos, char required_char)
 {
-    if(**input != required_char)
-        ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed zoneddate literal")));
+    if(*pos == size || data[*pos] != required_char)
+        ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed xsd:date literal")));
 
-    (*input)++;
+    (*pos)++;
 }
 
 
-static char *move_bc_year(char *input, int size)
+static char *move_bc_year(char *data, int size)
 {
+    char *input = pnstrdup(data, size);
+
     errno = 0;
     char *endptr;
 
     int64 year = strtol(input, &endptr, 10);
 
-    if(input == endptr)
-        ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed zoneddate literal")));
-
-    if(errno == EINVAL || year >= 999999999)
-        ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("zoneddate out of range")));
+    if(input == endptr || errno != 0) // should never happen
+        ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed xsd:date literal")));
 
     return psprintf("%04li%.*s", year + 1, size - (int) (endptr - input), endptr);
 }
 
 
-PG_FUNCTION_INFO_V1(zoneddate_input);
-Datum zoneddate_input(PG_FUNCTION_ARGS)
+ZonedDate date_parse(char *data, int size)
 {
-    char *value = PG_GETARG_CSTRING(0);
-
-
     /* parse input */
-    char *input = value;
+    int pos = 0;
 
-    while(isspace((unsigned char) *input))
-        input++;
+    while(pos < size && xsd_isspace(data[pos]))
+        pos++;
 
-    char *begin = input;
+    int begin = pos;
 
-    if(*input == '-')
-        input++;
+    if(pos < size && data[pos] == '-')
+        pos++;
 
-    char *date = input;
+    int date = pos;
 
-    read_input_digits(&input, 4, false, true);
-    read_input_char(&input, '-');
-    read_input_digits(&input, 2, true, true);
-    read_input_char(&input, '-');
-    read_input_digits(&input, 2, true, true);
+    read_input_digits(data, size, &pos, 4, false, true);
+    read_input_char(data, size, &pos, '-');
+    read_input_digits(data, size, &pos, 2, true, true);
+    read_input_char(data, size, &pos, '-');
+    read_input_digits(data, size, &pos, 2, true, true);
 
-    char *zone = input;
+    int zone = pos;
 
-    if(*input == 'Z')
+    if(pos < size && data[pos] == 'Z')
     {
-        input++;
+        pos++;
     }
-    else if(*input == '+' || *input == '-')
+    else if(pos < size && (data[pos] == '+' || data[pos] == '-'))
     {
-        input++;
+        pos++;
 
-        read_input_digits(&input, 2, true, true);
-        read_input_char(&input, ':');
-        read_input_digits(&input, 2, true, true);
+        read_input_digits(data, size, &pos, 2, true, true);
+        read_input_char(data, size, &pos, ':');
+        read_input_digits(data, size, &pos, 2, true, true);
     }
 
-    char *end = input;
+    int end = pos;
 
-    while(isspace((unsigned char) *input))
-        input++;
+    while(pos < size && xsd_isspace(data[pos]))
+        pos++;
 
-    read_input_char(&input, '\0');
+    if(pos != size)
+        ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed xsd:date literal")));
 
 
     /* truncate the date string to ensure that the year field will not overflow in DecodeDateTime */
@@ -110,17 +107,17 @@ Datum zoneddate_input(PG_FUNCTION_ARGS)
 
 
     /* convert input */
-    bool has_zone = *zone != '\0' && !isspace((unsigned char) *zone);
-    bool ad = begin == date && strncmp(begin, "0000", 4) != 0;
+    bool has_zone = zone != end;
+    bool ad = begin == date && strncmp(data + begin, "0000", 4);
 
     char *field[3];
     int ftype[3];
 
-    field[0] = ad ? pnstrdup(date, zone - date) : move_bc_year(date, zone - date);
+    field[0] = ad ? pnstrdup(data + date, zone - date) : move_bc_year(data + date, zone - date);
     ftype[0] = DTK_DATE;
 
-    field[1] = (!has_zone || *zone == 'Z') ? "z" : pnstrdup(zone, end - zone);
-    ftype[1] = (!has_zone || *zone == 'Z') ? DTK_STRING : DTK_TZ;
+    field[1] = (!has_zone || data[zone] == 'Z') ? "z" : pnstrdup(data + zone, end - zone);
+    ftype[1] = (!has_zone || data[zone] == 'Z') ? DTK_STRING : DTK_TZ;
 
     field[2] = ad ? "ad" : "bc";
     ftype[2] = DTK_STRING;
@@ -140,45 +137,41 @@ Datum zoneddate_input(PG_FUNCTION_ARGS)
     #endif
 
     if(derr != 0 || dtype != DTK_DATE)
-        ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed zoneddate literal")));
+        ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed xsd:date literal")));
 
     if(has_zone && (tz % SECS_PER_MINUTE || tz > ZONE_MAX || tz < ZONE_MIN))
-        ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed zoneddate literal")));
+        ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed xsd:date literal")));
 
     ZonedDate result;
 
     // err:FODT0001, Overflow/underflow in date/time operation
     if(year_overflow || !IS_VALID_JULIAN(tm.tm_year, tm.tm_mon, tm.tm_mday))
-        ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("zoneddate literal out of range")));
+        ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("xsd:date out of range")));
 
     result.value = date2j(tm.tm_year, tm.tm_mon, tm.tm_mday) - POSTGRES_EPOCH_JDATE;
 
     // err:FODT0001, Overflow/underflow in date/time operation
     if(!IS_VALID_DATE(result.value))
-        ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("zoneddate literal out of range")));
+        ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("xsd:date out of range")));
 
     result.zone = has_zone ? -tz : ZONE_UNSPECIFIED;
 
-    PG_RETURN_ZONEDDATE(result);
+    return result;
 }
 
 
-PG_FUNCTION_INFO_V1(zoneddate_output);
-Datum zoneddate_output(PG_FUNCTION_ARGS)
+int date_print(ZonedDate date, char *buffer)
 {
-    ZonedDate date = PG_GETARG_ZONEDDATE(0);
-
     // the exception should be never thrown unless there is some bug in the code
     if(!IS_VALID_DATE(date.value) || !IS_VALID_TIMEZONE(date.zone))
-        ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("zoneddate out of range")));
+        ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("xsd:date out of range")));
 
 
     struct pg_tm tm;
     j2date(date.value + POSTGRES_EPOCH_JDATE, &(tm.tm_year), &(tm.tm_mon), &(tm.tm_mday));
 
 
-    char data[MAXDATELEN + 1];
-    char *str = data;
+    char *str = buffer;
 
     if(tm.tm_year < 0)
         *str++ = '-';
@@ -208,9 +201,27 @@ Datum zoneddate_output(PG_FUNCTION_ARGS)
         }
     }
 
-    *str = '\0';
+    return str - buffer;
+}
 
-    PG_RETURN_CSTRING(pstrdup(data));
+
+PG_FUNCTION_INFO_V1(zoneddate_input);
+Datum zoneddate_input(PG_FUNCTION_ARGS)
+{
+    char *data = PG_GETARG_CSTRING(0);
+    PG_RETURN_ZONEDDATE(date_parse(data, strlen(data)));
+}
+
+
+PG_FUNCTION_INFO_V1(zoneddate_output);
+Datum zoneddate_output(PG_FUNCTION_ARGS)
+{
+    ZonedDate date = PG_GETARG_ZONEDDATE(0);
+
+    char buffer[DATE_MAXLEN];
+    int size = date_print(date, buffer);
+
+    PG_RETURN_CSTRING(pnstrdup(buffer, size));
 }
 
 

@@ -8,6 +8,7 @@
 #include <utils/numeric.h>
 #include "call.h"
 #include "try-catch.h"
+#include "types/integer.h"
 #include "rdfbox/rdfbox.h"
 
 
@@ -85,22 +86,16 @@ Datum cast_as_integer_from_double(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(cast_as_integer_from_string);
 Datum cast_as_integer_from_string(PG_FUNCTION_ARGS)
 {
-    text *value = PG_GETARG_TEXT_PP(0);
+    VarChar *value = PG_GETARG_VARCHAR_PP(0);
     NullableDatum result = { .isnull = false };
-
-    char *cstring = text_to_cstring(value);
 
     PG_TRY_EX();
     {
-        for(char *c = cstring; *c != '\0'; c++)
-            if(!isspace((unsigned char) *c) && !isdigit((unsigned char) *c) && *c != '+' && *c != '-')
-                ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION)));
-
-        result = NullableFunctionCall3(numeric_in, CStringGetDatum(cstring), ObjectIdGetDatum(InvalidOid), Int32GetDatum(-1));
+        result.value = NumericGetDatum(integer_parse(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value)));
     }
     PG_CATCH_EX();
     {
-        if(sqlerrcode != ERRCODE_INVALID_TEXT_REPRESENTATION)
+        if(sqlerrcode != ERRCODE_INVALID_TEXT_REPRESENTATION && sqlerrcode != ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE)
             PG_RE_THROW_EX();
 
         result.isnull = true;

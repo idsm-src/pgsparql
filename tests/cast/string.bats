@@ -47,19 +47,19 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_string_from_float('-3.402823466e38'::float4)" {
-  expect_output '-3.4028235e+38'
+  expect_output '-3.4028235E38'
 }
 
 @test "sparql.cast_as_string_from_float('-1.175494351e-38'::float4)" {
-  expect_output '-1.1754944e-38'
+  expect_output '-1.1754944E-38'
 }
 
 @test "sparql.cast_as_string_from_float('1.175494351e-38'::float4)" {
-  expect_output '1.1754944e-38'
+  expect_output '1.1754944E-38'
 }
 
 @test "sparql.cast_as_string_from_float('3.402823466e38'::float4)" {
-  expect_output '3.4028235e+38'
+  expect_output '3.4028235E38'
 }
 
 @test "sparql.cast_as_string_from_float('inf'::float4)" {
@@ -75,19 +75,19 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_string_from_double('-1.7976931348623158e308'::float8)" {
-  expect_output '-1.7976931348623157e+308'
+  expect_output '-1.7976931348623157E308'
 }
 
 @test "sparql.cast_as_string_from_double('-2.2250738585072014e-308'::float8)" {
-  expect_output '-2.2250738585072014e-308'
+  expect_output '-2.2250738585072014E-308'
 }
 
 @test "sparql.cast_as_string_from_double('2.2250738585072014e-308'::float8)" {
-  expect_output '2.2250738585072014e-308'
+  expect_output '2.2250738585072014E-308'
 }
 
 @test "sparql.cast_as_string_from_double('1.7976931348623158e308'::float8)" {
-  expect_output '1.7976931348623157e+308'
+  expect_output '1.7976931348623157E308'
 }
 
 @test "sparql.cast_as_string_from_double('inf'::float8)" {
@@ -267,19 +267,19 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_string_from_rdfbox(sparql.rdfbox_create_from_float('-3.402823466e38'::float4))" {
-  expect_output '-3.4028235e+38'
+  expect_output '-3.4028235E38'
 }
 
 @test "sparql.cast_as_string_from_rdfbox(sparql.rdfbox_create_from_float('-1.175494351e-38'::float4))" {
-  expect_output '-1.1754944e-38'
+  expect_output '-1.1754944E-38'
 }
 
 @test "sparql.cast_as_string_from_rdfbox(sparql.rdfbox_create_from_float('1.175494351e-38'::float4))" {
-  expect_output '1.1754944e-38'
+  expect_output '1.1754944E-38'
 }
 
 @test "sparql.cast_as_string_from_rdfbox(sparql.rdfbox_create_from_float('3.402823466e38'::float4))" {
-  expect_output '3.4028235e+38'
+  expect_output '3.4028235E38'
 }
 
 @test "sparql.cast_as_string_from_rdfbox(sparql.rdfbox_create_from_float('inf'::float4))" {
@@ -295,19 +295,19 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_string_from_rdfbox(sparql.rdfbox_create_from_double('-1.7976931348623158e308'::float8))" {
-  expect_output '-1.7976931348623157e+308'
+  expect_output '-1.7976931348623157E308'
 }
 
 @test "sparql.cast_as_string_from_rdfbox(sparql.rdfbox_create_from_double('-2.2250738585072014e-308'::float8))" {
-  expect_output '-2.2250738585072014e-308'
+  expect_output '-2.2250738585072014E-308'
 }
 
 @test "sparql.cast_as_string_from_rdfbox(sparql.rdfbox_create_from_double('2.2250738585072014e-308'::float8))" {
-  expect_output '2.2250738585072014e-308'
+  expect_output '2.2250738585072014E-308'
 }
 
 @test "sparql.cast_as_string_from_rdfbox(sparql.rdfbox_create_from_double('1.7976931348623158e308'::float8))" {
-  expect_output '1.7976931348623157e+308'
+  expect_output '1.7976931348623157E308'
 }
 
 @test "sparql.cast_as_string_from_rdfbox(sparql.rdfbox_create_from_double('inf'::float8))" {

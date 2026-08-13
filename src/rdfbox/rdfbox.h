@@ -12,23 +12,23 @@
 
 typedef enum
 {
-    XSD_BOOLEAN,
-    XSD_SHORT,
-    XSD_INT,
-    XSD_LONG,
-    XSD_INTEGER,
-    XSD_DECIMAL,
-    XSD_FLOAT,
-    XSD_DOUBLE,
-    XSD_DATETIME,
-    XSD_DATE,
-    XSD_DAYTIMEDURATION,
-    XSD_STRING,
-    RDF_LANGSTRING,
-    TYPED_LITERAL,
-    IRI,
-    IBLANKNODE,
-    SBLANKNODE
+    XSD_BOOLEAN = 0,
+    XSD_SHORT = 1,
+    XSD_INT = 2,
+    XSD_LONG = 3,
+    XSD_INTEGER = 4,
+    XSD_DECIMAL = 5,
+    XSD_FLOAT = 6,
+    XSD_DOUBLE = 7,
+    XSD_DATETIME = 8,
+    XSD_DATE = 9,
+    XSD_DAYTIMEDURATION = 10,
+    XSD_STRING = 11,
+    RDF_LANGSTRING = 12,
+    TYPED_LITERAL = 13,
+    IRI = 14,
+    IBLANKNODE = 15,
+    SBLANKNODE = 16
 }
 RdfType;
 
@@ -36,7 +36,8 @@ RdfType;
 typedef struct
 {
     char vl_len_[4];
-    RdfType type;
+    RdfType type : 31;
+    bool lexical : 1;
 }
 RdfBox;
 
@@ -113,10 +114,95 @@ typedef struct
 RdfBoxVarlena;
 
 
+typedef struct
+{
+    RdfBoxBool box;
+    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);
+}
+RdfBoxBoolWithLexical;
+
+
+typedef struct
+{
+    RdfBoxInt16 box;
+    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);
+}
+RdfBoxInt16WithLexical;
+
+
+typedef struct
+{
+    RdfBoxInt32 box;
+    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);
+}
+RdfBoxInt32WithLexical;
+
+
+typedef struct
+{
+    RdfBoxInt64 box;
+    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);
+}
+RdfBoxInt64WithLexical;
+
+
+typedef struct
+{
+    RdfBoxFloat4 box;
+    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);
+}
+RdfBoxFloat4WithLexical;
+
+
+typedef struct
+{
+    RdfBoxFloat8 box;
+    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);
+}
+RdfBoxFloat8WithLexical;
+
+
+typedef struct
+{
+    RdfBoxDateTime box;
+    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);
+}
+RdfBoxDateTimeWithLexical;
+
+
+typedef struct
+{
+    RdfBoxDate box;
+    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);
+}
+RdfBoxDateWithLexical;
+
+
 #define DatumGetRdfBox(X)       ((RdfBox *) PG_DETOAST_DATUM(X))
 #define RdfBoxGetDatum(X)       PointerGetDatum(X)
 #define PG_GETARG_RDFBOX_P(n)   DatumGetRdfBox(PG_GETARG_DATUM(n))
 #define PG_RETURN_RDFBOX_P(x)   return RdfBoxGetDatum(x)
+
+
+typedef enum
+{
+    LEXICAL_BOTH,
+    LEXICAL_TRUE,
+    LEXICAL_FALSE
+}
+LexicalFlag;
+
+
+#define PG_GETARG_LEXICAL_FLAG(n)  ((n) == PG_NARGS() ? LEXICAL_BOTH : (PG_GETARG_BOOL(n) ? LEXICAL_TRUE : LEXICAL_FALSE))
+
+
+static inline bool RdfBoxCheckLexicalFlag(RdfBox *box, LexicalFlag flag)
+{
+    if(flag == LEXICAL_BOTH)
+        return true;
+
+    return box->lexical == (flag == LEXICAL_TRUE);
+}
 
 
 static inline uint32 align_size(uint32 n)
@@ -189,6 +275,54 @@ static inline VarChar *RdfBoxGetAttachment(RdfBox *box)
 {
     VarChar *value = (VarChar *) ((RdfBoxVarlena *) box)->value;
     return (VarChar *) (((RdfBoxVarlena *) box)->value + align_size(VARSIZE(value)));
+}
+
+
+static inline VarChar *RdfBoxGetBoolLexical(RdfBox *box)
+{
+    return (VarChar *) ((RdfBoxBoolWithLexical *) box)->lexical;
+}
+
+
+static inline VarChar *RdfBoxGetInt16Lexical(RdfBox *box)
+{
+    return (VarChar *) ((RdfBoxInt16WithLexical *) box)->lexical;
+}
+
+
+static inline VarChar *RdfBoxGetInt32Lexical(RdfBox *box)
+{
+    return (VarChar *) ((RdfBoxInt32WithLexical *) box)->lexical;
+}
+
+
+static inline VarChar *RdfBoxGetInt64Lexical(RdfBox *box)
+{
+    return (VarChar *) ((RdfBoxInt64WithLexical *) box)->lexical;
+}
+
+
+static inline VarChar *RdfBoxGetFloat4Lexical(RdfBox *box)
+{
+    return (VarChar *) ((RdfBoxFloat4WithLexical *) box)->lexical;
+}
+
+
+static inline VarChar *RdfBoxGetFloat8Lexical(RdfBox *box)
+{
+    return (VarChar *) ((RdfBoxFloat8WithLexical *) box)->lexical;
+}
+
+
+static inline VarChar *RdfBoxGetZonedDateTimeLexical(RdfBox *box)
+{
+    return (VarChar *) ((RdfBoxDateTimeWithLexical *) box)->lexical;
+}
+
+
+static inline VarChar *RdfBoxGetZonedDateLexical(RdfBox *box)
+{
+    return (VarChar *) ((RdfBoxDateWithLexical *) box)->lexical;
 }
 
 
@@ -328,15 +462,160 @@ static inline RdfBox *GetLangStringRdfBox(const char *data, int size, const char
 }
 
 
-static inline RdfBox *GetTypedLiteralRdfBox(const char *data, int size, const char *lang, int lang_size)
+static inline RdfBox *GetTypedLiteralRdfBox(const char *data, int size, const char *type, int type_size)
 {
-    RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + align_size(size + VARHDRSZ) + lang_size + VARHDRSZ);
-    SET_VARSIZE(result, sizeof(RdfBoxVarlena) + align_size(size + VARHDRSZ) + lang_size + VARHDRSZ);
+    RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + align_size(size + VARHDRSZ) + type_size + VARHDRSZ);
+    SET_VARSIZE(result, sizeof(RdfBoxVarlena) + align_size(size + VARHDRSZ) + type_size + VARHDRSZ);
     result->header.type = TYPED_LITERAL;
     SET_VARSIZE(result->value, size + VARHDRSZ);
     memcpy(VARDATA(result->value), data, size);
-    SET_VARSIZE(result->value + align_size(size + VARHDRSZ), lang_size + VARHDRSZ);
-    memcpy(VARDATA(result->value + align_size(size + VARHDRSZ)), lang, lang_size);
+    SET_VARSIZE(result->value + align_size(size + VARHDRSZ), type_size + VARHDRSZ);
+    memcpy(VARDATA(result->value + align_size(size + VARHDRSZ)), type, type_size);
+    return (RdfBox *) result;
+}
+
+
+static inline RdfBox *GetBooleanRdfBoxWithLexical(bool value, const char *data, int size)
+{
+    RdfBoxBoolWithLexical *result = (RdfBoxBoolWithLexical *) palloc0(sizeof(RdfBoxBoolWithLexical) + VARHDRSZ + size);
+    SET_VARSIZE(result, sizeof(RdfBoxBoolWithLexical) + VARHDRSZ + size);
+    result->box.header.type = XSD_BOOLEAN;
+    result->box.header.lexical = true;
+    result->box.value = value;
+    SET_VARSIZE(result->lexical, size + VARHDRSZ);
+    memcpy(VARDATA(result->lexical), data, size);
+    return (RdfBox *) result;
+}
+
+
+static inline RdfBox *GetShortRdfBoxWithLexical(int16 value, const char *data, int size)
+{
+    RdfBoxInt16WithLexical *result = (RdfBoxInt16WithLexical *) palloc0(sizeof(RdfBoxInt16WithLexical) + VARHDRSZ + size);
+    SET_VARSIZE(result, sizeof(RdfBoxInt16WithLexical) + VARHDRSZ + size);
+    result->box.header.type = XSD_SHORT;
+    result->box.header.lexical = true;
+    result->box.value = value;
+    SET_VARSIZE(result->lexical, size + VARHDRSZ);
+    memcpy(VARDATA(result->lexical), data, size);
+    return (RdfBox *) result;
+}
+
+
+static inline RdfBox *GetIntRdfBoxWithLexical(int32 value, const char *data, int size)
+{
+    RdfBoxInt32WithLexical *result = (RdfBoxInt32WithLexical *) palloc0(sizeof(RdfBoxInt32WithLexical) + VARHDRSZ + size);
+    SET_VARSIZE(result, sizeof(RdfBoxInt32WithLexical) + VARHDRSZ + size);
+    result->box.header.type = XSD_INT;
+    result->box.header.lexical = true;
+    result->box.value = value;
+    SET_VARSIZE(result->lexical, size + VARHDRSZ);
+    memcpy(VARDATA(result->lexical), data, size);
+    return (RdfBox *) result;
+}
+
+
+static inline RdfBox *GetLongRdfBoxWithLexical(int64 value, const char *data, int size)
+{
+    RdfBoxInt64WithLexical *result = (RdfBoxInt64WithLexical *) palloc0(sizeof(RdfBoxInt64WithLexical) + VARHDRSZ + size);
+    SET_VARSIZE(result, sizeof(RdfBoxInt64WithLexical) + VARHDRSZ + size);
+    result->box.header.type = XSD_LONG;
+    result->box.header.lexical = true;
+    result->box.value = value;
+    SET_VARSIZE(result->lexical, size + VARHDRSZ);
+    memcpy(VARDATA(result->lexical), data, size);
+    return (RdfBox *) result;
+}
+
+
+static inline RdfBox *GetIntegerRdfBoxWithLexical(Numeric value, const char *data, int size)
+{
+    int nsize = VARSIZE(value);
+    RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + align_size(nsize) + VARHDRSZ + size);
+    SET_VARSIZE(result, sizeof(RdfBoxVarlena) + align_size(nsize) + VARHDRSZ + size);
+    result->header.type = XSD_INTEGER;
+    result->header.lexical = true;
+    memcpy(result->value, value, nsize);
+    SET_VARSIZE(result->value + align_size(nsize), size + VARHDRSZ);
+    memcpy(VARDATA(result->value + align_size(nsize)), data, size);
+    return (RdfBox *) result;
+}
+
+
+static inline RdfBox *GetDecimalRdfBoxWithLexical(Numeric value, const char *data, int size)
+{
+    int nsize = VARSIZE(value);
+    RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + align_size(nsize) + VARHDRSZ + size);
+    SET_VARSIZE(result, sizeof(RdfBoxVarlena) + align_size(nsize) + VARHDRSZ + size);
+    result->header.type = XSD_DECIMAL;
+    result->header.lexical = true;
+    memcpy(result->value, value, nsize);
+    SET_VARSIZE(result->value + align_size(nsize), size + VARHDRSZ);
+    memcpy(VARDATA(result->value + align_size(nsize)), data, size);
+    return (RdfBox *) result;
+}
+
+
+static inline RdfBox *GetFloatRdfBoxWithLexical(float4 value, const char *data, int size)
+{
+    RdfBoxFloat4WithLexical *result = (RdfBoxFloat4WithLexical *) palloc0(sizeof(RdfBoxFloat4WithLexical) + VARHDRSZ + size);
+    SET_VARSIZE(result, sizeof(RdfBoxFloat4WithLexical) + VARHDRSZ + size);
+    result->box.header.type = XSD_FLOAT;
+    result->box.header.lexical = true;
+    result->box.value = value;
+    SET_VARSIZE(result->lexical, size + VARHDRSZ);
+    memcpy(VARDATA(result->lexical), data, size);
+    return (RdfBox *) result;
+}
+
+
+static inline RdfBox *GetDoubleRdfBoxWithLexical(float8 value, const char *data, int size)
+{
+    RdfBoxFloat8WithLexical *result = (RdfBoxFloat8WithLexical *) palloc0(sizeof(RdfBoxFloat8WithLexical) + VARHDRSZ + size);
+    SET_VARSIZE(result, sizeof(RdfBoxFloat8WithLexical) + VARHDRSZ + size);
+    result->box.header.type = XSD_DOUBLE;
+    result->box.header.lexical = true;
+    result->box.value = value;
+    SET_VARSIZE(result->lexical, size + VARHDRSZ);
+    memcpy(VARDATA(result->lexical), data, size);
+    return (RdfBox *) result;
+}
+
+
+static inline RdfBox *GetDateTimeRdfBoxWithLexical(ZonedDateTime *value, const char *data, int size)
+{
+    RdfBoxDateTimeWithLexical *result = (RdfBoxDateTimeWithLexical *) palloc0(sizeof(RdfBoxDateTimeWithLexical) + VARHDRSZ + size);
+    SET_VARSIZE(result, sizeof(RdfBoxDateTimeWithLexical) + VARHDRSZ + size);
+    result->box.header.type = XSD_DATETIME;
+    result->box.header.lexical = true;
+    result->box.value = *value;
+    SET_VARSIZE(result->lexical, size + VARHDRSZ);
+    memcpy(VARDATA(result->lexical), data, size);
+    return (RdfBox *) result;
+}
+
+
+static inline RdfBox *GetDateRdfBoxWithLexical(ZonedDate value, const char *data, int size)
+{
+    RdfBoxDateWithLexical *result = (RdfBoxDateWithLexical *) palloc0(sizeof(RdfBoxDateWithLexical) + VARHDRSZ + size);
+    SET_VARSIZE(result, sizeof(RdfBoxDateWithLexical) + VARHDRSZ + size);
+    result->box.header.type = XSD_DATE;
+    result->box.header.lexical = true;
+    result->box.value = value;
+    SET_VARSIZE(result->lexical, size + VARHDRSZ);
+    memcpy(VARDATA(result->lexical), data, size);
+    return (RdfBox *) result;
+}
+
+
+static inline RdfBox *GetDayTimeDurationRdfBoxWithLexical(int64 value, const char *data, int size)
+{
+    RdfBoxInt64WithLexical *result = (RdfBoxInt64WithLexical *) palloc0(sizeof(RdfBoxInt64WithLexical) + VARHDRSZ + size);
+    SET_VARSIZE(result, sizeof(RdfBoxInt64WithLexical) + VARHDRSZ + size);
+    result->box.header.type = XSD_DAYTIMEDURATION;
+    result->box.header.lexical = true;
+    result->box.value = value;
+    SET_VARSIZE(result->lexical, size + VARHDRSZ);
+    memcpy(VARDATA(result->lexical), data, size);
     return (RdfBox *) result;
 }
 

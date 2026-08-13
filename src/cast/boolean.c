@@ -5,7 +5,9 @@
 #include <postgres.h>
 #include <utils/builtins.h>
 #include "call.h"
+#include "try-catch.h"
 #include "constants.h"
+#include "types/boolean.h"
 #include "rdfbox/rdfbox.h"
 
 
@@ -62,22 +64,22 @@ PG_FUNCTION_INFO_V1(cast_as_boolean_from_string);
 Datum cast_as_boolean_from_string(PG_FUNCTION_ARGS)
 {
     VarChar *value = PG_GETARG_VARCHAR_PP(0);
+    NullableDatum result = { .isnull = false };
 
-    char *data = VARDATA_ANY(value);
-    int length = VARSIZE_ANY_EXHDR(value);
+    PG_TRY_EX();
+    {
+        result.value = BoolGetDatum(boolean_parse(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value)));
+    }
+    PG_CATCH_EX();
+    {
+        if(sqlerrcode != ERRCODE_INVALID_TEXT_REPRESENTATION)
+            PG_RE_THROW_EX();
 
-    while(length > 0 && isspace((unsigned char) *data))
-        length--, data++;
+        result.isnull = true;
+    }
+    PG_END_TRY_EX();
 
-    while(length > 0 && isspace((unsigned char) data[length - 1]))
-        length--;
-
-    if((length == 4 && strncmp(data, "true", length) == 0) || (length == 1 && data[0] == '1'))
-        PG_RETURN_BOOL(true);
-    else if((length == 5 && strncmp(data, "false", length) == 0) || (length == 1 && data[0] == '0'))
-        PG_RETURN_BOOL(false);
-    else
-        PG_RETURN_NULL();
+    PG_RETURN(result);
 }
 
 

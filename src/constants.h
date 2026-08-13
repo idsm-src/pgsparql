@@ -6,5 +6,6 @@
 
 
 Numeric get_zero();
+VarChar *get_empty_varchar();
 
 #endif /* CONSTANTS_H_ */

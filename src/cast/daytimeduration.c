@@ -13,12 +13,12 @@
 PG_FUNCTION_INFO_V1(cast_as_daytimeduration_from_string);
 Datum cast_as_daytimeduration_from_string(PG_FUNCTION_ARGS)
 {
-    text *value = PG_GETARG_TEXT_PP(0);
+    VarChar *value = PG_GETARG_VARCHAR_PP(0);
     NullableDatum result = { .isnull = false };
 
     PG_TRY_EX();
     {
-        result = NullableFunctionCall1(daytimeduration_input, CStringGetDatum(text_to_cstring(value)));
+        result.value = Int64GetDatum(daytimeduration_parse(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value)));
     }
     PG_CATCH_EX();
     {

@@ -411,19 +411,19 @@ load ../psql_tests.bash
 }
 
 @test "sparql.str_rdfbox(sparql.rdfbox_create_from_float('-3.402823466e38'::float4))" {
-  expect_output '-3.4028235e+38'
+  expect_output '-3.4028235E38'
 }
 
 @test "sparql.str_rdfbox(sparql.rdfbox_create_from_float('-1.175494351e-38'::float4))" {
-  expect_output '-1.1754944e-38'
+  expect_output '-1.1754944E-38'
 }
 
 @test "sparql.str_rdfbox(sparql.rdfbox_create_from_float('1.175494351e-38'::float4))" {
-  expect_output '1.1754944e-38'
+  expect_output '1.1754944E-38'
 }
 
 @test "sparql.str_rdfbox(sparql.rdfbox_create_from_float('3.402823466e38'::float4))" {
-  expect_output '3.4028235e+38'
+  expect_output '3.4028235E38'
 }
 
 @test "sparql.str_rdfbox(sparql.rdfbox_create_from_float('inf'::float4))" {
@@ -439,19 +439,19 @@ load ../psql_tests.bash
 }
 
 @test "sparql.str_rdfbox(sparql.rdfbox_create_from_double('-1.7976931348623158e308'::float8))" {
-  expect_output '-1.7976931348623157e+308'
+  expect_output '-1.7976931348623157E308'
 }
 
 @test "sparql.str_rdfbox(sparql.rdfbox_create_from_double('-2.2250738585072014e-308'::float8))" {
-  expect_output '-2.2250738585072014e-308'
+  expect_output '-2.2250738585072014E-308'
 }
 
 @test "sparql.str_rdfbox(sparql.rdfbox_create_from_double('2.2250738585072014e-308'::float8))" {
-  expect_output '2.2250738585072014e-308'
+  expect_output '2.2250738585072014E-308'
 }
 
 @test "sparql.str_rdfbox(sparql.rdfbox_create_from_double('1.7976931348623158e308'::float8))" {
-  expect_output '1.7976931348623157e+308'
+  expect_output '1.7976931348623157E308'
 }
 
 @test "sparql.str_rdfbox(sparql.rdfbox_create_from_double('inf'::float8))" {
@@ -1009,43 +1009,43 @@ load ../psql_tests.bash
 }
 
 @test "sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#short'::varchar)" {
-  expect_output '"1"^^<http://www.w3.org/2001/XMLSchema#short>'
+  expect_output '" 1 "^^<http://www.w3.org/2001/XMLSchema#short>'
 }
 
 @test "sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#int'::varchar)" {
-  expect_output '"1"^^<http://www.w3.org/2001/XMLSchema#int>'
+  expect_output '" 1 "^^<http://www.w3.org/2001/XMLSchema#int>'
 }
 
 @test "sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#long'::varchar)" {
-  expect_output '"1"^^<http://www.w3.org/2001/XMLSchema#long>'
+  expect_output '" 1 "^^<http://www.w3.org/2001/XMLSchema#long>'
 }
 
 @test "sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#integer'::varchar)" {
-  expect_output '"1"^^<http://www.w3.org/2001/XMLSchema#integer>'
+  expect_output '" 1 "^^<http://www.w3.org/2001/XMLSchema#integer>'
 }
 
 @test "sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#decimal'::varchar)" {
-  expect_output '"1"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+  expect_output '" 1 "^^<http://www.w3.org/2001/XMLSchema#decimal>'
 }
 
 @test "sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#float'::varchar)" {
-  expect_output '"1"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '" 1 "^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#double'::varchar)" {
-  expect_output '"1"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '" 1 "^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "sparql.strdt_string(' 0001-01-01T00:00:00Z '::varchar, 'http://www.w3.org/2001/XMLSchema#dateTime'::varchar)" {
-  expect_output '"0001-01-01T00:00:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>'
+  expect_output '" 0001-01-01T00:00:00Z "^^<http://www.w3.org/2001/XMLSchema#dateTime>'
 }
 
 @test "sparql.strdt_string(' 0001-01-01Z '::varchar, 'http://www.w3.org/2001/XMLSchema#date'::varchar)" {
-  expect_output '"0001-01-01Z"^^<http://www.w3.org/2001/XMLSchema#date>'
+  expect_output '" 0001-01-01Z "^^<http://www.w3.org/2001/XMLSchema#date>'
 }
 
 @test "sparql.strdt_string(' PT0S '::varchar, 'http://www.w3.org/2001/XMLSchema#dayTimeDuration'::varchar)" {
-  expect_output '"PT0S"^^<http://www.w3.org/2001/XMLSchema#dayTimeDuration>'
+  expect_output '" PT0S "^^<http://www.w3.org/2001/XMLSchema#dayTimeDuration>'
 }
 
 @test "sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#string'::varchar)" {

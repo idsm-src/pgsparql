@@ -4,6 +4,7 @@
 #include <postgres.h>
 #include <fmgr.h>
 
+
 void write_sblanknode_segment(char *buffer, uint32 value);
 
 Datum sblanknode_create(PG_FUNCTION_ARGS);
