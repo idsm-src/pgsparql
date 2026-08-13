@@ -317,23 +317,23 @@ load ../psql_tests.bash
 }
 
 @test "sparql.rdfbox_create_from_boolean('t'::bool) operator(sparql.=) sparql.rdfbox_create_from_short('4'::int2)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.rdfbox_create_from_short('4'::int2) operator(sparql.=) sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z BC'::timestamptz, 0::int4)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z BC'::timestamptz, 0::int4) operator(sparql.=) sparql.rdfbox_create_from_date('0001-01-01 BC'::date, 0::int4)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.rdfbox_create_from_string('2'::varchar) operator(sparql.=) sparql.rdfbox_create_from_double('4'::float8)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.rdfbox_create_from_string('b'::varchar) operator(sparql.=) sparql.rdfbox_create_from_langstring('b'::varchar, 'en'::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 
@@ -455,23 +455,23 @@ load ../psql_tests.bash
 }
 
 @test "sparql.rdfbox_create_from_boolean('t'::bool) operator(sparql.!=) sparql.rdfbox_create_from_short('4'::int2)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.rdfbox_create_from_short('4'::int2) operator(sparql.!=) sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z BC'::timestamptz, 0::int4)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z BC'::timestamptz, 0::int4) operator(sparql.!=) sparql.rdfbox_create_from_date('0001-01-01 BC'::date, 0::int4)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.rdfbox_create_from_string('2'::varchar) operator(sparql.!=) sparql.rdfbox_create_from_double('4'::float8)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.rdfbox_create_from_string('b'::varchar) operator(sparql.!=) sparql.rdfbox_create_from_langstring('b'::varchar, 'en'::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 
@@ -593,23 +593,23 @@ load ../psql_tests.bash
 }
 
 @test "sparql.rdfbox_create_from_boolean('t'::bool) operator(sparql.<) sparql.rdfbox_create_from_short('4'::int2)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.rdfbox_create_from_short('4'::int2) operator(sparql.<) sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z BC'::timestamptz, 0::int4)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z BC'::timestamptz, 0::int4) operator(sparql.<) sparql.rdfbox_create_from_date('0001-01-01 BC'::date, 0::int4)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.rdfbox_create_from_string('2'::varchar) operator(sparql.<) sparql.rdfbox_create_from_double('4'::float8)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.rdfbox_create_from_string('b'::varchar) operator(sparql.<) sparql.rdfbox_create_from_langstring('b'::varchar, 'en'::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 
@@ -731,23 +731,23 @@ load ../psql_tests.bash
 }
 
 @test "sparql.rdfbox_create_from_boolean('t'::bool) operator(sparql.>) sparql.rdfbox_create_from_short('4'::int2)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.rdfbox_create_from_short('4'::int2) operator(sparql.>) sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z BC'::timestamptz, 0::int4)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z BC'::timestamptz, 0::int4) operator(sparql.>) sparql.rdfbox_create_from_date('0001-01-01 BC'::date, 0::int4)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.rdfbox_create_from_string('2'::varchar) operator(sparql.>) sparql.rdfbox_create_from_double('4'::float8)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.rdfbox_create_from_string('b'::varchar) operator(sparql.>) sparql.rdfbox_create_from_langstring('b'::varchar, 'en'::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 
@@ -869,23 +869,23 @@ load ../psql_tests.bash
 }
 
 @test "sparql.rdfbox_create_from_boolean('t'::bool) operator(sparql.<=) sparql.rdfbox_create_from_short('4'::int2)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.rdfbox_create_from_short('4'::int2) operator(sparql.<=) sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z BC'::timestamptz, 0::int4)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z BC'::timestamptz, 0::int4) operator(sparql.<=) sparql.rdfbox_create_from_date('0001-01-01 BC'::date, 0::int4)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.rdfbox_create_from_string('2'::varchar) operator(sparql.<=) sparql.rdfbox_create_from_double('4'::float8)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.rdfbox_create_from_string('b'::varchar) operator(sparql.<=) sparql.rdfbox_create_from_langstring('b'::varchar, 'en'::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 
@@ -1007,21 +1007,21 @@ load ../psql_tests.bash
 }
 
 @test "sparql.rdfbox_create_from_boolean('t'::bool) operator(sparql.>=) sparql.rdfbox_create_from_short('4'::int2)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.rdfbox_create_from_short('4'::int2) operator(sparql.>=) sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z BC'::timestamptz, 0::int4)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z BC'::timestamptz, 0::int4) operator(sparql.>=) sparql.rdfbox_create_from_date('0001-01-01 BC'::date, 0::int4)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.rdfbox_create_from_string('2'::varchar) operator(sparql.>=) sparql.rdfbox_create_from_double('4'::float8)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.rdfbox_create_from_string('b'::varchar) operator(sparql.>=) sparql.rdfbox_create_from_langstring('b'::varchar, 'en'::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }

@@ -63,7 +63,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.sblanknode_get_value_of_segment(sparql.sblanknode_create(''::varchar, '-2147483648'::int4), '2147483647'::int4)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.sblanknode_get_value_of_segment(sparql.sblanknode_create(' '::varchar, '-2147483648'::int4), '-2147483648'::int4)" {
@@ -75,7 +75,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.sblanknode_get_value_of_segment(sparql.sblanknode_create('ff'::varchar, '2147483647'::int4), '-2147483648'::int4)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 

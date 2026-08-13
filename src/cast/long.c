@@ -8,6 +8,7 @@
 #include "pgsparql.h"
 #include "call.h"
 #include "try-catch.h"
+#include "types/long.h"
 #include "rdfbox/rdfbox.h"
 
 
@@ -114,12 +115,12 @@ Datum cast_as_long_from_double(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(cast_as_long_from_string);
 Datum cast_as_long_from_string(PG_FUNCTION_ARGS)
 {
-    text *value = PG_GETARG_TEXT_PP(0);
+    VarChar *value = PG_GETARG_VARCHAR_PP(0);
     NullableDatum result = { .isnull = false };
 
     PG_TRY_EX();
     {
-        result.value = pg_strtoint64(text_to_cstring(value));
+        result.value = Int64GetDatum(long_parse(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value)));
     }
     PG_CATCH_EX();
     {

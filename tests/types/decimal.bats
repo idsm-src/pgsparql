@@ -57,13 +57,13 @@ load ../psql_tests.bash
 #
 
 @test "'-1'::decimal operator(sparql./) '0'::decimal" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "'0'::decimal operator(sparql./) '0'::decimal" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "'1'::decimal operator(sparql./) '0'::decimal" {
-  expect_output ''
+  expect_output '(null)'
 }

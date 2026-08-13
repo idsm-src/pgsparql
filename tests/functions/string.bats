@@ -31,7 +31,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.strlen_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 
@@ -89,11 +89,11 @@ load ../psql_tests.bash
 }
 
 @test "sparql.substr_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar), '4'::decimal)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.substr_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar), '4'::decimal, '1'::decimal)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 
@@ -119,7 +119,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.ucase_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 
@@ -145,7 +145,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.lcase_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 
@@ -203,7 +203,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.strstarts_rdfbox_string(sparql.rdfbox_create_from_iri('http://example.org'::varchar), ''::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strstarts_rdfbox_rdfbox(sparql.rdfbox_create_from_string('foobar'::varchar), sparql.rdfbox_create_from_string('foo'::varchar))" {
@@ -239,19 +239,19 @@ load ../psql_tests.bash
 }
 
 @test "sparql.strstarts_rdfbox_rdfbox(sparql.rdfbox_create_from_string('foobar'::varchar), sparql.rdfbox_create_from_langstring('foo'::varchar, 'en'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strstarts_rdfbox_rdfbox(sparql.rdfbox_create_from_string('foobar'::varchar), sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strstarts_rdfbox_rdfbox(sparql.rdfbox_create_from_string(''::varchar), sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strstarts_rdfbox_rdfbox(sparql.rdfbox_create_from_string('foobar'::varchar), sparql.rdfbox_create_from_langstring('oob'::varchar, 'en'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strstarts_rdfbox_rdfbox(sparql.rdfbox_create_from_langstring('foobar'::varchar, 'en'::varchar), sparql.rdfbox_create_from_langstring('foo'::varchar, 'en'::varchar))" {
@@ -271,27 +271,27 @@ load ../psql_tests.bash
 }
 
 @test "sparql.strstarts_rdfbox_rdfbox(sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar), sparql.rdfbox_create_from_langstring(''::varchar, 'ge'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strstarts_rdfbox_rdfbox(sparql.rdfbox_create_from_string(''::varchar), sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strstarts_rdfbox_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar), sparql.rdfbox_create_from_string(''::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strstarts_rdfbox_rdfbox(sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar), sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strstarts_rdfbox_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar), sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strstarts_rdfbox_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar), sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 
@@ -349,7 +349,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.strends_rdfbox_string(sparql.rdfbox_create_from_iri('http://example.org'::varchar), ''::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strends_rdfbox_rdfbox(sparql.rdfbox_create_from_string('foobar'::varchar), sparql.rdfbox_create_from_string('bar'::varchar))" {
@@ -385,19 +385,19 @@ load ../psql_tests.bash
 }
 
 @test "sparql.strends_rdfbox_rdfbox(sparql.rdfbox_create_from_string('foobar'::varchar), sparql.rdfbox_create_from_langstring('bar'::varchar, 'en'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strends_rdfbox_rdfbox(sparql.rdfbox_create_from_string('foobar'::varchar), sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strends_rdfbox_rdfbox(sparql.rdfbox_create_from_string(''::varchar), sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strends_rdfbox_rdfbox(sparql.rdfbox_create_from_string('foobar'::varchar), sparql.rdfbox_create_from_langstring('oob'::varchar, 'en'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strends_rdfbox_rdfbox(sparql.rdfbox_create_from_langstring('foobar'::varchar, 'en'::varchar), sparql.rdfbox_create_from_langstring('bar'::varchar, 'en'::varchar))" {
@@ -417,27 +417,27 @@ load ../psql_tests.bash
 }
 
 @test "sparql.strends_rdfbox_rdfbox(sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar), sparql.rdfbox_create_from_langstring(''::varchar, 'ge'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strends_rdfbox_rdfbox(sparql.rdfbox_create_from_string(''::varchar), sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strends_rdfbox_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar), sparql.rdfbox_create_from_string(''::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strends_rdfbox_rdfbox(sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar), sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strends_rdfbox_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar), sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strends_rdfbox_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar), sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 
@@ -495,7 +495,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.contains_rdfbox_string(sparql.rdfbox_create_from_iri('http://example.org'::varchar), ''::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.contains_rdfbox_rdfbox(sparql.rdfbox_create_from_string('foobar'::varchar), sparql.rdfbox_create_from_string('oob'::varchar))" {
@@ -531,19 +531,19 @@ load ../psql_tests.bash
 }
 
 @test "sparql.contains_rdfbox_rdfbox(sparql.rdfbox_create_from_string('foobar'::varchar), sparql.rdfbox_create_from_langstring('oob'::varchar, 'en'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.contains_rdfbox_rdfbox(sparql.rdfbox_create_from_string('foobar'::varchar), sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.contains_rdfbox_rdfbox(sparql.rdfbox_create_from_string(''::varchar), sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.contains_rdfbox_rdfbox(sparql.rdfbox_create_from_string('foobar'::varchar), sparql.rdfbox_create_from_langstring('xob'::varchar, 'en'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.contains_rdfbox_rdfbox(sparql.rdfbox_create_from_langstring('foobar'::varchar, 'en'::varchar), sparql.rdfbox_create_from_langstring('oob'::varchar, 'en'::varchar))" {
@@ -563,27 +563,27 @@ load ../psql_tests.bash
 }
 
 @test "sparql.contains_rdfbox_rdfbox(sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar), sparql.rdfbox_create_from_langstring(''::varchar, 'ge'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.contains_rdfbox_rdfbox(sparql.rdfbox_create_from_string(''::varchar), sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.contains_rdfbox_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar), sparql.rdfbox_create_from_string(''::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.contains_rdfbox_rdfbox(sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar), sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.contains_rdfbox_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar), sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.contains_rdfbox_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar), sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 
@@ -629,7 +629,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.strbefore_rdfbox_string(sparql.rdfbox_create_from_iri('http://example.org'::varchar), ''::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strbefore_rdfbox_rdfbox(sparql.rdfbox_create_from_string('abc'::varchar), sparql.rdfbox_create_from_string('b'::varchar))" {
@@ -657,19 +657,19 @@ load ../psql_tests.bash
 }
 
 @test "sparql.strbefore_rdfbox_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar), sparql.rdfbox_create_from_string(''::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strbefore_rdfbox_rdfbox(sparql.rdfbox_create_from_string('abc'::varchar), sparql.rdfbox_create_from_langstring('b'::varchar, 'en'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strbefore_rdfbox_rdfbox(sparql.rdfbox_create_from_string('abc'::varchar), sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strbefore_rdfbox_rdfbox(sparql.rdfbox_create_from_string('abc'::varchar), sparql.rdfbox_create_from_langstring('xyz'::varchar, 'en'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strbefore_rdfbox_rdfbox(sparql.rdfbox_create_from_langstring('abc'::varchar, 'en'::varchar), sparql.rdfbox_create_from_langstring('b'::varchar, 'en'::varchar))" {
@@ -685,15 +685,15 @@ load ../psql_tests.bash
 }
 
 @test "sparql.strbefore_rdfbox_rdfbox(sparql.rdfbox_create_from_langstring('abc'::varchar, 'en'::varchar), sparql.rdfbox_create_from_langstring('xyz'::varchar, 'cy'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strbefore_rdfbox_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar), sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strbefore_rdfbox_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar), sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 
@@ -739,7 +739,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.strafter_rdfbox_string(sparql.rdfbox_create_from_iri('http://example.org'::varchar), ''::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strafter_rdfbox_rdfbox(sparql.rdfbox_create_from_string('abc'::varchar), sparql.rdfbox_create_from_string('b'::varchar))" {
@@ -767,19 +767,19 @@ load ../psql_tests.bash
 }
 
 @test "sparql.strafter_rdfbox_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar), sparql.rdfbox_create_from_string(''::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strafter_rdfbox_rdfbox(sparql.rdfbox_create_from_string('abc'::varchar), sparql.rdfbox_create_from_langstring('b'::varchar, 'en'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strafter_rdfbox_rdfbox(sparql.rdfbox_create_from_string('abc'::varchar), sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strafter_rdfbox_rdfbox(sparql.rdfbox_create_from_string('abc'::varchar), sparql.rdfbox_create_from_langstring('xyz'::varchar, 'en'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strafter_rdfbox_rdfbox(sparql.rdfbox_create_from_langstring('abc'::varchar, 'en'::varchar), sparql.rdfbox_create_from_langstring('b'::varchar, 'en'::varchar))" {
@@ -795,15 +795,15 @@ load ../psql_tests.bash
 }
 
 @test "sparql.strafter_rdfbox_rdfbox(sparql.rdfbox_create_from_langstring('abc'::varchar, 'en'::varchar), sparql.rdfbox_create_from_langstring('xyz'::varchar, 'cy'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strafter_rdfbox_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar), sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.strafter_rdfbox_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar), sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 
@@ -825,7 +825,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.encode_for_uri_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 
@@ -855,23 +855,23 @@ load ../psql_tests.bash
 }
 
 @test "sparql.concat_rdfbox_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar), sparql.rdfbox_create_from_string('bar'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.concat_rdfbox_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar), sparql.rdfbox_create_from_langstring('bar'::varchar, 'en'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.concat_rdfbox_rdfbox(sparql.rdfbox_create_from_string('bar'::varchar), sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.concat_rdfbox_rdfbox(sparql.rdfbox_create_from_langstring('bar'::varchar, 'en'::varchar), sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.concat_rdfbox_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar), sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 
@@ -897,13 +897,13 @@ load ../psql_tests.bash
 }
 
 @test "sparql.langmatches_rdfbox_rdfbox(sparql.rdfbox_create_from_langstring('fr-be'::varchar, 'en'::varchar), sparql.rdfbox_create_from_string('fr'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.langmatches_rdfbox_rdfbox(sparql.rdfbox_create_from_string('fr-be'::varchar), sparql.rdfbox_create_from_langstring('en'::varchar, 'en'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.langmatches_rdfbox_rdfbox(sparql.rdfbox_create_from_langstring('fr-be'::varchar, 'en'::varchar), sparql.rdfbox_create_from_langstring('fr'::varchar, 'en'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }

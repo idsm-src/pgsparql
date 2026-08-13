@@ -75,7 +75,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_boolean_from_string(' TRUE '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_boolean_from_string(' 0 '::varchar)" {
@@ -87,15 +87,15 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_boolean_from_string(' FALSE '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_boolean_from_string(' '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_boolean_from_string(''::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_boolean_from_rdfbox(sparql.rdfbox_create_from_short(0::int2))" {
@@ -171,7 +171,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_boolean_from_rdfbox(sparql.rdfbox_create_from_string(' TRUE '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_boolean_from_rdfbox(sparql.rdfbox_create_from_string(' 0 '::varchar))" {
@@ -183,15 +183,15 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_boolean_from_rdfbox(sparql.rdfbox_create_from_string(' FALSE '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_boolean_from_rdfbox(sparql.rdfbox_create_from_string(' '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_boolean_from_rdfbox(sparql.rdfbox_create_from_string(''::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_boolean_from_rdfbox(sparql.rdfbox_create_from_boolean('f'::bool))" {
@@ -203,5 +203,5 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_boolean_from_rdfbox(sparql.rdfbox_create_from_iri('http://false.org'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }

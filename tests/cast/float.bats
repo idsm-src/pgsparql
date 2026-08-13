@@ -171,11 +171,11 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_float_from_string(' e1 '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_float_from_string(' inf '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_float_from_string(' -1000000000000000000000000000000000000000 '::varchar)" {
@@ -211,11 +211,11 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_float_from_string(' '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_float_from_string(''::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_float_from_rdfbox(sparql.rdfbox_create_from_boolean('f'::bool))" {
@@ -387,11 +387,11 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_float_from_rdfbox(sparql.rdfbox_create_from_string(' e1 '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_float_from_rdfbox(sparql.rdfbox_create_from_string(' inf '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_float_from_rdfbox(sparql.rdfbox_create_from_string(' -1000000000000000000000000000000000000000 '::varchar))" {
@@ -427,11 +427,11 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_float_from_rdfbox(sparql.rdfbox_create_from_string(' '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_float_from_rdfbox(sparql.rdfbox_create_from_string(''::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_float_from_rdfbox(sparql.rdfbox_create_from_float('1.402823466e38'::float4))" {
@@ -443,5 +443,5 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_float_from_rdfbox(sparql.rdfbox_create_from_iri(' http://123.org '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }

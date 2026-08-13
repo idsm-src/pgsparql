@@ -91,9 +91,9 @@ load ../psql_tests.bash
 }
 
 @test "sparql.ebv_rdfbox(sparql.rdfbox_create_from_typedliteral('true'::varchar, 'http://example.org'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.ebv_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }

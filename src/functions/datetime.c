@@ -13,7 +13,7 @@ static void datetime_decompose(ZonedDateTime *date, struct pg_tm *tm, fsec_t *fs
 {
     // the exception should be never thrown unless there is some bug in the code
     if(!IS_VALID_TIMESTAMP(date->value) || !IS_VALID_TIMEZONE(date->zone))
-        ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("zoneddatetime out of range")));
+        ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("xsd:dateTime out of range")));
 
     pg_tz *timezone = pg_tzset_offset(date->zone != ZONE_UNSPECIFIED ? -date->zone : 0);
 
@@ -21,7 +21,7 @@ static void datetime_decompose(ZonedDateTime *date, struct pg_tm *tm, fsec_t *fs
     const char *tzn;
 
     if(timestamp2tm(date->value, &tz, tm, fsec, &tzn, timezone))
-        ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("zoneddatetime out of range")));
+        ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("xsd:dateTime out of range")));
 }
 
 
@@ -29,7 +29,7 @@ static void date_decompose(ZonedDate *date, struct pg_tm *tm)
 {
     // the exception should be never thrown unless there is some bug in the code
     if(!IS_VALID_DATE(date->value) || !IS_VALID_TIMEZONE(date->zone))
-        ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("zoneddate out of range")));
+        ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("xsd:date out of range")));
 
     j2date(date->value + POSTGRES_EPOCH_JDATE, &(tm->tm_year), &(tm->tm_mon), &(tm->tm_mday));
 }

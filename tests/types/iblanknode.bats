@@ -63,7 +63,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.iblanknode_get_value_of_segment(sparql.iblanknode_create('-2147483648'::int4, '-2147483648'::int4), '2147483647'::int4)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.iblanknode_get_value_of_segment(sparql.iblanknode_create('2147483647'::int4, '-2147483648'::int4), '-2147483648'::int4)" {
@@ -75,7 +75,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.iblanknode_get_value_of_segment(sparql.iblanknode_create('2147483647'::int4, '2147483647'::int4), '-2147483648'::int4)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 

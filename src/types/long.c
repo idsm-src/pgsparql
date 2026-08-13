@@ -1,0 +1,84 @@
+#include <postgres.h>
+#include <utils/builtins.h>
+#include <common/int.h>
+#include "pgsparql.h"
+#include "types/parser.h"
+#include "types/long.h"
+
+
+int64 long_parse(char *data, int size)
+{
+    int pos = 0;
+
+    while(pos < size && xsd_isspace(data[pos]))
+        pos++;
+
+    uint64 tmp = 0;
+    bool neg = false;
+
+    if(pos < size && data[pos] == '-')
+    {
+        pos++;
+        neg = true;
+    }
+    else if(pos < size && data[pos] == '+')
+    {
+        pos++;
+    }
+
+    int begin = pos;
+
+    while(pos < size)
+    {
+        unsigned char digit = (data[pos] - '0');
+
+        if(digit >= 10)
+            break;
+
+        pos++;
+
+        if(unlikely(tmp > -(PG_INT64_MIN / 10)))
+            ereport(ERROR, (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE), errmsg("xsd:long out of range")));
+
+        tmp = tmp * 10 + digit;
+    }
+
+    if(pos == begin)
+        ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed xsd:long literal")));
+
+    while(pos < size && xsd_isspace(data[pos]))
+        pos++;
+
+    if(pos != size)
+        ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed xsd:long literal")));
+
+    if(neg)
+    {
+        int64 result;
+
+        if(unlikely(pg_neg_u64_overflow(tmp, &result)))
+            ereport(ERROR, (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE), errmsg("xsd:long out of range")));
+
+        return result;
+    }
+
+    if(unlikely(tmp > PG_INT64_MAX))
+        ereport(ERROR, (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE), errmsg("xsd:long out of range")));
+
+    return (int64) tmp;
+}
+
+
+int long_print(int64 value, char *buffer)
+{
+    uint64 uvalue = value;
+    int size = 0;
+
+    if(value < 0)
+    {
+        uvalue = (uint64) 0 - uvalue;
+        buffer[size++] = '-';
+    }
+
+    return size + pg_ulltoa_n(uvalue, buffer + size);
+}

@@ -11,7 +11,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_short_from_int('-32769'::int4)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_int('-32768'::int4)" {
@@ -23,11 +23,11 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_short_from_int('32768'::int4)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_long('-32769'::int8)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_long('-32768'::int8)" {
@@ -39,15 +39,15 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_short_from_long('32768'::int8)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_integer('-infinity'::decimal)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_integer('-32769'::decimal)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_integer('-32768'::decimal)" {
@@ -59,23 +59,23 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_short_from_integer('32768'::decimal)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_integer('infinity'::decimal)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_integer('nan'::decimal)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_decimal('-infinity'::decimal)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_decimal('-32769.0'::decimal)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_decimal('-32768.9'::decimal)" {
@@ -87,23 +87,23 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_short_from_decimal('32768.9'::decimal)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_decimal('infinity'::decimal)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_decimal('nan'::decimal)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_float('-inf'::float4)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_float('-32769'::float4)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_float('-32768'::float4)" {
@@ -115,23 +115,23 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_short_from_float('32768'::float4)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_float('inf'::float4)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_float('nan'::float4)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_double('-inf'::float8)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_double('-32769'::float8)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_double('-32768'::float8)" {
@@ -143,23 +143,23 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_short_from_double('32768'::float8)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_double('inf'::float8)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_double('nan'::float8)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_string(' -infinity '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_string(' -32769 '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_string(' -32768 '::varchar)" {
@@ -171,27 +171,27 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_short_from_string(' 32768 '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_string(' infinity '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_string(' nan '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_string(' 10.0 '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_string(' '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_string(''::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_boolean('f'::bool))" {
@@ -203,7 +203,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_int('-32769'::int4))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_int('-32768'::int4))" {
@@ -215,11 +215,11 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_int('32768'::int4))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_long('-32769'::int8))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_long('-32768'::int8))" {
@@ -231,15 +231,15 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_long('32768'::int8))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_integer('-infinity'::decimal))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_integer('-32769'::decimal))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_integer('-32768'::decimal))" {
@@ -251,23 +251,23 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_integer('32768'::decimal))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_integer('infinity'::decimal))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_integer('nan'::decimal))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_decimal('-infinity'::decimal))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_decimal('-32769.0'::decimal))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_decimal('-32768.9'::decimal))" {
@@ -279,23 +279,23 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_decimal('32768.9'::decimal))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_decimal('infinity'::decimal))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_decimal('nan'::decimal))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_float('-inf'::float4))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_float('-32769'::float4))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_float('-32768'::float4))" {
@@ -307,23 +307,23 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_float('32768'::float4))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_float('inf'::float4))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_float('nan'::float4))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_double('-inf'::float8))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_double('-32769'::float8))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_double('-32768'::float8))" {
@@ -335,23 +335,23 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_double('32768'::float8))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_double('inf'::float8))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_double('nan'::float8))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_string(' -infinity '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_string(' -32769 '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_string(' -32768 '::varchar))" {
@@ -363,27 +363,27 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_string(' 32768 '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_string(' infinity '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_string(' nan '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_string(' 10.0 '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_string(' '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_string(''::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_short('-32768'::int2))" {
@@ -395,5 +395,5 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_iri(' http://123.org '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }

@@ -177,11 +177,11 @@ load ../psql_tests.bash
 }
 
 @test "sparql.zoneddate_get_value_of_zone(sparql.zoneddate_create('1990-05-15'::date, (-14*60*60)::int4), (14*60*60)::int4)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.zoneddate_get_value_of_zone(sparql.zoneddate_create('2011-07-25'::date, (10*60*60)::int4), '-2147483648'::int4)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.zoneddate_get_value_of_zone(sparql.zoneddate_create('2022-10-05'::date, '-2147483648'::int4), '-2147483648'::int4)" {

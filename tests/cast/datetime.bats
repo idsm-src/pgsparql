@@ -111,39 +111,39 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_datetime_from_string(' 2020-02-30T00:00:00 '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_datetime_from_string(' 999-04-15T00:00:00 '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_datetime_from_string(' 1990-1-20T00:00:00 '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_datetime_from_string(' 2000-10-20T24:00:10 '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_datetime_from_string(' 2000-10-20T00:00:00. '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_datetime_from_string(' 2000-10-20T00:00:00+14:01 '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_datetime_from_string(' 2000-10-20T00:00:00-14:01 '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_datetime_from_string(' '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_datetime_from_string(''::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_datetime_from_rdfbox(sparql.rdfbox_create_from_date('0000-02-18Z'::sparql.zoneddate))" {
@@ -255,39 +255,39 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_datetime_from_rdfbox(sparql.rdfbox_create_from_string(' 2020-02-30T00:00:00 '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_datetime_from_rdfbox(sparql.rdfbox_create_from_string(' 999-04-15T00:00:00 '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_datetime_from_rdfbox(sparql.rdfbox_create_from_string(' 1990-1-20T00:00:00 '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_datetime_from_rdfbox(sparql.rdfbox_create_from_string(' 2000-10-20T24:00:10 '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_datetime_from_rdfbox(sparql.rdfbox_create_from_string(' 2000-10-20T00:00:00. '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_datetime_from_rdfbox(sparql.rdfbox_create_from_string(' 2000-10-20T00:00:00+14:01 '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_datetime_from_rdfbox(sparql.rdfbox_create_from_string(' 2000-10-20T00:00:00-14:01 '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_datetime_from_rdfbox(sparql.rdfbox_create_from_string(' '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_datetime_from_rdfbox(sparql.rdfbox_create_from_string(''::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_datetime_from_rdfbox(sparql.rdfbox_create_from_datetime('1990-05-15T10:00:00+10:00'::sparql.zoneddatetime))" {
@@ -303,7 +303,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_datetime_from_rdfbox(sparql.rdfbox_create_from_iri('http://false.org'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 
@@ -377,5 +377,5 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_plain_datetime_from_rdfbox(sparql.rdfbox_create_from_iri('http://false.org'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }

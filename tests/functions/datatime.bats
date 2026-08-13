@@ -127,7 +127,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.year_rdfbox(sparql.rdfbox_create_from_string(''))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 
@@ -257,7 +257,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.month_rdfbox(sparql.rdfbox_create_from_string(''))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 
@@ -387,7 +387,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.day_rdfbox(sparql.rdfbox_create_from_string(''))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 
@@ -457,11 +457,11 @@ load ../psql_tests.bash
 }
 
 @test "sparql.hours_rdfbox(sparql.rdfbox_create_from_date('2010-11-18'::date, (14*60*60)::int4))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.hours_rdfbox(sparql.rdfbox_create_from_string(''))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 
@@ -531,11 +531,11 @@ load ../psql_tests.bash
 }
 
 @test "sparql.minutes_rdfbox(sparql.rdfbox_create_from_date('2010-11-18'::date, (14*60*60)::int4))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.minutes_rdfbox(sparql.rdfbox_create_from_string(''))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 
@@ -605,11 +605,11 @@ load ../psql_tests.bash
 }
 
 @test "sparql.seconds_rdfbox(sparql.rdfbox_create_from_date('2010-11-18'::date, (14*60*60)::int4))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.seconds_rdfbox(sparql.rdfbox_create_from_string(''))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 
@@ -623,7 +623,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.timezone_datetime('0000-03-15T24:00:00'::sparql.zoneddatetime)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.timezone_datetime('0000-04-17T24:00:00+10:30'::sparql.zoneddatetime)" {
@@ -643,7 +643,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.timezone_datetime('0001-03-15T24:00:00 BC'::timestamptz, '-2147483648'::int4)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.timezone_datetime('0001-04-17T24:00:00+10:30 BC'::timestamptz, ((10*60+30)*60)::int4)" {
@@ -663,7 +663,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.timezone_date('0000-03-15'::sparql.zoneddate)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.timezone_date('0000-04-17+10:30'::sparql.zoneddate)" {
@@ -683,7 +683,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.timezone_date('0001-03-15 BC'::date, '-2147483648'::int4)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.timezone_date('0001-04-17 BC'::date, ((10*60+30)*60)::int4)" {
@@ -703,7 +703,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.timezone_rdfbox(sparql.rdfbox_create_from_datetime('0001-03-15T24:00:00 BC'::timestamptz, '-2147483648'::int4))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.timezone_rdfbox(sparql.rdfbox_create_from_datetime('0001-04-17T24:00:00+10:30 BC'::timestamptz, ((10*60+30)*60)::int4))" {
@@ -723,7 +723,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.timezone_rdfbox(sparql.rdfbox_create_from_date('0001-03-15 BC'::date, '-2147483648'::int4))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.timezone_rdfbox(sparql.rdfbox_create_from_date('0001-04-17 BC'::date, ((10*60+30)*60)::int4))" {
@@ -739,7 +739,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.timezone_rdfbox(sparql.rdfbox_create_from_string(''))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 
@@ -869,5 +869,5 @@ load ../psql_tests.bash
 }
 
 @test "sparql.tz_rdfbox(sparql.rdfbox_create_from_string(''))" {
-  expect_output ''
+  expect_output '(null)'
 }

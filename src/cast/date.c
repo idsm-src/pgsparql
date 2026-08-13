@@ -50,12 +50,12 @@ Datum cast_as_date_from_datetime(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(cast_as_date_from_string);
 Datum cast_as_date_from_string(PG_FUNCTION_ARGS)
 {
-    text *value = PG_GETARG_TEXT_PP(0);
+    VarChar *value = PG_GETARG_VARCHAR_PP(0);
     NullableDatum result = { .isnull = false };
 
     PG_TRY_EX();
     {
-        result = NullableFunctionCall1(zoneddate_input, CStringGetDatum(text_to_cstring(value)));
+        result.value = ZonedDateGetDatum(date_parse(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value)));
     }
     PG_CATCH_EX();
     {

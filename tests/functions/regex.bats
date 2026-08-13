@@ -19,7 +19,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.regex_string('abcd'::varchar, '['::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.regex_rdfbox(sparql.rdfbox_create_from_string('abcd'::varchar), 'b'::varchar)" {
@@ -35,7 +35,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.regex_rdfbox(sparql.rdfbox_create_from_string('abcd'::varchar), '['::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.regex_rdfbox(sparql.rdfbox_create_from_langstring('abcd'::varchar, 'en'::varchar), 'b'::varchar)" {
@@ -51,11 +51,11 @@ load ../psql_tests.bash
 }
 
 @test "sparql.regex_rdfbox(sparql.rdfbox_create_from_langstring('abcd'::varchar, 'en'::varchar), '['::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.regex_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar), 'B'::varchar, 'i'::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 
@@ -77,7 +77,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.replace_string('abcd'::varchar, '['::varchar, 'Z'::varchar, 'i'::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.replace_rdfbox(sparql.rdfbox_create_from_string('abcd'::varchar), 'b'::varchar, 'Z'::varchar)" {
@@ -93,7 +93,7 @@ load ../psql_tests.bash
 }
 
 @test "sparql.replace_rdfbox(sparql.rdfbox_create_from_string('abcd'::varchar), '['::varchar, 'Z'::varchar, 'i'::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.replace_rdfbox(sparql.rdfbox_create_from_langstring('abcd'::varchar, 'en'::varchar), 'b'::varchar, 'Z'::varchar)" {
@@ -109,9 +109,9 @@ load ../psql_tests.bash
 }
 
 @test "sparql.replace_rdfbox(sparql.rdfbox_create_from_langstring('abcd'::varchar, 'en'::varchar), '['::varchar, 'Z'::varchar, 'i'::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.replace_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar), 'B.'::varchar, 'Z'::varchar, 'i'::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }

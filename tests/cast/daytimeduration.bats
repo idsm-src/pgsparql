@@ -43,59 +43,59 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_daytimeduration_from_string(' -P106751991DT4H54.775809S '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_daytimeduration_from_string(' P106751991DT4H54.775808S '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_daytimeduration_from_string(' P2Y6M5DT12H35M30S '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_daytimeduration_from_string(' P-20D '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_daytimeduration_from_string(' P20DT '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_daytimeduration_from_string(' PT1HM3S '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_daytimeduration_from_string(' P15.5D '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_daytimeduration_from_string(' P1D2H '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_daytimeduration_from_string(' 1DT2H '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_daytimeduration_from_string(' PT15M5H '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_daytimeduration_from_string(' P '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_daytimeduration_from_string(' PT15.S '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_daytimeduration_from_string(' '::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_daytimeduration_from_string(''::varchar)" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_daytimeduration_from_rdfbox(sparql.rdfbox_create_from_string(' P1DT2H '::varchar))" {
@@ -139,59 +139,59 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_daytimeduration_from_rdfbox(sparql.rdfbox_create_from_string(' -P106751991DT4H54.775809S '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_daytimeduration_from_rdfbox(sparql.rdfbox_create_from_string(' P106751991DT4H54.775808S '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_daytimeduration_from_rdfbox(sparql.rdfbox_create_from_string(' P2Y6M5DT12H35M30S '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_daytimeduration_from_rdfbox(sparql.rdfbox_create_from_string(' P-20D '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_daytimeduration_from_rdfbox(sparql.rdfbox_create_from_string(' P20DT '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_daytimeduration_from_rdfbox(sparql.rdfbox_create_from_string(' PT1HM3S '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_daytimeduration_from_rdfbox(sparql.rdfbox_create_from_string(' P15.5D '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_daytimeduration_from_rdfbox(sparql.rdfbox_create_from_string(' P1D2H '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_daytimeduration_from_rdfbox(sparql.rdfbox_create_from_string(' 1DT2H '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_daytimeduration_from_rdfbox(sparql.rdfbox_create_from_string(' PT15M5H '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_daytimeduration_from_rdfbox(sparql.rdfbox_create_from_string(' P '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_daytimeduration_from_rdfbox(sparql.rdfbox_create_from_string(' PT15.S '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_daytimeduration_from_rdfbox(sparql.rdfbox_create_from_string(' '::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_daytimeduration_from_rdfbox(sparql.rdfbox_create_from_string(''::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }
 
 @test "sparql.cast_as_daytimeduration_from_rdfbox(sparql.rdfbox_create_from_daytimeduration('-9223372036854775808'::int8))" {
@@ -203,5 +203,5 @@ load ../psql_tests.bash
 }
 
 @test "sparql.cast_as_daytimeduration_from_rdfbox(sparql.rdfbox_create_from_iri('http://false.org'::varchar))" {
-  expect_output ''
+  expect_output '(null)'
 }

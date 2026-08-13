@@ -7,8 +7,17 @@
 #include "rdfbox/rdfbox.h"
 #include "rdfbox/syntax.h"
 #include "rdfbox/promotion.h"
+#include "types/boolean.h"
+#include "types/short.h"
+#include "types/int.h"
+#include "types/long.h"
+#include "types/integer.h"
+#include "types/decimal.h"
 #include "types/float.h"
 #include "types/double.h"
+#include "types/integer.h"
+#include "types/decimal.h"
+#include "types/parser.h"
 #include "types/daytimeduration.h"
 #include "rdfbox/xsd.h"
 
@@ -98,8 +107,8 @@ Datum rdfbox_input(PG_FUNCTION_ARGS)
 
     if(str[0] == '"' || str[0] == '\'')
     {
-        char *buffer = palloc(length + 1);
-        size_t pos = 0;
+        char *data = palloc(length + 1);
+        size_t size = 0;
 
         char begin = str[0];
         bool simple = true;
@@ -127,26 +136,26 @@ Datum rdfbox_input(PG_FUNCTION_ARGS)
                     break;
                 }
 
-                buffer[pos++] = chr;
+                data[size++] = chr;
             }
             else if(chr == '\\')
             {
                 char esc = str[i++];
 
                 if(esc == 't')
-                    buffer[pos++] = '\t';
+                    data[size++] = '\t';
                 else if(esc == 'b')
-                    buffer[pos++] = '\b';
+                    data[size++] = '\b';
                 else if(esc == 'n')
-                    buffer[pos++] = '\n';
+                    data[size++] = '\n';
                 else if(esc == 'r')
-                    buffer[pos++] = '\r';
+                    data[size++] = '\r';
                 else if(esc == 'f')
-                    buffer[pos++] = '\f';
+                    data[size++] = '\f';
                 else if(esc == '"')
-                    buffer[pos++] = '"';
+                    data[size++] = '"';
                 else if(esc == '\'')
-                    buffer[pos++] = '\'';
+                    data[size++] = '\'';
                 else
                     ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("unknown escape sequence")));
             }
@@ -156,15 +165,15 @@ Datum rdfbox_input(PG_FUNCTION_ARGS)
             }
             else
             {
-                buffer[pos++] = chr;
+                data[size++] = chr;
             }
         }
 
-        buffer[pos] = '\0';
+        data[size] = '\0';
 
         if(str[i] == '\0')
         {
-            box = GetStringRdfBox(buffer, pos);
+            box = GetStringRdfBox(data, size);
         }
         else if(str[i] == '@')
         {
@@ -174,7 +183,7 @@ Datum rdfbox_input(PG_FUNCTION_ARGS)
             if(!check_language_tag(lang, lang_size))
                 ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid language tag")));
 
-            box = GetLangStringRdfBox(buffer, pos, lang, lang_size);
+            box = GetLangStringRdfBox(data, size, lang, lang_size);
         }
         else if(str[i] == '^' && str[i + 1] == '^' && str[i + 2] == '<' && str[length - 1] == '>')
         {
@@ -182,87 +191,117 @@ Datum rdfbox_input(PG_FUNCTION_ARGS)
             {
                 if(strcmp(str + i + 2, IRI_BEGIN XSD_BOOLEAN_IRI IRI_END) == 0)
                 {
-                    char *data = buffer;
-                    size_t size = pos;
+                    bool val = boolean_parse(data, size);
+                    char buffer[BOOLEAN_MAXLEN];
 
-                    while(size > 0 && isspace((unsigned char) *data))
-                        size--, data++;
-
-                    while(size > 0 && isspace((unsigned char) data[size - 1]))
-                        size--;
-
-                    bool value;
-
-                    if((size == 4 && strncmp(data, "true", size) == 0) || (size == 1 && data[0] == '1'))
-                        value = true;
-                    else if((size == 5 && strncmp(data, "false", size) == 0) || (size == 1 && data[0] == '0'))
-                        value = false;
+                    if(boolean_print(val, buffer) == size && !memcmp(data, buffer, size))
+                        box = GetBooleanRdfBox(val);
                     else
-                        ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION)));
-
-                    box = GetBooleanRdfBox(value);
+                        box = GetBooleanRdfBoxWithLexical(val, data, size);
                 }
                 else if(strcmp(str + i + 2, IRI_BEGIN XSD_SHORT_IRI IRI_END) == 0)
                 {
-                    int16 value = DatumGetInt16(DirectFunctionCall1(int2in, CStringGetDatum(buffer)));
-                    box = GetShortRdfBox(value);
+                    int16 val = short_parse(data, size);
+                    char buffer[SHORT_MAXLEN];
+
+                    if(short_print(val, buffer) == size && !memcmp(data, buffer, size))
+                        box = GetShortRdfBox(val);
+                    else
+                        box = GetShortRdfBoxWithLexical(val, data, size);
                 }
                 else if(strcmp(str + i + 2, IRI_BEGIN XSD_INT_IRI IRI_END) == 0)
                 {
-                    int32 value = DatumGetInt32(DirectFunctionCall1(int4in, CStringGetDatum(buffer)));
-                    box = GetIntRdfBox(value);
+                    int32 val = int_parse(data, size);
+                    char buffer[INT_MAXLEN];
+
+                    if(int_print(val, buffer) == size && !memcmp(data, buffer, size))
+                        box = GetIntRdfBox(val);
+                    else
+                        box = GetIntRdfBoxWithLexical(val, data, size);
                 }
                 else if(strcmp(str + i + 2, IRI_BEGIN XSD_LONG_IRI IRI_END) == 0)
                 {
-                    int64 value = DatumGetInt64(DirectFunctionCall1(int8in, CStringGetDatum(buffer)));
-                    box = GetLongRdfBox(value);
+                    int64 val = long_parse(data, size);
+                    char buffer[LONG_MAXLEN];
+
+                    if(long_print(val, buffer) == size && !memcmp(data, buffer, size))
+                        box = GetLongRdfBox(val);
+                    else
+                        box = GetLongRdfBoxWithLexical(val, data, size);
                 }
                 else if(strcmp(str + i + 2, IRI_BEGIN XSD_FLOAT_IRI IRI_END) == 0)
                 {
-                    float4 value = DatumGetFloat4(DirectFunctionCall1(float_input, CStringGetDatum(buffer)));
-                    box = GetFloatRdfBox(value);
+                    float4 val = float_parse(data, size);
+                    char buffer[FLOAT_MAXLEN];
+
+                    if(float_print(val, buffer) == size && !memcmp(data, buffer, size))
+                        box = GetFloatRdfBox(val);
+                    else
+                        box = GetFloatRdfBoxWithLexical(val, data, size);
                 }
                 else if(strcmp(str + i + 2, IRI_BEGIN XSD_DOUBLE_IRI IRI_END) == 0)
                 {
-                    float8 value = DatumGetFloat8(DirectFunctionCall1(double_input, CStringGetDatum(buffer)));
-                    box = GetDoubleRdfBox(value);
+                    float8 val = double_parse(data, size);
+                    char buffer[DOUBLE_MAXLEN];
+
+                    if(double_print(val, buffer) == size && !memcmp(data, buffer, size))
+                        box = GetDoubleRdfBox(val);
+                    else
+                        box = GetDoubleRdfBoxWithLexical(val, data, size);
                 }
                 else if(strcmp(str + i + 2, IRI_BEGIN XSD_INTEGER_IRI IRI_END) == 0)
                 {
-                    for(char *c = buffer; *c != '\0'; c++)
-                        if(!isspace((unsigned char) *c) && !isdigit((unsigned char) *c) && *c != '+' && *c != '-')
-                            ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION)));
+                    Numeric val = integer_parse(data, size);
+                    VarChar *std = integer_as_varchar(val);
 
-                    Numeric value = DatumGetNumeric(DirectFunctionCall3(numeric_in, CStringGetDatum(buffer), ObjectIdGetDatum(InvalidOid), Int32GetDatum(-1)));
-                    box = GetIntegerRdfBox(value);
+                    if(VARSIZE(std) - VARHDRSZ == size && !memcmp(data, VARDATA(std), size))
+                        box = GetIntegerRdfBox(val);
+                    else
+                        box = GetIntegerRdfBoxWithLexical(val, data, size);
                 }
                 else if(strcmp(str + i + 2, IRI_BEGIN XSD_DECIMAL_IRI IRI_END) == 0)
                 {
-                    for(char *c = buffer; *c != '\0'; c++)
-                        if(!isspace((unsigned char) *c) && !isdigit((unsigned char) *c) && *c != '+' && *c != '-' && *c != '.')
-                            ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION)));
+                    Numeric val = decimal_parse(data, size);
+                    VarChar *std = decimal_as_varchar(val);
 
-                    Numeric value = DatumGetNumeric(DirectFunctionCall3(numeric_in, CStringGetDatum(buffer), ObjectIdGetDatum(InvalidOid), Int32GetDatum(-1)));
-                    box = GetDecimalRdfBox(value);
+                    if(VARSIZE(std) - VARHDRSZ == size && !memcmp(data, VARDATA(std), size))
+                        box = GetDecimalRdfBox(val);
+                    else
+                        box = GetDecimalRdfBoxWithLexical(val, data, size);
                 }
                 else if(strcmp(str + i + 2, IRI_BEGIN XSD_DATETIME_IRI IRI_END) == 0)
                 {
-                    ZonedDateTime *value = DatumGetZonedDateTime(DirectFunctionCall1(zoneddatetime_input, CStringGetDatum(buffer)));
-                    box = GetDateTimeRdfBox(value);
+                    ZonedDateTime *val = datetime_parse(data, size);
+                    char buffer[DATETIME_MAXLEN];
+
+                    if(datetime_print(val, buffer) == size && !memcmp(data, buffer, size))
+                        box = GetDateTimeRdfBox(val);
+                    else
+                        box = GetDateTimeRdfBoxWithLexical(val, data, size);
                 }
                 else if(strcmp(str + i + 2, IRI_BEGIN XSD_DATE_IRI IRI_END) == 0)
                 {
-                    ZonedDate value = DatumGetZonedDate(DirectFunctionCall1(zoneddate_input, CStringGetDatum(buffer)));
-                    box = GetDateRdfBox(value);
+                    ZonedDate val = date_parse(data, size);
+                    char buffer[DATE_MAXLEN];
+
+                    if(date_print(val, buffer) == size && !memcmp(data, buffer, size))
+                        box = GetDateRdfBox(val);
+                    else
+                        box = GetDateRdfBoxWithLexical(val, data, size);
                 }
                 else if(strcmp(str + i + 2, IRI_BEGIN XSD_DAYTIMEDURATION_IRI IRI_END) == 0)
                 {
-                    int64 value = DatumGetInt64(DirectFunctionCall1(daytimeduration_input, CStringGetDatum(buffer)));
-                    box = GetDayTimeDurationRdfBox(value);
+                    int64 val = daytimeduration_parse(data, size);
+                    char buffer[DAYTIMEDURATION_MAXLEN];
+
+                    if(daytimeduration_print(val, buffer) == size && !memcmp(data, buffer, size))
+                        box = GetDayTimeDurationRdfBox(val);
+                    else
+                        box = GetDayTimeDurationRdfBoxWithLexical(val, data, size);
                 }
                 else if(strcmp(str + i + 2, IRI_BEGIN XSD_STRING_IRI IRI_END) == 0)
                 {
-                    box = GetStringRdfBox(buffer, pos);
+                    box = GetStringRdfBox(data, size);
                 }
             }
             PG_CATCH_EX();
@@ -270,7 +309,7 @@ Datum rdfbox_input(PG_FUNCTION_ARGS)
                 if(sqlerrcode != ERRCODE_INVALID_TEXT_REPRESENTATION && sqlerrcode != ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE && sqlerrcode != ERRCODE_DATETIME_VALUE_OUT_OF_RANGE)
                     PG_RE_THROW_EX();
 
-                box = NULL;
+                box = GetTypedLiteralRdfBox(data, size, str + i + 3, length - i - 4);
             }
             PG_END_TRY_EX();
 
@@ -282,7 +321,7 @@ Datum rdfbox_input(PG_FUNCTION_ARGS)
                 if(!check_iri(type, type_size))
                     ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid datatype IRI")));
 
-                box = GetTypedLiteralRdfBox(buffer, pos, type, type_size);
+                box = GetTypedLiteralRdfBox(data, size, type, type_size);
             }
         }
         else
@@ -312,7 +351,7 @@ Datum rdfbox_input(PG_FUNCTION_ARGS)
     {
         for(int i = 3; i < 11; i++)
             if(!(str[i] >= '0' && str[i] <= '9') && !(str[i] >= 'a' && str[i] <= 'f'))
-                ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION)));
+                ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid blank node")));
 
         char *buffer = palloc(length - 3);
         memcpy(buffer, str + 3, 8);
@@ -331,7 +370,7 @@ Datum rdfbox_input(PG_FUNCTION_ARGS)
                 char chr = hi * 16 + lo;
 
                 if((chr >= 'a' && chr <= 'z') || (chr >= 'A' && chr <= 'Z') || (chr >= '0' && chr <= '9'))
-                    ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION)));
+                    ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid blank node")));
 
                 buffer[pos++] = chr;
                 i += 2;
@@ -375,35 +414,50 @@ Datum rdfbox_input(PG_FUNCTION_ARGS)
 
         if(is_integer)
         {
-            Numeric value = DatumGetNumeric(DirectFunctionCall3(numeric_in, CStringGetDatum(str), ObjectIdGetDatum(InvalidOid), Int32GetDatum(-1)));
-            box = GetIntegerRdfBox(value);
+            Numeric val = integer_parse(str, length);
+            VarChar *std = integer_as_varchar(val);
+
+            if(VARSIZE(std) - VARHDRSZ == length && !memcmp(str, VARDATA(std), length))
+                box = GetIntegerRdfBox(val);
+            else
+                box = GetIntegerRdfBoxWithLexical(val, str, length);
         }
         else if(is_decimal)
         {
-            Numeric value = DatumGetNumeric(DirectFunctionCall3(numeric_in, CStringGetDatum(str), ObjectIdGetDatum(InvalidOid), Int32GetDatum(-1)));
-            box = GetDecimalRdfBox(value);
+            Numeric val = decimal_parse(str, length);
+            VarChar *std = decimal_as_varchar(val);
+
+            if(VARSIZE(std) - VARHDRSZ == length && !memcmp(str, VARDATA(std), length))
+                box = GetDecimalRdfBox(val);
+            else
+                box = GetDecimalRdfBoxWithLexical(val, str, length);
         }
         else if(is_double)
         {
-            float8 value = DatumGetFloat8(DirectFunctionCall1(double_input, CStringGetDatum(str)));
-            box = GetDoubleRdfBox(value);
+            float8 val = double_parse(str, length);
+            char buffer[DOUBLE_MAXLEN];
+
+            if(double_print(val, buffer) == length && !memcmp(str, buffer, length))
+                box = GetDoubleRdfBox(val);
+            else
+                box = GetDoubleRdfBoxWithLexical(val, str, length);
         }
         else
         {
             char *data = str;
             size_t size = length;
 
-            while(size > 0 && isspace((unsigned char) *data))
+            while(size > 0 && xsd_isspace(*data))
                 size--, data++;
 
-            while(size > 0 && isspace((unsigned char) data[size - 1]))
+            while(size > 0 && xsd_isspace(data[size - 1]))
                 size--;
 
             bool value;
 
-            if((size == 4 && strncmp(data, "true", size) == 0) || (size == 1 && data[0] == '1'))
+            if(size == 4 && !strncmp(data, "true", size))
                 value = true;
-            else if((size == 5 && strncmp(data, "false", size) == 0) || (size == 1 && data[0] == '0'))
+            else if(size == 5 && !strncmp(data, "false", size))
                 value = false;
             else
                 ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid RDF term")));
@@ -426,153 +480,132 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
     {
         case XSD_BOOLEAN:
         {
-            bool value = RdfBoxGetBool(box);
+            VarChar *value = box->lexical ? RdfBoxGetBoolLexical(box) : boolean_as_varchar(RdfBoxGetBool(box));
 
-            int buffsize = PREFIX_SIZE + (value ? 4 : 5) + SUFFIX_SIZE(XSD_BOOLEAN_IRI) + 1;
-            result = (char *) palloc0(buffsize);
+            int buffsize = PREFIX_SIZE + VARSIZE(value) - VARHDRSZ + SUFFIX_SIZE(XSD_BOOLEAN_IRI) + 1;
+            result = (char *) palloc(buffsize);
 
-            if(value)
-                snprintf(result, buffsize, PREFIX "true" SUFFIX(XSD_BOOLEAN_IRI));
-            else
-                snprintf(result, buffsize, PREFIX "false" SUFFIX(XSD_BOOLEAN_IRI));
+            snprintf(result, buffsize, PREFIX "%.*s" SUFFIX(XSD_BOOLEAN_IRI), VARSIZE(value) - VARHDRSZ, VARDATA(value));
 
             break;
         }
 
         case XSD_SHORT:
         {
-            int16 value = RdfBoxGetInt16(box);
+            VarChar *value = box->lexical ? RdfBoxGetInt16Lexical(box) : short_as_varchar(RdfBoxGetInt16(box));
 
-            int buffsize = PREFIX_SIZE + 6 + SUFFIX_SIZE(XSD_SHORT_IRI) + 1;
-            result = (char *) palloc0(buffsize);
+            int buffsize = PREFIX_SIZE + VARSIZE(value) - VARHDRSZ + SUFFIX_SIZE(XSD_SHORT_IRI) + 1;
+            result = (char *) palloc(buffsize);
 
-            snprintf(result, buffsize, PREFIX "%" SCNi16 SUFFIX(XSD_SHORT_IRI), value);
+            snprintf(result, buffsize, PREFIX "%.*s" SUFFIX(XSD_SHORT_IRI), VARSIZE(value) - VARHDRSZ, VARDATA(value));
+
             break;
         }
 
         case XSD_INT:
         {
-            int32 value = RdfBoxGetInt32(box);
+            VarChar *value = box->lexical ? RdfBoxGetInt32Lexical(box) : int_as_varchar(RdfBoxGetInt32(box));
 
-            int buffsize = PREFIX_SIZE + 11 + SUFFIX_SIZE(XSD_INT_IRI) + 1;
-            result = (char *) palloc0(buffsize);
+            int buffsize = PREFIX_SIZE + VARSIZE(value) - VARHDRSZ + SUFFIX_SIZE(XSD_INT_IRI) + 1;
+            result = (char *) palloc(buffsize);
 
-            snprintf(result, buffsize, PREFIX "%" SCNi32 SUFFIX(XSD_INT_IRI), value);
+            snprintf(result, buffsize, PREFIX "%.*s" SUFFIX(XSD_INT_IRI), VARSIZE(value) - VARHDRSZ, VARDATA(value));
+
             break;
         }
 
         case XSD_LONG:
         {
-            int64 value = RdfBoxGetInt64(box);
+            VarChar *value = box->lexical ? RdfBoxGetInt64Lexical(box) : long_as_varchar(RdfBoxGetInt64(box));
 
-            int buffsize = PREFIX_SIZE + 20 + SUFFIX_SIZE(XSD_LONG_IRI) + 1;
-            result = (char *) palloc0(buffsize);
+            int buffsize = PREFIX_SIZE + VARSIZE(value) - VARHDRSZ + SUFFIX_SIZE(XSD_LONG_IRI) + 1;
+            result = (char *) palloc(buffsize);
 
-            snprintf(result, buffsize, PREFIX "%" SCNi64 SUFFIX(XSD_LONG_IRI), value);
+            snprintf(result, buffsize, PREFIX "%.*s" SUFFIX(XSD_LONG_IRI), VARSIZE(value) - VARHDRSZ, VARDATA(value));
+
             break;
         }
 
         case XSD_INTEGER:
         {
-            Numeric value = RdfBoxGetNumeric(box);
-            char *data = numeric_normalize(value);
+            VarChar *value = box->lexical ? RdfBoxGetAttachment(box) : integer_as_varchar(RdfBoxGetNumeric(box));
 
-            size_t size = strlen(data);
-            result = (char *) palloc0(PREFIX_SIZE + size + SUFFIX_SIZE(XSD_INTEGER_IRI) + 1);
+            int buffsize = PREFIX_SIZE + VARSIZE(value) - VARHDRSZ + SUFFIX_SIZE(XSD_INTEGER_IRI) + 1;
+            result = (char *) palloc(buffsize);
 
-            memcpy(result, PREFIX, PREFIX_SIZE);
-            memcpy(result + PREFIX_SIZE, data, size);
-            memcpy(result + PREFIX_SIZE + size, SUFFIX(XSD_INTEGER_IRI), SUFFIX_SIZE(XSD_INTEGER_IRI));
+            snprintf(result, buffsize, PREFIX "%.*s" SUFFIX(XSD_INTEGER_IRI), VARSIZE(value) - VARHDRSZ, VARDATA(value));
 
             break;
         }
 
         case XSD_DECIMAL:
         {
-            Numeric value = RdfBoxGetNumeric(box);
-            char *data = numeric_normalize(value);
+            VarChar *value = box->lexical ? RdfBoxGetAttachment(box) : decimal_as_varchar(RdfBoxGetNumeric(box));
 
-            size_t size = strlen(data);
-            result = (char *) palloc0(PREFIX_SIZE + size + SUFFIX_SIZE(XSD_DECIMAL_IRI) + 1);
+            int buffsize = PREFIX_SIZE + VARSIZE(value) - VARHDRSZ + SUFFIX_SIZE(XSD_DECIMAL_IRI) + 1;
+            result = (char *) palloc(buffsize);
 
-            memcpy(result, PREFIX, PREFIX_SIZE);
-            memcpy(result + PREFIX_SIZE, data, size);
-            memcpy(result + PREFIX_SIZE + size, SUFFIX(XSD_DECIMAL_IRI), SUFFIX_SIZE(XSD_DECIMAL_IRI));
+            snprintf(result, buffsize, PREFIX "%.*s" SUFFIX(XSD_DECIMAL_IRI), VARSIZE(value) - VARHDRSZ, VARDATA(value));
 
             break;
         }
 
         case XSD_FLOAT:
         {
-            float4 value = RdfBoxGetFloat4(box);
-            char *data = DatumGetCString(DirectFunctionCall1(float_output, Float4GetDatum(value)));
+            VarChar *value = box->lexical ? RdfBoxGetFloat4Lexical(box) : float_as_varchar(RdfBoxGetFloat4(box));
 
-            size_t size = strlen(data);
-            result = (char *) palloc0(PREFIX_SIZE + size + SUFFIX_SIZE(XSD_FLOAT_IRI) + 1);
+            int buffsize = PREFIX_SIZE + VARSIZE(value) - VARHDRSZ + SUFFIX_SIZE(XSD_FLOAT_IRI) + 1;
+            result = (char *) palloc(buffsize);
 
-            memcpy(result, PREFIX, PREFIX_SIZE);
-            memcpy(result + PREFIX_SIZE, data, size);
-            memcpy(result + PREFIX_SIZE + size, SUFFIX(XSD_FLOAT_IRI), SUFFIX_SIZE(XSD_FLOAT_IRI));
+            snprintf(result, buffsize, PREFIX "%.*s" SUFFIX(XSD_FLOAT_IRI), VARSIZE(value) - VARHDRSZ, VARDATA(value));
 
             break;
         }
 
         case XSD_DOUBLE:
         {
-            float8 value = RdfBoxGetFloat8(box);
-            char *data = DatumGetCString(DirectFunctionCall1(double_output, Float8GetDatum(value)));
+            VarChar *value = box->lexical ? RdfBoxGetFloat8Lexical(box) : double_as_varchar(RdfBoxGetFloat8(box));
 
-            size_t size = strlen(data);
-            result = (char *) palloc0(PREFIX_SIZE + size + SUFFIX_SIZE(XSD_DOUBLE_IRI) + 1);
+            int buffsize = PREFIX_SIZE + VARSIZE(value) - VARHDRSZ + SUFFIX_SIZE(XSD_DOUBLE_IRI) + 1;
+            result = (char *) palloc(buffsize);
 
-            memcpy(result, PREFIX, PREFIX_SIZE);
-            memcpy(result + PREFIX_SIZE, data, size);
-            memcpy(result + PREFIX_SIZE + size, SUFFIX(XSD_DOUBLE_IRI), SUFFIX_SIZE(XSD_DOUBLE_IRI));
+            snprintf(result, buffsize, PREFIX "%.*s" SUFFIX(XSD_DOUBLE_IRI), VARSIZE(value) - VARHDRSZ, VARDATA(value));
 
             break;
         }
 
         case XSD_DATETIME:
         {
-            ZonedDateTime *value = RdfBoxGetZonedDateTime(box);
-            char *data = DatumGetCString(DirectFunctionCall1(zoneddatetime_output, ZonedDateTimeGetDatum(value)));
+            VarChar *value = box->lexical ? RdfBoxGetZonedDateTimeLexical(box) : datetime_as_varchar(RdfBoxGetZonedDateTime(box));
 
-            size_t size = strlen(data);
-            result = (char *) palloc0(PREFIX_SIZE + size + SUFFIX_SIZE(XSD_DATETIME_IRI) + 1);
+            int buffsize = PREFIX_SIZE + VARSIZE(value) - VARHDRSZ + SUFFIX_SIZE(XSD_DATETIME_IRI) + 1;
+            result = (char *) palloc(buffsize);
 
-            memcpy(result, PREFIX, PREFIX_SIZE);
-            memcpy(result + PREFIX_SIZE, data, size);
-            memcpy(result + PREFIX_SIZE + size, SUFFIX(XSD_DATETIME_IRI), SUFFIX_SIZE(XSD_DATETIME_IRI));
+            snprintf(result, buffsize, PREFIX "%.*s" SUFFIX(XSD_DATETIME_IRI), VARSIZE(value) - VARHDRSZ, VARDATA(value));
 
             break;
         }
 
         case XSD_DATE:
         {
-            ZonedDate value = RdfBoxGetZonedDate(box);
-            char *data = DatumGetCString(DirectFunctionCall1(zoneddate_output, ZonedDateGetDatum(value)));
+            VarChar *value = box->lexical ? RdfBoxGetZonedDateLexical(box) : date_as_varchar(RdfBoxGetZonedDate(box));
 
-            size_t size = strlen(data);
-            result = (char *) palloc0(PREFIX_SIZE + size + SUFFIX_SIZE(XSD_DATE_IRI) + 1);
+            int buffsize = PREFIX_SIZE + VARSIZE(value) - VARHDRSZ + SUFFIX_SIZE(XSD_DATE_IRI) + 1;
+            result = (char *) palloc(buffsize);
 
-            memcpy(result, PREFIX, PREFIX_SIZE);
-            memcpy(result + PREFIX_SIZE, data, size);
-            memcpy(result + PREFIX_SIZE + size, SUFFIX(XSD_DATE_IRI), SUFFIX_SIZE(XSD_DATE_IRI));
+            snprintf(result, buffsize, PREFIX "%.*s" SUFFIX(XSD_DATE_IRI), VARSIZE(value) - VARHDRSZ, VARDATA(value));
 
             break;
         }
 
         case XSD_DAYTIMEDURATION:
         {
-            int64 value = RdfBoxGetInt64(box);
-            char *data = DatumGetCString(DirectFunctionCall1(daytimeduration_output, Int64GetDatum(value)));
+            VarChar *value = box->lexical ? RdfBoxGetInt64Lexical(box) : daytimeduration_as_varchar(RdfBoxGetInt64(box));
 
-            size_t size = strlen(data);
-            result = (char *) palloc0(PREFIX_SIZE + size + SUFFIX_SIZE(XSD_DAYTIMEDURATION_IRI) + 1);
+            int buffsize = PREFIX_SIZE + VARSIZE(value) - VARHDRSZ + SUFFIX_SIZE(XSD_DAYTIMEDURATION_IRI) + 1;
+            result = (char *) palloc(buffsize);
 
-            memcpy(result, PREFIX, PREFIX_SIZE);
-            memcpy(result + PREFIX_SIZE, data, size);
-            memcpy(result + PREFIX_SIZE + size, SUFFIX(XSD_DAYTIMEDURATION_IRI), SUFFIX_SIZE(XSD_DAYTIMEDURATION_IRI));
+            snprintf(result, buffsize, PREFIX "%.*s" SUFFIX(XSD_DAYTIMEDURATION_IRI), VARSIZE(value) - VARHDRSZ, VARDATA(value));
 
             break;
         }
@@ -701,58 +734,163 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
 {
     StringInfo buf = (StringInfo) PG_GETARG_POINTER(0);
 
-    uint type = pq_getmsgint(buf, sizeof(int32));
+    uint32 header = pq_getmsgint(buf, sizeof(int32));
+    uint32 type    = header & ~(1u << 31);
+    bool lexical = header >> 31;
+
     RdfBox *box = NULL;
 
     switch(type)
     {
         case XSD_BOOLEAN:
         {
-            box = GetBooleanRdfBox(pq_getmsgbyte(buf));
+            bool value = pq_getmsgbyte(buf);
+
+            if(lexical)
+            {
+                int32 size = pq_getmsgint(buf, sizeof(int32));
+                char *data = buf->data + buf->cursor;
+                box = GetBooleanRdfBoxWithLexical(value, data, size);
+                buf->cursor += size;
+            }
+            else
+            {
+                box = GetBooleanRdfBox(value);
+            }
+
             break;
         }
 
         case XSD_SHORT:
         {
-            box = GetShortRdfBox(pq_getmsgint(buf, sizeof(int16)));
+            int16 value = pq_getmsgint(buf, sizeof(int16));
+
+            if(lexical)
+            {
+                int32 size = pq_getmsgint(buf, sizeof(int32));
+                char *data = buf->data + buf->cursor;
+                box = GetShortRdfBoxWithLexical(value, data, size);
+                buf->cursor += size;
+            }
+            else
+            {
+                box = GetShortRdfBox(value);
+            }
+
             break;
         }
 
         case XSD_INT:
         {
-            box = GetIntRdfBox(pq_getmsgint(buf, sizeof(int32)));
+            int32 value = pq_getmsgint(buf, sizeof(int32));
+
+            if(lexical)
+            {
+                int32 size = pq_getmsgint(buf, sizeof(int32));
+                char *data = buf->data + buf->cursor;
+                box = GetIntRdfBoxWithLexical(value, data, size);
+                buf->cursor += size;
+            }
+            else
+            {
+                box = GetIntRdfBox(value);
+            }
+
             break;
         }
 
         case XSD_LONG:
         {
-            box = GetLongRdfBox(pq_getmsgint64(buf));
+            int64 value = pq_getmsgint64(buf);
+
+            if(lexical)
+            {
+                int32 size = pq_getmsgint(buf, sizeof(int32));
+                char *data = buf->data + buf->cursor;
+                box = GetLongRdfBoxWithLexical(value, data, size);
+                buf->cursor += size;
+            }
+            else
+            {
+                box = GetLongRdfBox(value);
+            }
+
             break;
         }
 
         case XSD_INTEGER:
         {
             Numeric value = DatumGetNumeric(DirectFunctionCall3(numeric_recv, PointerGetDatum(buf), ObjectIdGetDatum(InvalidOid), Int32GetDatum(-1)));
-            box = GetIntegerRdfBox(value);
+
+            if(lexical)
+            {
+                int32 size = pq_getmsgint(buf, sizeof(int32));
+                char *data = buf->data + buf->cursor;
+                box = GetIntegerRdfBoxWithLexical(value, data, size);
+                buf->cursor += size;
+            }
+            else
+            {
+                box = GetIntegerRdfBox(value);
+            }
+
             break;
         }
 
         case XSD_DECIMAL:
         {
             Numeric value = DatumGetNumeric(DirectFunctionCall3(numeric_recv, PointerGetDatum(buf), ObjectIdGetDatum(InvalidOid), Int32GetDatum(-1)));
-            box = GetDecimalRdfBox(value);
+
+            if(lexical)
+            {
+                int32 size = pq_getmsgint(buf, sizeof(int32));
+                char *data = buf->data + buf->cursor;
+                box = GetDecimalRdfBoxWithLexical(value, data, size);
+                buf->cursor += size;
+            }
+            else
+            {
+                box = GetDecimalRdfBox(value);
+            }
+
             break;
         }
 
         case XSD_FLOAT:
         {
-            box = GetFloatRdfBox(pq_getmsgfloat4(buf));
+            float4 value = pq_getmsgfloat4(buf);
+
+            if(lexical)
+            {
+                int32 size = pq_getmsgint(buf, sizeof(int32));
+                char *data = buf->data + buf->cursor;
+                box = GetFloatRdfBoxWithLexical(value, data, size);
+                buf->cursor += size;
+            }
+            else
+            {
+                box = GetFloatRdfBox(value);
+            }
+
             break;
         }
 
         case XSD_DOUBLE:
         {
-            box = GetDoubleRdfBox(pq_getmsgfloat8(buf));
+            float8 value = pq_getmsgfloat8(buf);
+
+            if(lexical)
+            {
+                int32 size = pq_getmsgint(buf, sizeof(int32));
+                char *data = buf->data + buf->cursor;
+                box = GetDoubleRdfBoxWithLexical(value, data, size);
+                buf->cursor += size;
+            }
+            else
+            {
+                box = GetDoubleRdfBox(value);
+            }
+
             break;
         }
 
@@ -767,10 +905,23 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
                 fsec_t fsec;
 
                 if(timestamp2tm(timestamp, NULL, &tt, &fsec, NULL, NULL) != 0 || !IS_VALID_TIMESTAMP(timestamp))
-                    ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("timestamp out of range")));
+                    ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("xsd:dateTime out of range")));
             }
 
-            box = GetDateTimeRdfBox(&((ZonedDateTime) { .value = timestamp, .zone = zone}));
+            ZonedDateTime value = { .value = timestamp, .zone = zone};
+
+            if(lexical)
+            {
+                int32 size = pq_getmsgint(buf, sizeof(int32));
+                char *data = buf->data + buf->cursor;
+                box = GetDateTimeRdfBoxWithLexical(&value, data, size);
+                buf->cursor += size;
+            }
+            else
+            {
+                box = GetDateTimeRdfBox(&value);
+            }
+
             break;
         }
 
@@ -780,15 +931,41 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
             int32 zone = pq_getmsgint(buf, sizeof(int32));
 
             if(!DATE_NOT_FINITE(date) && !IS_VALID_DATE(date))
-                    ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("date out of range")));
+                ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("xsd:date out of range")));
 
-            box = GetDateRdfBox((ZonedDate) { .value = date, .zone = zone});
+            ZonedDate value = { .value = date, .zone = zone};
+
+            if(lexical)
+            {
+                int32 size = pq_getmsgint(buf, sizeof(int32));
+                char *data = buf->data + buf->cursor;
+                box = GetDateRdfBoxWithLexical(value, data, size);
+                buf->cursor += size;
+            }
+            else
+            {
+                box = GetDateRdfBox(value);
+            }
+
             break;
         }
 
         case XSD_DAYTIMEDURATION:
         {
-            box = GetDayTimeDurationRdfBox(pq_getmsgint64(buf));
+            int64 value = pq_getmsgint64(buf);
+
+            if(lexical)
+            {
+                int32 size = pq_getmsgint(buf, sizeof(int32));
+                char *data = buf->data + buf->cursor;
+                box = GetDayTimeDurationRdfBoxWithLexical(value, data, size);
+                buf->cursor += size;
+            }
+            else
+            {
+                box = GetDayTimeDurationRdfBox(value);
+            }
+
             break;
         }
 
@@ -865,31 +1042,69 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
     StringInfoData buf;
     pq_begintypsend(&buf);
 
-    pq_sendint32(&buf, box->type);
+    uint32 header = ((uint32) box->type) | (((uint32) box->lexical) << 31);
+
+    pq_sendint32(&buf, header);
 
     switch(box->type)
     {
         case XSD_BOOLEAN:
         {
             pq_sendbyte(&buf, RdfBoxGetBool(box) ? 1 : 0);
+
+            if(box->lexical)
+            {
+                VarChar *value = RdfBoxGetBoolLexical(box);
+                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                break;
+            }
+
             break;
         }
 
         case XSD_SHORT:
         {
             pq_sendint16(&buf, RdfBoxGetInt16(box));
+
+            if(box->lexical)
+            {
+                VarChar *value = RdfBoxGetInt16Lexical(box);
+                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                break;
+            }
+
             break;
         }
 
         case XSD_INT:
         {
             pq_sendint32(&buf, RdfBoxGetInt32(box));
+
+            if(box->lexical)
+            {
+                VarChar *value = RdfBoxGetInt32Lexical(box);
+                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                break;
+            }
+
             break;
         }
 
         case XSD_LONG:
         {
             pq_sendint64(&buf, RdfBoxGetInt64(box));
+
+            if(box->lexical)
+            {
+                VarChar *value = RdfBoxGetInt64Lexical(box);
+                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                break;
+            }
+
             break;
         }
 
@@ -899,18 +1114,45 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
             Numeric num = RdfBoxGetNumeric(box);
             bytea *value = DatumGetByteaP(DirectFunctionCall3(numeric_send, NumericGetDatum(num), ObjectIdGetDatum(InvalidOid), Int32GetDatum(-1)));
             appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+
+            if(box->lexical)
+            {
+                VarChar *value = RdfBoxGetAttachment(box);
+                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                break;
+            }
+
             break;
         }
 
         case XSD_FLOAT:
         {
             pq_sendfloat4(&buf, RdfBoxGetFloat4(box));
+
+            if(box->lexical)
+            {
+                VarChar *value = RdfBoxGetFloat4Lexical(box);
+                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                break;
+            }
+
             break;
         }
 
         case XSD_DOUBLE:
         {
             pq_sendfloat8(&buf, RdfBoxGetFloat8(box));
+
+            if(box->lexical)
+            {
+                VarChar *value = RdfBoxGetFloat8Lexical(box);
+                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                break;
+            }
+
             break;
         }
 
@@ -918,6 +1160,15 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
         {
             pq_sendint64(&buf, RdfBoxGetZonedDateTime(box)->value);
             pq_sendint32(&buf, RdfBoxGetZonedDateTime(box)->zone);
+
+            if(box->lexical)
+            {
+                VarChar *value = RdfBoxGetZonedDateTimeLexical(box);
+                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                break;
+            }
+
             break;
         }
 
@@ -925,12 +1176,30 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
         {
             pq_sendint32(&buf, RdfBoxGetZonedDate(box).value);
             pq_sendint32(&buf, RdfBoxGetZonedDate(box).zone);
+
+            if(box->lexical)
+            {
+                VarChar *value = RdfBoxGetZonedDateLexical(box);
+                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                break;
+            }
+
             break;
         }
 
         case XSD_DAYTIMEDURATION:
         {
             pq_sendint64(&buf, RdfBoxGetInt64(box));
+
+            if(box->lexical)
+            {
+                VarChar *value = RdfBoxGetInt64Lexical(box);
+                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                break;
+            }
+
             break;
         }
 
