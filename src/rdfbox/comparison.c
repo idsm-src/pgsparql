@@ -4,6 +4,7 @@
 #include "compare.h"
 #include "call.h"
 #include "rdfbox/rdfbox.h"
+#include "rdfbox/order.h"
 #include "rdfbox/promotion.h"
 
 
@@ -13,30 +14,12 @@ Datum rdfbox_is_same_as(PG_FUNCTION_ARGS)
     RdfBox *left = PG_GETARG_RDFBOX_P(0);
     RdfBox *right = PG_GETARG_RDFBOX_P(1);
 
-    if(left->type == XSD_DOUBLE && right->type == XSD_DOUBLE)
-    {
-        float8 l = RdfBoxGetFloat8(left);
-        float8 r = RdfBoxGetFloat8(right);
+    bool result = rdfbox_same_terms(left, right);
 
-        PG_RETURN_BOOL(l == r || (isnan(l) && isnan(r)));
-    }
-    else if(left->type == XSD_FLOAT && right->type == XSD_FLOAT)
-    {
-        float4 l = RdfBoxGetFloat4(left);
-        float4 r = RdfBoxGetFloat4(right);
+    PG_FREE_IF_COPY(left, 0);
+    PG_FREE_IF_COPY(right, 1);
 
-        PG_RETURN_BOOL(l == r || (isnan(l) && isnan(r)));
-    }
-    else if((left->type == XSD_DECIMAL && right->type == XSD_DECIMAL) || (left->type == XSD_INTEGER && right->type == XSD_INTEGER))
-    {
-        Numeric l = RdfBoxGetNumeric(left);
-        Numeric r = RdfBoxGetNumeric(right);
-        PG_RETURN_DATUM(DirectFunctionCall2(numeric_eq, NumericGetDatum(l), NumericGetDatum(r)));
-    }
-    else
-    {
-        PG_RETURN_BOOL(memcmp(left, right, Min(VARSIZE(left), VARSIZE(right))) == 0);
-    }
+    PG_RETURN_BOOL(result);
 }
 
 

@@ -326,6 +326,45 @@ static inline VarChar *RdfBoxGetZonedDateLexical(RdfBox *box)
 }
 
 
+static inline VarChar *RdfBoxGetLexical(RdfBox *box)
+{
+    switch(box->type)
+    {
+        case XSD_BOOLEAN:
+            return RdfBoxGetBoolLexical(box);
+
+        case XSD_SHORT:
+            return RdfBoxGetInt16Lexical(box);
+
+        case XSD_INT:
+            return RdfBoxGetInt32Lexical(box);
+
+        case XSD_LONG:
+        case XSD_DAYTIMEDURATION:
+            return RdfBoxGetInt64Lexical(box);
+
+        case XSD_INTEGER:
+        case XSD_DECIMAL:
+            return RdfBoxGetAttachment(box);
+
+        case XSD_FLOAT:
+            return RdfBoxGetFloat4Lexical(box);
+
+        case XSD_DOUBLE:
+            return RdfBoxGetFloat8Lexical(box);
+
+        case XSD_DATETIME:
+            return RdfBoxGetZonedDateTimeLexical(box);
+
+        case XSD_DATE:
+            return RdfBoxGetZonedDateLexical(box);
+
+        default:
+            elog(ERROR, "unexpected rdfbox type");
+    }
+}
+
+
 static inline RdfBox *GetBooleanRdfBox(bool value)
 {
     RdfBoxBool *result = (RdfBoxBool *) palloc0(sizeof(RdfBoxBool));

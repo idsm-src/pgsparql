@@ -18,6 +18,8 @@ CREATE FUNCTION rdfbox_order_is_greater_than(rdfbox,rdfbox) RETURNS bool AS 'MOD
 CREATE FUNCTION rdfbox_order_is_not_less_than(rdfbox,rdfbox) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
 CREATE FUNCTION rdfbox_order_is_not_greater_than(rdfbox,rdfbox) RETURNS bool AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
 CREATE FUNCTION rdfbox_order_compare(rdfbox,rdfbox) RETURNS int4 AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+CREATE FUNCTION rdfbox_hash(rdfbox) RETURNS int4 AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+CREATE FUNCTION rdfbox_hash_extended(rdfbox,int8) RETURNS int8 AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
 CREATE FUNCTION rdfbox_create_from_boolean(bool) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
 CREATE FUNCTION rdfbox_create_from_boolean_with_lexical(bool,varchar) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
 CREATE FUNCTION rdfbox_create_from_short(int2) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
@@ -143,7 +145,8 @@ CREATE TYPE rdfbox
     output = rdfbox_output,
     receive = rdfbox_recv,
     send = rdfbox_send,
-    alignment = double
+    alignment = double,
+    storage = extended
 );
 
 
@@ -152,7 +155,8 @@ CREATE OPERATOR === (
     rightarg = rdfbox,
     procedure = rdfbox_is_same_as,
     commutator = ===,
-    hashes, merges
+    restrict = eqsel,
+    join = eqjoinsel
 );
 
 CREATE OPERATOR = (
@@ -161,7 +165,8 @@ CREATE OPERATOR = (
     procedure = rdfbox_is_equal_to,
     commutator = =,
     negator = !=,
-    hashes, merges
+    restrict = eqsel,
+    join = eqjoinsel
 );
 
 CREATE OPERATOR != (
@@ -170,39 +175,36 @@ CREATE OPERATOR != (
     procedure = rdfbox_is_not_equal_to,
     commutator = !=,
     negator = =,
-    hashes, merges
+    restrict = neqsel,
+    join = neqjoinsel
 );
 
 CREATE OPERATOR < (
     leftarg = rdfbox,
     rightarg = rdfbox,
     procedure = rdfbox_is_less_than,
-    commutator = >,
-    hashes, merges
+    commutator = >
 );
 
 CREATE OPERATOR > (
     leftarg = rdfbox,
     rightarg = rdfbox,
     procedure = rdfbox_is_greater_than,
-    commutator = <,
-    hashes, merges
+    commutator = <
 );
 
 CREATE OPERATOR >= (
     leftarg = rdfbox,
     rightarg = rdfbox,
     procedure = rdfbox_is_not_less_than,
-    commutator = <=,
-    hashes, merges
+    commutator = <=
 );
 
 CREATE OPERATOR <= (
     leftarg = rdfbox,
     rightarg = rdfbox,
     procedure = rdfbox_is_not_greater_than,
-    commutator = >=,
-    hashes, merges
+    commutator = >=
 );
 
 CREATE OPERATOR @= (
@@ -210,17 +212,20 @@ CREATE OPERATOR @= (
     rightarg = rdfbox,
     procedure = rdfbox_order_is_equal_to,
     commutator = @=,
-    negator = @!=,
+    negator = @<>,
+    restrict = eqsel,
+    join = eqjoinsel,
     hashes, merges
 );
 
-CREATE OPERATOR @!= (
+CREATE OPERATOR @<> (
     leftarg = rdfbox,
     rightarg = rdfbox,
     procedure = rdfbox_order_is_not_equal_to,
-    commutator = @!=,
+    commutator = @<>,
     negator = @=,
-    hashes, merges
+    restrict = neqsel,
+    join = neqjoinsel
 );
 
 CREATE OPERATOR @< (
@@ -229,7 +234,8 @@ CREATE OPERATOR @< (
     procedure = rdfbox_order_is_less_than,
     commutator = @>,
     negator = @>=,
-    hashes, merges
+    restrict = scalarltsel,
+    join = scalarltjoinsel
 );
 
 CREATE OPERATOR @> (
@@ -238,7 +244,8 @@ CREATE OPERATOR @> (
     procedure = rdfbox_order_is_greater_than,
     commutator = @<,
     negator = @<=,
-    hashes, merges
+    restrict = scalargtsel,
+    join = scalargtjoinsel
 );
 
 CREATE OPERATOR @>= (
@@ -247,7 +254,8 @@ CREATE OPERATOR @>= (
     procedure = rdfbox_order_is_not_less_than,
     commutator = @<=,
     negator = @<,
-    hashes, merges
+    restrict = scalargesel,
+    join = scalargejoinsel
 );
 
 CREATE OPERATOR @<= (
@@ -256,7 +264,8 @@ CREATE OPERATOR @<= (
     procedure = rdfbox_order_is_not_greater_than,
     commutator = @>=,
     negator = @>,
-    hashes, merges
+    restrict = scalarlesel,
+    join = scalarlejoinsel
 );
 
 CREATE OPERATOR - (
@@ -298,3 +307,8 @@ CREATE OPERATOR CLASS rdfbox DEFAULT FOR TYPE rdfbox USING btree AS
     OPERATOR   4   @>=,
     OPERATOR   5   @>,
     FUNCTION   1   rdfbox_order_compare;
+
+CREATE OPERATOR CLASS rdfbox DEFAULT FOR TYPE rdfbox USING hash AS
+    OPERATOR   1   @=,
+    FUNCTION   1   rdfbox_hash(rdfbox),
+    FUNCTION   2   rdfbox_hash_extended(rdfbox,int8);

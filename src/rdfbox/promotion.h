@@ -7,6 +7,24 @@
 #include "rdfbox/rdfbox.h"
 
 
+static inline float8 numeric_get_as_double(Numeric value)
+{
+    char *string = DatumGetCString(DirectFunctionCall1(numeric_out, NumericGetDatum(value)));
+    float8 result = strtod(string, NULL);
+    pfree(string);
+    return result;
+}
+
+
+static inline float4 numeric_get_as_float(Numeric value)
+{
+    char *string = DatumGetCString(DirectFunctionCall1(numeric_out, NumericGetDatum(value)));
+    float4 result = strtof(string, NULL);
+    pfree(string);
+    return result;
+}
+
+
 static inline float8 rdfbox_get_numeric_as_double(RdfBox *box)
 {
     switch(box->type)
@@ -22,19 +40,7 @@ static inline float8 rdfbox_get_numeric_as_double(RdfBox *box)
 
         case XSD_INTEGER:
         case XSD_DECIMAL:
-        {
-            Numeric value = RdfBoxGetNumeric(box);
-            char *string = DatumGetCString(DirectFunctionCall1(numeric_out, NumericGetDatum(value)));
-
-            errno = 0;
-            float8 result = strtod(string, NULL);
-
-            if(errno == ERANGE && result != 0.0)
-                result *= HUGE_VAL;
-
-            pfree(string);
-            return result;
-        }
+            return numeric_get_as_double(RdfBoxGetNumeric(box));
 
         case XSD_FLOAT:
             return RdfBoxGetFloat4(box);
@@ -63,19 +69,7 @@ static inline float4 rdfbox_get_numeric_as_float(RdfBox *box)
 
         case XSD_INTEGER:
         case XSD_DECIMAL:
-        {
-            Numeric value = RdfBoxGetNumeric(box);
-            char *string = DatumGetCString(DirectFunctionCall1(numeric_out, NumericGetDatum(value)));
-
-            errno = 0;
-            float4 result = strtof(string, NULL);
-
-            if(errno == ERANGE && result != 0.0)
-                result *= HUGE_VALF;
-
-            pfree(string);
-            return result;
-        }
+            return numeric_get_as_float(RdfBoxGetNumeric(box));
 
         case XSD_FLOAT:
             return RdfBoxGetFloat4(box);

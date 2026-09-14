@@ -55,6 +55,10 @@ load ../psql_tests.bash
 }
 
 @test "sparql.rdfbox_create_from_float('-0.0'::float4) operator(sparql.===) sparql.rdfbox_create_from_float('+0.0'::float4)" {
+  expect_output 'f'
+}
+
+@test "sparql.rdfbox_create_from_float('-0.0'::float4) operator(sparql.===) sparql.rdfbox_create_from_float('-0.0'::float4)" {
   expect_output 't'
 }
 
@@ -63,6 +67,10 @@ load ../psql_tests.bash
 }
 
 @test "sparql.rdfbox_create_from_double('-0.0'::float8) operator(sparql.===) sparql.rdfbox_create_from_double('+0.0'::float8)" {
+  expect_output 'f'
+}
+
+@test "sparql.rdfbox_create_from_double('-0.0'::float8) operator(sparql.===) sparql.rdfbox_create_from_double('-0.0'::float8)" {
   expect_output 't'
 }
 
@@ -195,6 +203,54 @@ load ../psql_tests.bash
 }
 
 @test "sparql.rdfbox_create_from_iblanknode('0'::int8) operator(sparql.===) sparql.rdfbox_create_from_sblanknode('00000000'::varchar)" {
+  expect_output 'f'
+}
+
+@test "sparql.rdfbox_create_from_double('NaN'::float8) operator(sparql.===) sparql.rdfbox_create_from_double('-NaN'::float8)" {
+  expect_output 't'
+}
+
+@test "sparql.rdfbox_create_from_int('1'::int4) operator(sparql.===) sparql.rdfbox_create_from_int_with_lexical('1'::int4, '01'::varchar)" {
+  expect_output 'f'
+}
+
+@test "sparql.rdfbox_create_from_int_with_lexical('1'::int4, '01'::varchar) operator(sparql.===) sparql.rdfbox_create_from_int_with_lexical('1'::int4, '01'::varchar)" {
+  expect_output 't'
+}
+
+@test "sparql.rdfbox_create_from_int_with_lexical('1'::int4, '01'::varchar) operator(sparql.===) sparql.rdfbox_create_from_int_with_lexical('1'::int4, '001'::varchar)" {
+  expect_output 'f'
+}
+
+@test "sparql.rdfbox_create_from_double('1'::float8) operator(sparql.===) sparql.rdfbox_create_from_double_with_lexical('1'::float8, '1.0'::varchar)" {
+  expect_output 'f'
+}
+
+@test "sparql.rdfbox_create_from_decimal('1.0'::decimal) operator(sparql.===) sparql.rdfbox_create_from_decimal('1.00'::decimal)" {
+  expect_output 't'
+}
+
+@test "'\"1.00\"^^<http://www.w3.org/2001/XMLSchema#decimal>'::sparql.rdfbox operator(sparql.===) '\"1.0\"^^<http://www.w3.org/2001/XMLSchema#decimal>'::sparql.rdfbox" {
+  expect_output 'f'
+}
+
+@test "'\"01\"^^<http://www.w3.org/2001/XMLSchema#integer>'::sparql.rdfbox operator(sparql.===) '\"1\"^^<http://www.w3.org/2001/XMLSchema#integer>'::sparql.rdfbox" {
+  expect_output 'f'
+}
+
+@test "'\"01\"^^<http://www.w3.org/2001/XMLSchema#integer>'::sparql.rdfbox operator(sparql.===) '\"01\"^^<http://www.w3.org/2001/XMLSchema#integer>'::sparql.rdfbox" {
+  expect_output 't'
+}
+
+@test "'\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>'::sparql.rdfbox operator(sparql.===) '\"1\"^^<http://www.w3.org/2001/XMLSchema#boolean>'::sparql.rdfbox" {
+  expect_output 'f'
+}
+
+@test "'\"2022-10-05T10:00:00Z\"^^<http://www.w3.org/2001/XMLSchema#dateTime>'::sparql.rdfbox operator(sparql.===) '\"2022-10-05T10:00:00+00:00\"^^<http://www.w3.org/2001/XMLSchema#dateTime>'::sparql.rdfbox" {
+  expect_output 'f'
+}
+
+@test "'\"2022-10-05T10:00:00Z\"^^<http://www.w3.org/2001/XMLSchema#dateTime>'::sparql.rdfbox operator(sparql.===) '\"2022-10-05T12:00:00+02:00\"^^<http://www.w3.org/2001/XMLSchema#dateTime>'::sparql.rdfbox" {
   expect_output 'f'
 }
 

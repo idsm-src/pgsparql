@@ -35,6 +35,7 @@ libpgsparql_la_SOURCES = \
     rdfbox/constructors.c \
     rdfbox/derivate.c \
     rdfbox/getters.c \
+    rdfbox/hash.c \
     rdfbox/order.c \
     rdfbox/order.h \
     rdfbox/promotion.h \
