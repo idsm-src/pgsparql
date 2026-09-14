@@ -8,6 +8,7 @@ SQLSOURCES = \
 		pgsparql/numeric.sql \
 		pgsparql/zoneddatetime.sql \
 		pgsparql/zoneddate.sql \
+		pgsparql/ubox.sql \
 		pgsparql/blanknode.sql \
 		pgsparql/rdfbox.sql \
 		pgsparql/extract.sql \

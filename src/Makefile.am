@@ -81,7 +81,9 @@ libpgsparql_la_SOURCES = \
     types/short.c \
 	types/short.h \
     types/timezone.c \
-    types/timezone.h
+    types/timezone.h \
+    types/ubox.c \
+    types/ubox.h
 
 
 EXTRA_DIST = \
