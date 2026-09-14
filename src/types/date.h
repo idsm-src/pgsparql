@@ -64,6 +64,7 @@ static inline Datum ZonedDateGetDatum(ZonedDate val)
 
 ZonedDate date_parse(char *data, int size);
 int date_print(ZonedDate value, char *buffer);
+int date_order_compare(ZonedDate left, ZonedDate right);
 
 
 static inline VarChar *date_as_varchar(ZonedDate value)
@@ -77,6 +78,8 @@ static inline VarChar *date_as_varchar(ZonedDate value)
 
 Datum zoneddate_input(PG_FUNCTION_ARGS);
 Datum zoneddate_output(PG_FUNCTION_ARGS);
+Datum zoneddate_recv(PG_FUNCTION_ARGS);
+Datum zoneddate_send(PG_FUNCTION_ARGS);
 
 Datum zoneddate_create(PG_FUNCTION_ARGS);
 Datum zoneddate_get_value(PG_FUNCTION_ARGS);
@@ -91,5 +94,16 @@ Datum zoneddate_is_greater_than(PG_FUNCTION_ARGS);
 Datum zoneddate_is_not_less_than(PG_FUNCTION_ARGS);
 Datum zoneddate_is_not_greater_than(PG_FUNCTION_ARGS);
 Datum zoneddate_compare(PG_FUNCTION_ARGS);
+
+Datum zoneddate_order_is_equal_to(PG_FUNCTION_ARGS);
+Datum zoneddate_order_is_not_equal_to(PG_FUNCTION_ARGS);
+Datum zoneddate_order_is_less_than(PG_FUNCTION_ARGS);
+Datum zoneddate_order_is_greater_than(PG_FUNCTION_ARGS);
+Datum zoneddate_order_is_not_less_than(PG_FUNCTION_ARGS);
+Datum zoneddate_order_is_not_greater_than(PG_FUNCTION_ARGS);
+Datum zoneddate_order_compare(PG_FUNCTION_ARGS);
+
+Datum zoneddate_hash(PG_FUNCTION_ARGS);
+Datum zoneddate_hash_extended(PG_FUNCTION_ARGS);
 
 #endif /* TYPES_DATE_H_ */

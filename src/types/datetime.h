@@ -13,6 +13,7 @@ typedef struct
 {
     TimestampTz value;
     int32 zone;
+    int32 reserved; // always-zero member
 }
 ZonedDateTime;
 
@@ -29,6 +30,7 @@ ZonedDateTime;
 
 ZonedDateTime *datetime_parse(char *data, int size);
 int datetime_print(ZonedDateTime *value, char *buffer);
+int datetime_order_compare(ZonedDateTime *left, ZonedDateTime *right);
 
 
 static inline VarChar *datetime_as_varchar(ZonedDateTime *value)
@@ -42,6 +44,8 @@ static inline VarChar *datetime_as_varchar(ZonedDateTime *value)
 
 Datum zoneddatetime_input(PG_FUNCTION_ARGS);
 Datum zoneddatetime_output(PG_FUNCTION_ARGS);
+Datum zoneddatetime_recv(PG_FUNCTION_ARGS);
+Datum zoneddatetime_send(PG_FUNCTION_ARGS);
 
 Datum zoneddatetime_create(PG_FUNCTION_ARGS);
 Datum zoneddatetime_get_value(PG_FUNCTION_ARGS);
@@ -56,5 +60,16 @@ Datum zoneddatetime_is_greater_than(PG_FUNCTION_ARGS);
 Datum zoneddatetime_is_not_less_than(PG_FUNCTION_ARGS);
 Datum zoneddatetime_is_not_greater_than(PG_FUNCTION_ARGS);
 Datum zoneddatetime_compare(PG_FUNCTION_ARGS);
+
+Datum zoneddatetime_order_is_equal_to(PG_FUNCTION_ARGS);
+Datum zoneddatetime_order_is_not_equal_to(PG_FUNCTION_ARGS);
+Datum zoneddatetime_order_is_less_than(PG_FUNCTION_ARGS);
+Datum zoneddatetime_order_is_greater_than(PG_FUNCTION_ARGS);
+Datum zoneddatetime_order_is_not_less_than(PG_FUNCTION_ARGS);
+Datum zoneddatetime_order_is_not_greater_than(PG_FUNCTION_ARGS);
+Datum zoneddatetime_order_compare(PG_FUNCTION_ARGS);
+
+Datum zoneddatetime_hash(PG_FUNCTION_ARGS);
+Datum zoneddatetime_hash_extended(PG_FUNCTION_ARGS);
 
 #endif /* TYPES_DATETIME_H_ */

@@ -1,6 +1,8 @@
 #include <postgres.h>
 #include <fmgr.h>
 #include <utils/datetime.h>
+#include <libpq/pqformat.h>
+#include <utils/fmgrprotos.h>
 #include "pgsparql.h"
 #include "types/date.h"
 #include "types/parser.h"
@@ -205,6 +207,32 @@ int date_print(ZonedDate date, char *buffer)
 }
 
 
+static inline int64 get_time_value(ZonedDate arg)
+{
+    int64 timezone = arg.zone == ZONE_UNSPECIFIED ? implicit_timezone : arg.zone;
+
+    return (int64) arg.value * HOURS_PER_DAY * MINS_PER_HOUR * SECS_PER_MINUTE - timezone;
+}
+
+
+int date_order_compare(ZonedDate left, ZonedDate right)
+{
+    int64 l = get_time_value(left);
+    int64 r = get_time_value(right);
+
+    if(l != r)
+        return l < r ? -1 : 1;
+
+    if(left.value != right.value)
+        return left.value < right.value ? -1 : 1;
+
+    if(left.zone != right.zone)
+        return left.zone < right.zone ? -1 : 1;
+
+    return 0;
+}
+
+
 PG_FUNCTION_INFO_V1(zoneddate_input);
 Datum zoneddate_input(PG_FUNCTION_ARGS)
 {
@@ -222,6 +250,37 @@ Datum zoneddate_output(PG_FUNCTION_ARGS)
     int size = date_print(date, buffer);
 
     PG_RETURN_CSTRING(pnstrdup(buffer, size));
+}
+
+
+PG_FUNCTION_INFO_V1(zoneddate_recv);
+Datum zoneddate_recv(PG_FUNCTION_ARGS)
+{
+    StringInfo buf = (StringInfo) PG_GETARG_POINTER(0);
+
+    ZonedDate result;
+    result.value = (DateADT) pq_getmsgint(buf, sizeof(int32));
+    result.zone = (int32) pq_getmsgint(buf, sizeof(int32));
+
+    // the same invariants date_print() relies on
+    if(!IS_VALID_DATE(result.value) || !IS_VALID_TIMEZONE(result.zone))
+        ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("xsd:date out of range")));
+
+    PG_RETURN_ZONEDDATE(result);
+}
+
+
+PG_FUNCTION_INFO_V1(zoneddate_send);
+Datum zoneddate_send(PG_FUNCTION_ARGS)
+{
+    ZonedDate date = PG_GETARG_ZONEDDATE(0);
+
+    StringInfoData buf;
+    pq_begintypsend(&buf);
+    pq_sendint32(&buf, date.value);
+    pq_sendint32(&buf, date.zone);
+
+    PG_RETURN_BYTEA_P(pq_endtypsend(&buf));
 }
 
 
@@ -261,14 +320,6 @@ Datum zoneddate_get_zone(PG_FUNCTION_ARGS)
 {
     ZonedDate date = PG_GETARG_ZONEDDATE(0);
     PG_RETURN_INT32(date.zone);
-}
-
-
-static inline int64 get_time_value(ZonedDate arg)
-{
-    int64 timezone = arg.zone == ZONE_UNSPECIFIED ? implicit_timezone : arg.zone;
-
-    return (int64) arg.value * HOURS_PER_DAY * MINS_PER_HOUR * SECS_PER_MINUTE - timezone;
 }
 
 
@@ -364,4 +415,103 @@ Datum zoneddate_compare(PG_FUNCTION_ARGS)
         PG_RETURN_INT32(1);
     else
         PG_RETURN_INT32(0);
+}
+
+
+PG_FUNCTION_INFO_V1(zoneddate_order_is_equal_to);
+Datum zoneddate_order_is_equal_to(PG_FUNCTION_ARGS)
+{
+    ZonedDate left = PG_GETARG_ZONEDDATE(0);
+    ZonedDate right = PG_GETARG_ZONEDDATE(1);
+
+    PG_RETURN_BOOL(date_order_compare(left, right) == 0);
+}
+
+
+PG_FUNCTION_INFO_V1(zoneddate_order_is_not_equal_to);
+Datum zoneddate_order_is_not_equal_to(PG_FUNCTION_ARGS)
+{
+    ZonedDate left = PG_GETARG_ZONEDDATE(0);
+    ZonedDate right = PG_GETARG_ZONEDDATE(1);
+
+    PG_RETURN_BOOL(date_order_compare(left, right) != 0);
+}
+
+
+PG_FUNCTION_INFO_V1(zoneddate_order_is_less_than);
+Datum zoneddate_order_is_less_than(PG_FUNCTION_ARGS)
+{
+    ZonedDate left = PG_GETARG_ZONEDDATE(0);
+    ZonedDate right = PG_GETARG_ZONEDDATE(1);
+
+    PG_RETURN_BOOL(date_order_compare(left, right) < 0);
+}
+
+
+PG_FUNCTION_INFO_V1(zoneddate_order_is_greater_than);
+Datum zoneddate_order_is_greater_than(PG_FUNCTION_ARGS)
+{
+    ZonedDate left = PG_GETARG_ZONEDDATE(0);
+    ZonedDate right = PG_GETARG_ZONEDDATE(1);
+
+    PG_RETURN_BOOL(date_order_compare(left, right) > 0);
+}
+
+
+PG_FUNCTION_INFO_V1(zoneddate_order_is_not_less_than);
+Datum zoneddate_order_is_not_less_than(PG_FUNCTION_ARGS)
+{
+    ZonedDate left = PG_GETARG_ZONEDDATE(0);
+    ZonedDate right = PG_GETARG_ZONEDDATE(1);
+
+    PG_RETURN_BOOL(date_order_compare(left, right) >= 0);
+}
+
+
+PG_FUNCTION_INFO_V1(zoneddate_order_is_not_greater_than);
+Datum zoneddate_order_is_not_greater_than(PG_FUNCTION_ARGS)
+{
+    ZonedDate left = PG_GETARG_ZONEDDATE(0);
+    ZonedDate right = PG_GETARG_ZONEDDATE(1);
+
+    PG_RETURN_BOOL(date_order_compare(left, right) <= 0);
+}
+
+
+PG_FUNCTION_INFO_V1(zoneddate_order_compare);
+Datum zoneddate_order_compare(PG_FUNCTION_ARGS)
+{
+    ZonedDate left = PG_GETARG_ZONEDDATE(0);
+    ZonedDate right = PG_GETARG_ZONEDDATE(1);
+
+    PG_RETURN_INT32(date_order_compare(left, right));
+}
+
+
+PG_FUNCTION_INFO_V1(zoneddate_hash);
+Datum zoneddate_hash(PG_FUNCTION_ARGS)
+{
+    ZonedDate date = PG_GETARG_ZONEDDATE(0);
+
+    uint32 result = DatumGetUInt32(DirectFunctionCall1(hashint4, Int32GetDatum(date.value)));
+    uint32 zone = DatumGetUInt32(DirectFunctionCall1(hashint4, Int32GetDatum(date.zone)));
+
+    result = (result << 5) - result + zone;
+
+    PG_RETURN_UINT32(result);
+}
+
+
+PG_FUNCTION_INFO_V1(zoneddate_hash_extended);
+Datum zoneddate_hash_extended(PG_FUNCTION_ARGS)
+{
+    ZonedDate date = PG_GETARG_ZONEDDATE(0);
+    Datum seed = PG_GETARG_DATUM(1);
+
+    uint64 result = DatumGetUInt64(DirectFunctionCall2(hashint4extended, Int32GetDatum(date.value), seed));
+    uint64 zone = DatumGetUInt64(DirectFunctionCall2(hashint4extended, Int32GetDatum(date.zone), seed));
+
+    result = (result << 5) - result + zone;
+
+    PG_RETURN_UINT64(result);
 }
