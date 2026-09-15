@@ -1,7 +1,8 @@
 #include <postgres.h>
 #include <fmgr.h>
 #include <utils/numeric.h>
-#include "try-catch.h"
+#include "call.h"
+#include "types/decimal.h"
 #include "rdfbox/rdfbox.h"
 #include "rdfbox/promotion.h"
 
@@ -28,12 +29,15 @@ Datum rdfbox_uminus(PG_FUNCTION_ARGS)
     else
     {
         Numeric a = rdfbox_get_numeric_as_decimal(arg);
-        Numeric v = DatumGetNumeric(DirectFunctionCall1(numeric_uminus, NumericGetDatum(a)));
+        NullableDatum v = NullableFunctionCall1(decimal_uminus, NumericGetDatum(a));
+
+        if(v.isnull)
+            PG_RETURN_NULL();
 
         if(arg->type == XSD_DECIMAL)
-            PG_RETURN_RDFBOX_P(GetDecimalRdfBox(v));
+            PG_RETURN_RDFBOX_P(GetDecimalRdfBox(DatumGetNumeric(v.value)));
         else
-            PG_RETURN_RDFBOX_P(GetIntegerRdfBox(v));
+            PG_RETURN_RDFBOX_P(GetIntegerRdfBox(DatumGetNumeric(v.value)));
     }
 }
 
@@ -64,12 +68,15 @@ Datum rdfbox_add(PG_FUNCTION_ARGS)
     {
         Numeric l = rdfbox_get_numeric_as_decimal(left);
         Numeric r = rdfbox_get_numeric_as_decimal(right);
-        Numeric v = DatumGetNumeric(DirectFunctionCall2(numeric_add, NumericGetDatum(l), NumericGetDatum(r)));
+        NullableDatum v = NullableFunctionCall2(decimal_add, NumericGetDatum(l), NumericGetDatum(r));
+
+        if(v.isnull)
+            PG_RETURN_NULL();
 
         if(left->type == XSD_DECIMAL || right->type == XSD_DECIMAL)
-            PG_RETURN_RDFBOX_P(GetDecimalRdfBox(v));
+            PG_RETURN_RDFBOX_P(GetDecimalRdfBox(DatumGetNumeric(v.value)));
         else
-            PG_RETURN_RDFBOX_P(GetIntegerRdfBox(v));
+            PG_RETURN_RDFBOX_P(GetIntegerRdfBox(DatumGetNumeric(v.value)));
     }
 }
 
@@ -100,12 +107,15 @@ Datum rdfbox_sub(PG_FUNCTION_ARGS)
     {
         Numeric l = rdfbox_get_numeric_as_decimal(left);
         Numeric r = rdfbox_get_numeric_as_decimal(right);
-        Numeric v = DatumGetNumeric(DirectFunctionCall2(numeric_sub, NumericGetDatum(l), NumericGetDatum(r)));
+        NullableDatum v = NullableFunctionCall2(decimal_sub, NumericGetDatum(l), NumericGetDatum(r));
+
+        if(v.isnull)
+            PG_RETURN_NULL();
 
         if(left->type == XSD_DECIMAL || right->type == XSD_DECIMAL)
-            PG_RETURN_RDFBOX_P(GetDecimalRdfBox(v));
+            PG_RETURN_RDFBOX_P(GetDecimalRdfBox(DatumGetNumeric(v.value)));
         else
-            PG_RETURN_RDFBOX_P(GetIntegerRdfBox(v));
+            PG_RETURN_RDFBOX_P(GetIntegerRdfBox(DatumGetNumeric(v.value)));
     }
 }
 
@@ -136,12 +146,15 @@ Datum rdfbox_mul(PG_FUNCTION_ARGS)
     {
         Numeric l = rdfbox_get_numeric_as_decimal(left);
         Numeric r = rdfbox_get_numeric_as_decimal(right);
-        Numeric v = DatumGetNumeric(DirectFunctionCall2(numeric_mul, NumericGetDatum(l), NumericGetDatum(r)));
+        NullableDatum v = NullableFunctionCall2(decimal_mul, NumericGetDatum(l), NumericGetDatum(r));
+
+        if(v.isnull)
+            PG_RETURN_NULL();
 
         if(left->type == XSD_DECIMAL || right->type == XSD_DECIMAL)
-            PG_RETURN_RDFBOX_P(GetDecimalRdfBox(v));
+            PG_RETURN_RDFBOX_P(GetDecimalRdfBox(DatumGetNumeric(v.value)));
         else
-            PG_RETURN_RDFBOX_P(GetIntegerRdfBox(v));
+            PG_RETURN_RDFBOX_P(GetIntegerRdfBox(DatumGetNumeric(v.value)));
     }
 }
 
@@ -172,22 +185,11 @@ Datum rdfbox_div(PG_FUNCTION_ARGS)
     {
         Numeric l = rdfbox_get_numeric_as_decimal(left);
         Numeric r = rdfbox_get_numeric_as_decimal(right);
-        Numeric v = NULL;
+        NullableDatum v = NullableFunctionCall2(decimal_div, NumericGetDatum(l), NumericGetDatum(r));
 
-        PG_TRY_EX();
-        {
-            v = DatumGetNumeric(DirectFunctionCall2(numeric_div, NumericGetDatum(l), NumericGetDatum(r)));
-        }
-        PG_CATCH_EX();
-        {
-            if(sqlerrcode != ERRCODE_DIVISION_BY_ZERO)
-                PG_RE_THROW_EX();
-        }
-        PG_END_TRY_EX();
-
-        if(v == NULL)
+        if(v.isnull)
             PG_RETURN_NULL();
 
-        PG_RETURN_RDFBOX_P(GetDecimalRdfBox(v));
+        PG_RETURN_RDFBOX_P(GetDecimalRdfBox(DatumGetNumeric(v.value)));
     }
 }

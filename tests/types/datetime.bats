@@ -54,6 +54,14 @@ setup_file() {
   expect_output '2010-05-15T14:00:00.5-14:00'
 }
 
+@test "io: ' 2010-05-15T14:00:00.1234560000-14:00 '::sparql.zoneddatetime" {
+  expect_output '2010-05-15T14:00:00.123456-14:00'
+}
+
+@test "io: ' 2010-05-15T14:00:00.0000000-14:00 '::sparql.zoneddatetime" {
+  expect_output '2010-05-15T14:00:00-14:00'
+}
+
 @test "io: ' 2010-05-15T14:00:00 '::sparql.zoneddatetime" {
   expect_output '2010-05-15T14:00:00'
 }
@@ -79,6 +87,14 @@ setup_file() {
 }
 
 @test "io: ' 2000-10-20T00:00:00. '::sparql.zoneddatetime" {
+  expect_error
+}
+
+@test "io: ' 2000-10-20T00:00:00.1234567 '::sparql.zoneddatetime" {
+  expect_error
+}
+
+@test "io: ' 2000-10-20T00:00:00.0000001 '::sparql.zoneddatetime" {
   expect_error
 }
 
@@ -146,6 +162,14 @@ setup_file() {
 
 @test "rs: ' 2010-05-15T14:00:00.50-14:00 '::sparql.zoneddatetime" {
   expect_output '2010-05-15T14:00:00.5-14:00'
+}
+
+@test "rs: ' 2010-05-15T14:00:00.1234560000-14:00 '::sparql.zoneddatetime" {
+  expect_output '2010-05-15T14:00:00.123456-14:00'
+}
+
+@test "rs: ' 2010-05-15T14:00:00.0000000-14:00 '::sparql.zoneddatetime" {
+  expect_output '2010-05-15T14:00:00-14:00'
 }
 
 @test "rs: ' 2010-05-15T14:00:00 '::sparql.zoneddatetime" {

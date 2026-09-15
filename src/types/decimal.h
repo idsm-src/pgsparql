@@ -2,6 +2,7 @@
 #define TYPES_DECIMAL_H_
 
 #include <postgres.h>
+#include <fmgr.h>
 #include <string.h>
 #include <utils/numeric.h>
 #include <utils/builtins.h>
@@ -19,5 +20,12 @@ static inline VarChar *decimal_as_varchar(Numeric value)
     else
         return (VarChar *) cstring_to_text(psprintf("%s.0", result));
 }
+
+
+Datum decimal_uminus(PG_FUNCTION_ARGS);
+Datum decimal_add(PG_FUNCTION_ARGS);
+Datum decimal_sub(PG_FUNCTION_ARGS);
+Datum decimal_mul(PG_FUNCTION_ARGS);
+Datum decimal_div(PG_FUNCTION_ARGS);
 
 #endif /* TYPES_DECIMAL_H_ */

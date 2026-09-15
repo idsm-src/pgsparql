@@ -46,8 +46,95 @@ Numeric decimal_parse(char *data, int size)
 }
 
 
-PG_FUNCTION_INFO_V1(numeric_div_checked);
-Datum numeric_div_checked(PG_FUNCTION_ARGS)
+static inline NullableDatum decimal_result(NullableDatum result)
+{
+    if(!result.isnull)
+    {
+        Numeric value = DatumGetNumeric(result.value);
+
+        if(numeric_is_inf(value) || numeric_is_nan(value))
+            result.isnull = true;
+    }
+
+    return result;
+}
+
+
+PG_FUNCTION_INFO_V1(decimal_uminus);
+Datum decimal_uminus(PG_FUNCTION_ARGS)
+{
+    PG_RETURN(decimal_result(NullableFunctionCall1(numeric_uminus, PG_GETARG_DATUM(0))));
+}
+
+
+PG_FUNCTION_INFO_V1(decimal_add);
+Datum decimal_add(PG_FUNCTION_ARGS)
+{
+    NullableDatum result = { .isnull = false };
+
+    PG_TRY_EX();
+    {
+        result = NullableFunctionCall2(numeric_add, PG_GETARG_DATUM(0), PG_GETARG_DATUM(1));
+    }
+    PG_CATCH_EX();
+    {
+        if(sqlerrcode != ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE)
+            PG_RE_THROW_EX();
+
+        result.isnull = true;
+    }
+    PG_END_TRY_EX();
+
+    PG_RETURN(decimal_result(result));
+}
+
+
+PG_FUNCTION_INFO_V1(decimal_sub);
+Datum decimal_sub(PG_FUNCTION_ARGS)
+{
+    NullableDatum result = { .isnull = false };
+
+    PG_TRY_EX();
+    {
+        result = NullableFunctionCall2(numeric_sub, PG_GETARG_DATUM(0), PG_GETARG_DATUM(1));
+    }
+    PG_CATCH_EX();
+    {
+        if(sqlerrcode != ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE)
+            PG_RE_THROW_EX();
+
+        result.isnull = true;
+    }
+    PG_END_TRY_EX();
+
+    PG_RETURN(decimal_result(result));
+}
+
+
+PG_FUNCTION_INFO_V1(decimal_mul);
+Datum decimal_mul(PG_FUNCTION_ARGS)
+{
+    NullableDatum result = { .isnull = false };
+
+    PG_TRY_EX();
+    {
+        result = NullableFunctionCall2(numeric_mul, PG_GETARG_DATUM(0), PG_GETARG_DATUM(1));
+    }
+    PG_CATCH_EX();
+    {
+        if(sqlerrcode != ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE)
+            PG_RE_THROW_EX();
+
+        result.isnull = true;
+    }
+    PG_END_TRY_EX();
+
+    PG_RETURN(decimal_result(result));
+}
+
+
+PG_FUNCTION_INFO_V1(decimal_div);
+Datum decimal_div(PG_FUNCTION_ARGS)
 {
     NullableDatum result = { .isnull = false };
 
@@ -57,12 +144,12 @@ Datum numeric_div_checked(PG_FUNCTION_ARGS)
     }
     PG_CATCH_EX();
     {
-        if(sqlerrcode != ERRCODE_DIVISION_BY_ZERO)
+        if(sqlerrcode != ERRCODE_DIVISION_BY_ZERO && sqlerrcode != ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE)
             PG_RE_THROW_EX();
 
         result.isnull = true;
     }
     PG_END_TRY_EX();
 
-    PG_RETURN(result);
+    PG_RETURN(decimal_result(result));
 }

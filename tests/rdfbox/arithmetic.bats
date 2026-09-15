@@ -38,6 +38,14 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "op: operator(sparql.-) sparql.rdfbox_create_from_decimal('Infinity'::decimal)" {
+  expect_output '(null)'
+}
+
+@test "op: operator(sparql.-) sparql.rdfbox_create_from_integer('NaN'::decimal)" {
+  expect_output '(null)'
+}
+
 
 
 ####
@@ -80,6 +88,18 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "op: sparql.rdfbox_create_from_integer('9e131071'::decimal) operator(sparql.+) sparql.rdfbox_create_from_integer('9e131071'::decimal)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_decimal('Infinity'::decimal) operator(sparql.+) sparql.rdfbox_create_from_int('1'::int4)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_double('Infinity'::float8) operator(sparql.+) sparql.rdfbox_create_from_int('1'::int4)" {
+  expect_output '"INF"^^<http://www.w3.org/2001/XMLSchema#double>'
+}
+
 
 
 ####
@@ -119,6 +139,14 @@ load ../psql_tests.bash
 }
 
 @test "op: sparql.rdfbox_create_from_string('2'::varchar) operator(sparql.-) sparql.rdfbox_create_from_double('4'::float8)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_decimal('-9e131071'::decimal) operator(sparql.-) sparql.rdfbox_create_from_decimal('9e131071'::decimal)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_int('1'::int4) operator(sparql.-) sparql.rdfbox_create_from_decimal('-Infinity'::decimal)" {
   expect_output '(null)'
 }
 
@@ -164,6 +192,18 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "op: sparql.rdfbox_create_from_decimal('1e131071'::decimal) operator(sparql.*) sparql.rdfbox_create_from_decimal('1e131071'::decimal)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_decimal('NaN'::decimal) operator(sparql.*) sparql.rdfbox_create_from_int('2'::int4)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_double('1e308'::float8) operator(sparql.*) sparql.rdfbox_create_from_double('10'::float8)" {
+  expect_output '"INF"^^<http://www.w3.org/2001/XMLSchema#double>'
+}
+
 
 
 ####
@@ -203,6 +243,14 @@ load ../psql_tests.bash
 }
 
 @test "op: sparql.rdfbox_create_from_string('2'::varchar) operator(sparql./) sparql.rdfbox_create_from_double('4'::float8)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_decimal('1e131071'::decimal) operator(sparql./) sparql.rdfbox_create_from_decimal('1e-10'::decimal)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_decimal('Infinity'::decimal) operator(sparql./) sparql.rdfbox_create_from_int('2'::int4)" {
   expect_output '(null)'
 }
 

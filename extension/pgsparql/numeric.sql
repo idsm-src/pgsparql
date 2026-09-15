@@ -1,4 +1,8 @@
-CREATE FUNCTION numeric_div_checked(decimal,decimal) RETURNS decimal AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+CREATE FUNCTION decimal_uminus(decimal) RETURNS decimal AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+CREATE FUNCTION decimal_add(decimal,decimal) RETURNS decimal AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+CREATE FUNCTION decimal_sub(decimal,decimal) RETURNS decimal AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+CREATE FUNCTION decimal_mul(decimal,decimal) RETURNS decimal AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+CREATE FUNCTION decimal_div(decimal,decimal) RETURNS decimal AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
 CREATE FUNCTION float_is_equal_to(float4,float4) RETURNS bool AS $$ select $1 = $2 and ($2 != 'NaN'::float4 or $1 is null) $$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE;
 CREATE FUNCTION float_is_not_equal_to(float4,float4) RETURNS bool AS $$ select $1 != $2 or ($2 = 'NaN'::float4 and $1 is not null) $$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE;
 CREATE FUNCTION float_is_less_than(float4,float4) RETURNS bool AS $$ select $1 < $2 and ($2 != 'NaN'::float4 or $1 is null) $$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE;
@@ -25,33 +29,33 @@ CREATE FUNCTION double_div(float8,float8) RETURNS float8 AS 'MODULE_PATHNAME' LA
 
 CREATE OPERATOR - (
     rightarg = decimal,
-    procedure = numeric_uminus
+    procedure = decimal_uminus
 );
 
 CREATE OPERATOR + (
     leftarg = decimal,
     rightarg = decimal,
-    procedure = numeric_add,
+    procedure = decimal_add,
     commutator = operator(@extschema@.+)
 );
 
 CREATE OPERATOR - (
     leftarg = decimal,
     rightarg = decimal,
-    procedure = numeric_sub
+    procedure = decimal_sub
 );
 
 CREATE OPERATOR * (
     leftarg = decimal,
     rightarg = decimal,
-    procedure = numeric_mul,
+    procedure = decimal_mul,
     commutator = operator(@extschema@.*)
 );
 
 CREATE OPERATOR / (
     leftarg = decimal,
     rightarg = decimal,
-    procedure = numeric_div_checked
+    procedure = decimal_div
 );
 
 CREATE OPERATOR = (

@@ -121,14 +121,15 @@ int64 daytimeduration_parse(char *data, int size)
                 if(pos == size || !xsd_isdigit(data[pos]))
                     ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed xsd:dayTimeDuration literal")));
 
-                // truncate field to microseconds
                 char frac[] = {'0', '0', '0', '0', '0', '0', '\0'};
 
                 for(int i = 0; i < 6 && pos < size && xsd_isdigit(data[pos]); i++)
                     frac[i] = data[pos++];
 
+                // digits beyond microseconds are accepted only if they do not carry any value
                 while(pos < size && xsd_isdigit(data[pos]))
-                    pos++;
+                    if(data[pos++] != '0')
+                        ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("xsd:dayTimeDuration precision out of range")));
 
                 if(pos == size || data[pos] != 'S')
                     ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed xsd:dayTimeDuration literal")));

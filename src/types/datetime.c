@@ -83,8 +83,14 @@ ZonedDateTime *datetime_parse(char *data, int size)
 
     if(pos < size && data[pos] == '.')
     {
-        pos++;
+        int fraction = ++pos;
+
         read_input_digits(data, size, &pos, 1, false, false);
+
+        // digits beyond microseconds are accepted only if they do not carry any value
+        for(int i = fraction + MAX_TIMESTAMP_PRECISION; i < pos; i++)
+            if(data[i] != '0')
+                ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("xsd:dateTime precision out of range")));
     }
 
     int zone = pos;
@@ -133,7 +139,7 @@ ZonedDateTime *datetime_parse(char *data, int size)
     field[0] = ad ? pnstrdup(data + date, time - date - 1) : move_bc_year(data + date, time - date - 1);
     ftype[0] = DTK_DATE;
 
-    field[1] = pnstrdup(data + time, Min(zone - time, 15));   // use limit 15 to truncate field to microseconds
+    field[1] = pnstrdup(data + time, Min(zone - time, 9 + MAX_TIMESTAMP_PRECISION)); // use limit 15 to cut off the extra zero digits
     ftype[1] = DTK_TIME;
 
     field[2] = (!has_zone || data[zone] == 'Z') ? "z" : pnstrdup(data + zone, end - zone);

@@ -30,6 +30,22 @@ load ../psql_tests.bash
   expect_output '90500000'
 }
 
+@test "fn: sparql.cast_as_daytimeduration_from_string(' PT1M30.5000000S '::varchar)" {
+  expect_output '90500000'
+}
+
+@test "fn: sparql.cast_as_daytimeduration_from_string(' PT1M30.5000001S '::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_daytimeduration_from_string(' PT0.1234560S '::varchar)" {
+  expect_output '123456'
+}
+
+@test "fn: sparql.cast_as_daytimeduration_from_string(' PT0.1234567S '::varchar)" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.cast_as_daytimeduration_from_string(' -P106751991DT4H54.775808S '::varchar)" {
   expect_output '-9223372036854775808'
 }

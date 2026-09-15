@@ -102,6 +102,14 @@ load ../psql_tests.bash
   expect_output '2010-05-15T14:00:00.5-14:00'
 }
 
+@test "fn: sparql.cast_as_datetime_from_string(' 2010-05-15T14:00:00.1234560000-14:00 '::varchar)" {
+  expect_output '2010-05-15T14:00:00.123456-14:00'
+}
+
+@test "fn: sparql.cast_as_datetime_from_string(' 2010-05-15T14:00:00.0000000-14:00 '::varchar)" {
+  expect_output '2010-05-15T14:00:00-14:00'
+}
+
 @test "fn: sparql.cast_as_datetime_from_string(' 2010-05-15T14:00:00 '::varchar)" {
   expect_output '2010-05-15T14:00:00'
 }
@@ -127,6 +135,14 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.cast_as_datetime_from_string(' 2000-10-20T00:00:00. '::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_datetime_from_string(' 2000-10-20T00:00:00.1234567 '::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_datetime_from_string(' 2000-10-20T00:00:00.0000001 '::varchar)" {
   expect_output '(null)'
 }
 
