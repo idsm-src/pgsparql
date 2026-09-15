@@ -3,7 +3,7 @@ set -e
 
 whoami
 
-apk add build-base pcre2-dev ncurses bats
+apk add build-base pcre2-dev ncurses bats parallel
 
 mkdir /build
 cd /build
@@ -16,4 +16,4 @@ psql -U postgres -d postgres <<'EOF'
 create extension pgsparql;
 EOF
 
-bats /repo/tests/*/*.bats
+time bats --jobs $(nproc) --no-parallelize-within-files -r /repo/tests/
