@@ -61,6 +61,150 @@ static bool varchar_equals(VarChar* arg1, VarChar* arg2)
 }
 
 
+static IriComponents iri_parse(char *string)
+{
+    IriComponents iri = {.scheme = NULL, .authority = NULL, .path = NULL, .query = NULL, .fragment = NULL };
+
+    char *c = string;
+    char *begin = c;
+
+    while(*c != ':' && *c != '/' && *c != '?' && *c != '#' && *c != '\0')
+        c++;
+
+    if(*c == ':' && c != begin)
+    {
+        c++;
+
+        iri.scheme = pnstrdup(begin, c - begin);
+        begin = c;
+    }
+
+    if(*c == '/' && *(c+1) == '/')
+    {
+        c += 2;
+
+        while(*c != '/' && *c != '?' && *c != '#' && *c != '\0')
+            c++;
+
+        iri.authority = pnstrdup(begin, c - begin);
+        begin = c;
+    }
+
+    while(*c != '?' && *c != '#' && *c != '\0')
+        c++;
+
+    iri.path = pnstrdup(begin, c - begin);
+    begin = c;
+
+    if(*c == '?')
+    {
+        c++;
+
+        while(*c != '#' && *c != '\0')
+            c++;
+
+        iri.query = pnstrdup(begin, c - begin);
+        begin = c;
+    }
+
+    if(*c == '#')
+    {
+        c++;
+
+        while(*c != '\0')
+            c++;
+
+        iri.fragment = pnstrdup(begin, c - begin);
+    }
+
+    return iri;
+}
+
+
+static char *iri_merge_path(char *base, char *relative)
+{
+    int length = strlen(base);
+
+    while(length > 0 && base[length - 1] != '/')
+        length--;
+
+    return psprintf("%.*s%s", length, base, relative);
+}
+
+
+static char *iri_remove_dot_segments(char *path)
+{
+    char *data = pstrdup(path);
+    char *input = data;
+    char *result = palloc0(strlen(data) + 1);
+    char *output = result;
+
+
+    // While the input buffer is not empty, loop as follows:
+    while(*input != '\0')
+    {
+        // If the input buffer begins with a prefix of "../" or "./",
+        // then remove that prefix from the input buffer; otherwise,
+        if(strncmp(input, "../", 3) == 0)
+            input += 3;
+        else if(strncmp(input, "./", 2) == 0)
+            input += 2;
+
+        // if the input buffer begins with a prefix of "/./" or "/.",
+        // where "." is a complete path segment, then replace that
+        // prefix with "/" in the input buffer; otherwise,
+        else if(strncmp(input, "/./", 3) == 0)
+            input += 2;
+        else if(strncmp(input, "/.", 3) == 0)
+            input[1] = '\0';
+
+        // if the input buffer begins with a prefix of "/../" or "/..",
+        // where ".." is a complete path segment, then replace that
+        // prefix with "/" in the input buffer and remove the last
+        // segment and its preceding "/" (if any) from the output
+        // buffer; otherwise,
+        else if(strncmp(input, "/../", 4) == 0)
+        {
+            input += 3;
+
+            while(*output != '/' && output != result)
+                *(output--) = '\0';
+
+            *output = '\0';
+        }
+        else if(strncmp(input, "/..", 4) == 0)
+        {
+            input[1] = '\0';
+
+            while(*output != '/' && output != result)
+                *(output--) = '\0';
+
+            *output = '\0';
+        }
+
+        // if the input buffer consists only of "." or "..", then remove
+        // that from the input buffer; otherwise,
+        else if(strcmp(input, ".") == 0)
+            input += 1;
+        else if(strcmp(input, "..") == 0)
+            input += 2;
+
+        // move the first path segment in the input buffer to the end of
+        // the output buffer, including the initial "/" character (if
+        // any) and any subsequent characters up to, but not including,
+        // the next "/" character or the end of the input buffer.
+        else
+        {
+            do
+                *(output++) = *(input++);
+            while(*input != '\0' && *input != '/');
+        }
+    }
+
+    return result;
+}
+
+
 PG_FUNCTION_INFO_V1(is_iri_rdfbox);
 Datum is_iri_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -301,150 +445,6 @@ Datum datatype_rdfbox(PG_FUNCTION_ARGS)
         PG_RETURN_TEXT_P(cstring_to_text(rdfbox_types[box->type]));
     else
         PG_RETURN_NULL();
-}
-
-
-static IriComponents iri_parse(char *string)
-{
-    IriComponents iri = {.scheme = NULL, .authority = NULL, .path = NULL, .query = NULL, .fragment = NULL };
-
-    char *c = string;
-    char *begin = c;
-
-    while(*c != ':' && *c != '/' && *c != '?' && *c != '#' && *c != '\0')
-        c++;
-
-    if(*c == ':' && c != begin)
-    {
-        c++;
-
-        iri.scheme = pnstrdup(begin, c - begin);
-        begin = c;
-    }
-
-    if(*c == '/' && *(c+1) == '/')
-    {
-        c += 2;
-
-        while(*c != '/' && *c != '?' && *c != '#' && *c != '\0')
-            c++;
-
-        iri.authority = pnstrdup(begin, c - begin);
-        begin = c;
-    }
-
-    while(*c != '?' && *c != '#' && *c != '\0')
-        c++;
-
-    iri.path = pnstrdup(begin, c - begin);
-    begin = c;
-
-    if(*c == '?')
-    {
-        c++;
-
-        while(*c != '#' && *c != '\0')
-            c++;
-
-        iri.query = pnstrdup(begin, c - begin);
-        begin = c;
-    }
-
-    if(*c == '#')
-    {
-        c++;
-
-        while(*c != '\0')
-            c++;
-
-        iri.fragment = pnstrdup(begin, c - begin);
-    }
-
-    return iri;
-}
-
-
-static char *iri_merge_path(char *base, char *relative)
-{
-    int length = strlen(base);
-
-    while(length > 0 && base[length - 1] != '/')
-        length--;
-
-    return psprintf("%.*s%s", length, base, relative);
-}
-
-
-static char *iri_remove_dot_segments(char *path)
-{
-    char *data = pstrdup(path);
-    char *input = data;
-    char *result = palloc0(strlen(data) + 1);
-    char *output = result;
-
-
-    // While the input buffer is not empty, loop as follows:
-    while(*input != '\0')
-    {
-        // If the input buffer begins with a prefix of "../" or "./",
-        // then remove that prefix from the input buffer; otherwise,
-        if(strncmp(input, "../", 3) == 0)
-            input += 3;
-        else if(strncmp(input, "./", 2) == 0)
-            input += 2;
-
-        // if the input buffer begins with a prefix of "/./" or "/.",
-        // where "." is a complete path segment, then replace that
-        // prefix with "/" in the input buffer; otherwise,
-        else if(strncmp(input, "/./", 3) == 0)
-            input += 2;
-        else if(strncmp(input, "/.", 3) == 0)
-            input[1] = '\0';
-
-        // if the input buffer begins with a prefix of "/../" or "/..",
-        // where ".." is a complete path segment, then replace that
-        // prefix with "/" in the input buffer and remove the last
-        // segment and its preceding "/" (if any) from the output
-        // buffer; otherwise,
-        else if(strncmp(input, "/../", 4) == 0)
-        {
-            input += 3;
-
-            while(*output != '/' && output != result)
-                *(output--) = '\0';
-
-            *output = '\0';
-        }
-        else if(strncmp(input, "/..", 4) == 0)
-        {
-            input[1] = '\0';
-
-            while(*output != '/' && output != result)
-                *(output--) = '\0';
-
-            *output = '\0';
-        }
-
-        // if the input buffer consists only of "." or "..", then remove
-        // that from the input buffer; otherwise,
-        else if(strcmp(input, ".") == 0)
-            input += 1;
-        else if(strcmp(input, "..") == 0)
-            input += 2;
-
-        // move the first path segment in the input buffer to the end of
-        // the output buffer, including the initial "/" character (if
-        // any) and any subsequent characters up to, but not including,
-        // the next "/" character or the end of the input buffer.
-        else
-        {
-            do
-                *(output++) = *(input++);
-            while(*input != '\0' && *input != '/');
-        }
-    }
-
-    return result;
 }
 
 

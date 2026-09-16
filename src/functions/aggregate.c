@@ -152,6 +152,54 @@ static bool finish_numeric_state(PGFunction func, Datum numeric_state, NullableD
 }
 
 
+static MinAggState *create_min_state(Oid type, Oid collation)
+{
+    TypeCacheEntry *entry = lookup_type_cache(type, TYPECACHE_CMP_PROC_FINFO);
+
+    if(!OidIsValid(entry->cmp_proc_finfo.fn_oid))
+        ereport(ERROR, (errcode(ERRCODE_UNDEFINED_FUNCTION), errmsg("could not identify a comparison function for type %s", format_type_be(type))));
+
+    MinAggState *state = palloc0(sizeof(MinAggState));
+
+    state->type = type;
+    state->collation = collation;
+    state->typlen = entry->typlen;
+    state->typbyval = entry->typbyval;
+    fmgr_info_copy(&state->compare, &entry->cmp_proc_finfo, CurrentMemoryContext);
+
+    return state;
+}
+
+
+static void forget_min_value(MinAggState *state)
+{
+    if(state->has_value && !state->typbyval)
+        pfree(DatumGetPointer(state->value));
+
+    state->has_value = false;
+    state->value = (Datum) 0;
+}
+
+
+static void remember_min_value(MinAggState *state, Datum value, MemoryContext agg_context)
+{
+    MemoryContext old_context = MemoryContextSwitchTo(agg_context);
+    Datum copy = datumCopy(value, state->typbyval, state->typlen);
+    MemoryContextSwitchTo(old_context);
+
+    forget_min_value(state);
+
+    state->has_value = true;
+    state->value = copy;
+}
+
+
+static bool is_less_than_min_value(MinAggState *state, Datum value)
+{
+    return !state->has_value || DatumGetInt32(FunctionCall2Coll(&state->compare, state->collation, value, state->value)) < 0;
+}
+
+
 PG_FUNCTION_INFO_V1(agg_decimal_accum);
 Datum agg_decimal_accum(PG_FUNCTION_ARGS)
 {
@@ -873,54 +921,6 @@ Datum avg_rdfbox_final(PG_FUNCTION_ARGS)
     }
 
     PG_RETURN_RDFBOX_P(GetIntegerRdfBox(get_zero()));
-}
-
-
-static MinAggState *create_min_state(Oid type, Oid collation)
-{
-    TypeCacheEntry *entry = lookup_type_cache(type, TYPECACHE_CMP_PROC_FINFO);
-
-    if(!OidIsValid(entry->cmp_proc_finfo.fn_oid))
-        ereport(ERROR, (errcode(ERRCODE_UNDEFINED_FUNCTION), errmsg("could not identify a comparison function for type %s", format_type_be(type))));
-
-    MinAggState *state = palloc0(sizeof(MinAggState));
-
-    state->type = type;
-    state->collation = collation;
-    state->typlen = entry->typlen;
-    state->typbyval = entry->typbyval;
-    fmgr_info_copy(&state->compare, &entry->cmp_proc_finfo, CurrentMemoryContext);
-
-    return state;
-}
-
-
-static void forget_min_value(MinAggState *state)
-{
-    if(state->has_value && !state->typbyval)
-        pfree(DatumGetPointer(state->value));
-
-    state->has_value = false;
-    state->value = (Datum) 0;
-}
-
-
-static void remember_min_value(MinAggState *state, Datum value, MemoryContext agg_context)
-{
-    MemoryContext old_context = MemoryContextSwitchTo(agg_context);
-    Datum copy = datumCopy(value, state->typbyval, state->typlen);
-    MemoryContextSwitchTo(old_context);
-
-    forget_min_value(state);
-
-    state->has_value = true;
-    state->value = copy;
-}
-
-
-static bool is_less_than_min_value(MinAggState *state, Datum value)
-{
-    return !state->has_value || DatumGetInt32(FunctionCall2Coll(&state->compare, state->collation, value, state->value)) < 0;
 }
 
 

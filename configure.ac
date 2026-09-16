@@ -3,7 +3,7 @@ dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.59)
 AC_INIT(pgsparql, 2.0.0)
 AC_CONFIG_HEADERS([config.h])
-AC_CONFIG_AUX_DIR([build])
+AC_CONFIG_AUX_DIR([aux])
 AC_PROG_CC
 
 AC_CONFIG_MACRO_DIR([m4])

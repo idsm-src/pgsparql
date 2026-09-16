@@ -199,24 +199,6 @@ char *ubox_type_as_cstring(UBox *box)
 }
 
 
-PG_FUNCTION_INFO_V1(ubox_input);
-Datum ubox_input(PG_FUNCTION_ARGS)
-{
-    char *str = PG_GETARG_CSTRING(0);
-
-    PG_RETURN_UBOX_P(ubox_parse(str, NULL));
-}
-
-
-PG_FUNCTION_INFO_V1(ubox_output);
-Datum ubox_output(PG_FUNCTION_ARGS)
-{
-    UBox *box = PG_GETARG_UBOX_P(0);
-
-    PG_RETURN_CSTRING(psprintf("%s:%s", ubox_value_as_cstring(box), ubox_type_as_cstring(box)));
-}
-
-
 /*
  * Binary format:  NUL-terminated canonical type name (as in the text format),
  * followed by the binary (send) representation of the boxed value.  The value
@@ -253,40 +235,6 @@ void ubox_append_binary(StringInfo buf, UBox *box)
 }
 
 
-PG_FUNCTION_INFO_V1(ubox_recv);
-Datum ubox_recv(PG_FUNCTION_ARGS)
-{
-    StringInfo buf = (StringInfo) PG_GETARG_POINTER(0);
-
-    PG_RETURN_UBOX_P(ubox_receive(buf));
-}
-
-
-PG_FUNCTION_INFO_V1(ubox_send);
-Datum ubox_send(PG_FUNCTION_ARGS)
-{
-    UBox *box = PG_GETARG_UBOX_P(0);
-
-    StringInfoData buf;
-    pq_begintypsend(&buf);
-    ubox_append_binary(&buf, box);
-
-    PG_RETURN_BYTEA_P(pq_endtypsend(&buf));
-}
-
-
-PG_FUNCTION_INFO_V1(ubox_create);
-Datum ubox_create(PG_FUNCTION_ARGS)
-{
-    Oid typeoid = get_fn_expr_argtype(fcinfo->flinfo, 0);
-
-    if(!OidIsValid(typeoid))
-        ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE), errmsg("could not determine input data type")));
-
-    PG_RETURN_UBOX_P(ubox_make(typeoid, PG_GETARG_DATUM(0)));
-}
-
-
 Datum ubox_value_of_type(UBox *box, Oid typeoid)
 {
     if(!OidIsValid(typeoid))
@@ -296,22 +244,6 @@ Datum ubox_value_of_type(UBox *box, Oid typeoid)
         ereport(ERROR, (errcode(ERRCODE_DATATYPE_MISMATCH), errmsg("ubox contains a value of type %s, not %s", format_type_be(box->typeoid), format_type_be(typeoid))));
 
     return ubox_value(box, lookup_type_cache(typeoid, 0));
-}
-
-
-/*
- * The second argument only determines the result type and is normally passed
- * as NULL::type, therefore this function must NOT be declared STRICT.
- */
-PG_FUNCTION_INFO_V1(ubox_get_value);
-Datum ubox_get_value(PG_FUNCTION_ARGS)
-{
-    if(PG_ARGISNULL(0))
-        PG_RETURN_NULL();
-
-    UBox *box = PG_GETARG_UBOX_P(0);
-
-    PG_RETURN_DATUM(ubox_value_of_type(box, get_fn_expr_rettype(fcinfo->flinfo)));
 }
 
 
@@ -423,6 +355,155 @@ VarChar *ubox_value_as_varchar(FmgrInfo *flinfo, UBox *box)
         default: // COERCION_PATH_RELABELTYPE
             return (VarChar *) DatumGetPointer(value);
     }
+}
+
+
+/*
+ * The bytes that identify the boxed value: the payload without the varlena
+ * header for varlena types, the stored bytes otherwise (fixed-length types;
+ * cstring including its terminating NUL).
+ */
+static void ubox_raw_bytes(UBox *box, TypeCacheEntry *typentry, const unsigned char **ptr, int *len)
+{
+    if(typentry->typlen == -1)
+    {
+        *ptr = (const unsigned char *) VARDATA(box->value);
+        *len = VARSIZE(box->value) - VARHDRSZ;
+    }
+    else
+    {
+        *ptr = (const unsigned char *) box->value;
+        *len = (int) (VARSIZE(box) - UBOX_HDRSZ);
+    }
+}
+
+
+int ubox_order(FmgrInfo *flinfo, UBox *a, UBox *b)
+{
+    if(a->typeoid != b->typeoid)
+        return a->typeoid < b->typeoid ? -1 : 1;
+
+    int cmp = 0;
+
+    if(ubox_compare(flinfo, a, b, &cmp))
+        return cmp;
+
+    // no B-tree comparison for this type: compare the bytes
+    TypeCacheEntry *typentry = ubox_cached_typentry(flinfo, a->typeoid, TYPECACHE_CMP_PROC_FINFO);
+
+    const unsigned char *pa;
+    const unsigned char *pb;
+    int la;
+    int lb;
+
+    ubox_raw_bytes(a, typentry, &pa, &la);
+    ubox_raw_bytes(b, typentry, &pb, &lb);
+
+    int diff = memcmp(pa, pb, Min(la, lb));
+
+    if(diff != 0)
+        return diff < 0 ? -1 : 1;
+
+    return la < lb ? -1 : la > lb ? 1 : 0;
+}
+
+
+/*
+ * The type OID is folded into the value's hash the way hash_array() folds in
+ * successive elements; this keeps the low 32 bits of ubox_hash_extended(x, 0)
+ * equal to ubox_hash(x), as the hash access method requires.  TYPECACHE_EQ_OPR
+ * is requested so that the type cache verifies the hash function against the
+ * type's equality operator.
+ */
+uint64 ubox_hash_value(FmgrInfo *flinfo, UBox *box, uint64 seed)
+{
+    TypeCacheEntry *typentry = ubox_cached_typentry(flinfo, box->typeoid, TYPECACHE_EQ_OPR | TYPECACHE_CMP_PROC | TYPECACHE_HASH_EXTENDED_PROC_FINFO);
+    uint64 valhash = 0;
+
+    if(OidIsValid(typentry->hash_extended_proc_finfo.fn_oid))
+    {
+        valhash = DatumGetUInt64(FunctionCall2Coll(&typentry->hash_extended_proc_finfo, typentry->typcollation, ubox_value(box, typentry), Int64GetDatum(seed)));
+    }
+    else if(!OidIsValid(typentry->cmp_proc))
+    {
+        const unsigned char *ptr;
+        int len;
+
+        ubox_raw_bytes(box, typentry, &ptr, &len);
+        valhash = hash_bytes_extended(ptr, len, seed);
+    }
+
+    uint64 result = hash_bytes_uint32_extended(box->typeoid, seed);
+
+    return (result << 5) - result + valhash;
+}
+
+
+PG_FUNCTION_INFO_V1(ubox_input);
+Datum ubox_input(PG_FUNCTION_ARGS)
+{
+    char *str = PG_GETARG_CSTRING(0);
+
+    PG_RETURN_UBOX_P(ubox_parse(str, NULL));
+}
+
+
+PG_FUNCTION_INFO_V1(ubox_output);
+Datum ubox_output(PG_FUNCTION_ARGS)
+{
+    UBox *box = PG_GETARG_UBOX_P(0);
+
+    PG_RETURN_CSTRING(psprintf("%s:%s", ubox_value_as_cstring(box), ubox_type_as_cstring(box)));
+}
+
+
+PG_FUNCTION_INFO_V1(ubox_recv);
+Datum ubox_recv(PG_FUNCTION_ARGS)
+{
+    StringInfo buf = (StringInfo) PG_GETARG_POINTER(0);
+
+    PG_RETURN_UBOX_P(ubox_receive(buf));
+}
+
+
+PG_FUNCTION_INFO_V1(ubox_send);
+Datum ubox_send(PG_FUNCTION_ARGS)
+{
+    UBox *box = PG_GETARG_UBOX_P(0);
+
+    StringInfoData buf;
+    pq_begintypsend(&buf);
+    ubox_append_binary(&buf, box);
+
+    PG_RETURN_BYTEA_P(pq_endtypsend(&buf));
+}
+
+
+PG_FUNCTION_INFO_V1(ubox_create);
+Datum ubox_create(PG_FUNCTION_ARGS)
+{
+    Oid typeoid = get_fn_expr_argtype(fcinfo->flinfo, 0);
+
+    if(!OidIsValid(typeoid))
+        ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE), errmsg("could not determine input data type")));
+
+    PG_RETURN_UBOX_P(ubox_make(typeoid, PG_GETARG_DATUM(0)));
+}
+
+
+/*
+ * The second argument only determines the result type and is normally passed
+ * as NULL::type, therefore this function must NOT be declared STRICT.
+ */
+PG_FUNCTION_INFO_V1(ubox_get_value);
+Datum ubox_get_value(PG_FUNCTION_ARGS)
+{
+    if(PG_ARGISNULL(0))
+        PG_RETURN_NULL();
+
+    UBox *box = PG_GETARG_UBOX_P(0);
+
+    PG_RETURN_DATUM(ubox_value_of_type(box, get_fn_expr_rettype(fcinfo->flinfo)));
 }
 
 
@@ -560,56 +641,6 @@ Datum ubox_is_not_greater_than(PG_FUNCTION_ARGS)
  * failing at run time.
  */
 
-/*
- * The bytes that identify the boxed value: the payload without the varlena
- * header for varlena types, the stored bytes otherwise (fixed-length types;
- * cstring including its terminating NUL).
- */
-static void ubox_raw_bytes(UBox *box, TypeCacheEntry *typentry, const unsigned char **ptr, int *len)
-{
-    if(typentry->typlen == -1)
-    {
-        *ptr = (const unsigned char *) VARDATA(box->value);
-        *len = VARSIZE(box->value) - VARHDRSZ;
-    }
-    else
-    {
-        *ptr = (const unsigned char *) box->value;
-        *len = (int) (VARSIZE(box) - UBOX_HDRSZ);
-    }
-}
-
-
-int ubox_order(FmgrInfo *flinfo, UBox *a, UBox *b)
-{
-    if(a->typeoid != b->typeoid)
-        return a->typeoid < b->typeoid ? -1 : 1;
-
-    int cmp = 0;
-
-    if(ubox_compare(flinfo, a, b, &cmp))
-        return cmp;
-
-    // no B-tree comparison for this type: compare the bytes
-    TypeCacheEntry *typentry = ubox_cached_typentry(flinfo, a->typeoid, TYPECACHE_CMP_PROC_FINFO);
-
-    const unsigned char *pa;
-    const unsigned char *pb;
-    int la;
-    int lb;
-
-    ubox_raw_bytes(a, typentry, &pa, &la);
-    ubox_raw_bytes(b, typentry, &pb, &lb);
-
-    int diff = memcmp(pa, pb, Min(la, lb));
-
-    if(diff != 0)
-        return diff < 0 ? -1 : 1;
-
-    return la < lb ? -1 : la > lb ? 1 : 0;
-}
-
-
 PG_FUNCTION_INFO_V1(ubox_order_compare);
 Datum ubox_order_compare(PG_FUNCTION_ARGS)
 {
@@ -680,13 +711,6 @@ Datum ubox_order_is_not_greater_than(PG_FUNCTION_ARGS)
 }
 
 
-/*
- * The type OID is folded into the value's hash the way hash_array() folds in
- * successive elements; this keeps the low 32 bits of ubox_hash_extended(x, 0)
- * equal to ubox_hash(x), as the hash access method requires.  TYPECACHE_EQ_OPR
- * is requested so that the type cache verifies the hash function against the
- * type's equality operator.
- */
 PG_FUNCTION_INFO_V1(ubox_hash);
 Datum ubox_hash(PG_FUNCTION_ARGS)
 {
@@ -713,30 +737,6 @@ Datum ubox_hash(PG_FUNCTION_ARGS)
     result = (result << 5) - result + valhash;
 
     PG_RETURN_UINT32(result);
-}
-
-
-uint64 ubox_hash_value(FmgrInfo *flinfo, UBox *box, uint64 seed)
-{
-    TypeCacheEntry *typentry = ubox_cached_typentry(flinfo, box->typeoid, TYPECACHE_EQ_OPR | TYPECACHE_CMP_PROC | TYPECACHE_HASH_EXTENDED_PROC_FINFO);
-    uint64 valhash = 0;
-
-    if(OidIsValid(typentry->hash_extended_proc_finfo.fn_oid))
-    {
-        valhash = DatumGetUInt64(FunctionCall2Coll(&typentry->hash_extended_proc_finfo, typentry->typcollation, ubox_value(box, typentry), Int64GetDatum(seed)));
-    }
-    else if(!OidIsValid(typentry->cmp_proc))
-    {
-        const unsigned char *ptr;
-        int len;
-
-        ubox_raw_bytes(box, typentry, &ptr, &len);
-        valhash = hash_bytes_extended(ptr, len, seed);
-    }
-
-    uint64 result = hash_bytes_uint32_extended(box->typeoid, seed);
-
-    return (result << 5) - result + valhash;
 }
 
 
