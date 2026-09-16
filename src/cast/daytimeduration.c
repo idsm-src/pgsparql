@@ -14,18 +14,18 @@ PG_FUNCTION_INFO_V1(cast_as_daytimeduration_from_string);
 Datum cast_as_daytimeduration_from_string(PG_FUNCTION_ARGS)
 {
     VarChar *value = PG_GETARG_VARCHAR_PP(0);
-    NullableDatum result = { .isnull = false };
+    NullableDatum result = NULL_DATUM;
 
     PG_TRY_EX();
     {
-        result.value = Int64GetDatum(daytimeduration_parse(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value)));
+        result = NULLABLE_DATUM(Int64GetDatum(daytimeduration_parse(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value))));
     }
     PG_CATCH_EX();
     {
         if(sqlerrcode != ERRCODE_INVALID_TEXT_REPRESENTATION && sqlerrcode != ERRCODE_DATETIME_VALUE_OUT_OF_RANGE)
             PG_RE_THROW_EX();
 
-        result.isnull = true;
+        result = NULL_DATUM;
     }
     PG_END_TRY_EX();
 

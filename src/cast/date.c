@@ -17,7 +17,7 @@ PG_FUNCTION_INFO_V1(cast_as_date_from_datetime);
 Datum cast_as_date_from_datetime(PG_FUNCTION_ARGS)
 {
     ZonedDateTime datetime = PG_GETARG_DATETIME();
-    NullableDatum result = { .isnull = false };
+    NullableDatum result = NULL_DATUM;
 
     PG_TRY_EX();
     {
@@ -32,14 +32,14 @@ Datum cast_as_date_from_datetime(PG_FUNCTION_ARGS)
         }
 
         DateADT date = DatumGetDateADT(DirectFunctionCall1(timestamp_date, TimestampTzGetDatum(value)));
-        result.value = ZonedDateGetDatum((ZonedDate) { .value = date, .zone = datetime.zone });
+        result = NULLABLE_DATUM(ZonedDateGetDatum((ZonedDate) { .value = date, .zone = datetime.zone }));
     }
     PG_CATCH_EX();
     {
         if(sqlerrcode != ERRCODE_DATETIME_VALUE_OUT_OF_RANGE)
             PG_RE_THROW_EX();
 
-        result.isnull = true;
+        result = NULL_DATUM;
     }
     PG_END_TRY_EX();
 
@@ -51,18 +51,18 @@ PG_FUNCTION_INFO_V1(cast_as_date_from_string);
 Datum cast_as_date_from_string(PG_FUNCTION_ARGS)
 {
     VarChar *value = PG_GETARG_VARCHAR_PP(0);
-    NullableDatum result = { .isnull = false };
+    NullableDatum result = NULL_DATUM;
 
     PG_TRY_EX();
     {
-        result.value = ZonedDateGetDatum(date_parse(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value)));
+        result = NULLABLE_DATUM(ZonedDateGetDatum(date_parse(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value))));
     }
     PG_CATCH_EX();
     {
         if(sqlerrcode != ERRCODE_INVALID_TEXT_REPRESENTATION && sqlerrcode != ERRCODE_DATETIME_VALUE_OUT_OF_RANGE)
             PG_RE_THROW_EX();
 
-        result.isnull = true;
+        result = NULL_DATUM;
     }
     PG_END_TRY_EX();
 
@@ -96,7 +96,7 @@ PG_FUNCTION_INFO_V1(cast_as_plain_date_from_datetime);
 Datum cast_as_plain_date_from_datetime(PG_FUNCTION_ARGS)
 {
     ZonedDateTime datetime = PG_GETARG_DATETIME();
-    NullableDatum result = { .isnull = false };
+    NullableDatum result = NULL_DATUM;
 
     PG_TRY_EX();
     {
@@ -110,14 +110,14 @@ Datum cast_as_plain_date_from_datetime(PG_FUNCTION_ARGS)
                 ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE)));
         }
 
-        result.value = DirectFunctionCall1(timestamp_date, TimestampTzGetDatum(value));
+        result = NULLABLE_DATUM(DirectFunctionCall1(timestamp_date, TimestampTzGetDatum(value)));
     }
     PG_CATCH_EX();
     {
         if(sqlerrcode != ERRCODE_DATETIME_VALUE_OUT_OF_RANGE)
             PG_RE_THROW_EX();
 
-        result.isnull = true;
+        result = NULL_DATUM;
     }
     PG_END_TRY_EX();
 

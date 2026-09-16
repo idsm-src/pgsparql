@@ -53,7 +53,7 @@ static inline NullableDatum decimal_result(NullableDatum result)
         Numeric value = DatumGetNumeric(result.value);
 
         if(numeric_is_inf(value) || numeric_is_nan(value))
-            result.isnull = true;
+            result = NULL_DATUM;
     }
 
     return result;
@@ -70,7 +70,7 @@ Datum decimal_uminus(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(decimal_add);
 Datum decimal_add(PG_FUNCTION_ARGS)
 {
-    NullableDatum result = { .isnull = false };
+    NullableDatum result = NULL_DATUM;
 
     PG_TRY_EX();
     {
@@ -81,7 +81,7 @@ Datum decimal_add(PG_FUNCTION_ARGS)
         if(sqlerrcode != ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE)
             PG_RE_THROW_EX();
 
-        result.isnull = true;
+        result = NULL_DATUM;
     }
     PG_END_TRY_EX();
 
@@ -92,7 +92,7 @@ Datum decimal_add(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(decimal_sub);
 Datum decimal_sub(PG_FUNCTION_ARGS)
 {
-    NullableDatum result = { .isnull = false };
+    NullableDatum result = NULL_DATUM;
 
     PG_TRY_EX();
     {
@@ -103,7 +103,7 @@ Datum decimal_sub(PG_FUNCTION_ARGS)
         if(sqlerrcode != ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE)
             PG_RE_THROW_EX();
 
-        result.isnull = true;
+        result = NULL_DATUM;
     }
     PG_END_TRY_EX();
 
@@ -114,7 +114,7 @@ Datum decimal_sub(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(decimal_mul);
 Datum decimal_mul(PG_FUNCTION_ARGS)
 {
-    NullableDatum result = { .isnull = false };
+    NullableDatum result = NULL_DATUM;
 
     PG_TRY_EX();
     {
@@ -125,7 +125,7 @@ Datum decimal_mul(PG_FUNCTION_ARGS)
         if(sqlerrcode != ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE)
             PG_RE_THROW_EX();
 
-        result.isnull = true;
+        result = NULL_DATUM;
     }
     PG_END_TRY_EX();
 
@@ -136,7 +136,7 @@ Datum decimal_mul(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(decimal_div);
 Datum decimal_div(PG_FUNCTION_ARGS)
 {
-    NullableDatum result = { .isnull = false };
+    NullableDatum result = NULL_DATUM;
 
     PG_TRY_EX();
     {
@@ -147,7 +147,7 @@ Datum decimal_div(PG_FUNCTION_ARGS)
         if(sqlerrcode != ERRCODE_DIVISION_BY_ZERO && sqlerrcode != ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE)
             PG_RE_THROW_EX();
 
-        result.isnull = true;
+        result = NULL_DATUM;
     }
     PG_END_TRY_EX();
 
