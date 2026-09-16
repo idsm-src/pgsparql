@@ -534,6 +534,42 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.rdfbox_get_date_lexical_of_zone(sparql.rdfbox_create_from_userliteral('abc'::varchar, 'http://example.org'::varchar), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_date_lexical_of_zone(sparql.rdfbox_create_from_userliteral('abc'::varchar, 'http://example.org'::varchar), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_date_lexical_of_zone(sparql.rdfbox_create_from_userliteral('abc'::varchar, 'http://example.org'::varchar), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_date_lexical_of_zone(sparql.rdfbox_create_from_userliteral_with_lexical('abc'::varchar, 'http://example.org'::varchar, ''::varchar), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_date_lexical_of_zone(sparql.rdfbox_create_from_userliteral_with_lexical('abc'::varchar, 'http://example.org'::varchar, ''::varchar), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_date_lexical_of_zone(sparql.rdfbox_create_from_userliteral_with_lexical('abc'::varchar, 'http://example.org'::varchar, ''::varchar), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_date_lexical_of_zone(sparql.rdfbox_create_from_userliteral_with_lexical('abc'::varchar, 'http://example.org'::varchar, ' abc '::varchar), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_date_lexical_of_zone(sparql.rdfbox_create_from_userliteral_with_lexical('abc'::varchar, 'http://example.org'::varchar, ' abc '::varchar), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_date_lexical_of_zone(sparql.rdfbox_create_from_userliteral_with_lexical('abc'::varchar, 'http://example.org'::varchar, ' abc '::varchar), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.rdfbox_get_date_lexical_of_zone(sparql.rdfbox_create_from_typedliteral('abc'::varchar, 'http://example.org'::varchar), (14*60*60)::int4)" {
   expect_output '(null)'
 }

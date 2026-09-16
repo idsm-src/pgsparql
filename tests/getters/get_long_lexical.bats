@@ -462,6 +462,42 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.rdfbox_get_long_lexical(sparql.rdfbox_create_from_userliteral('abc'::varchar, 'http://example.org'::varchar))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_long_lexical(sparql.rdfbox_create_from_userliteral('abc'::varchar, 'http://example.org'::varchar), 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_long_lexical(sparql.rdfbox_create_from_userliteral('abc'::varchar, 'http://example.org'::varchar), 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_long_lexical(sparql.rdfbox_create_from_userliteral_with_lexical('abc'::varchar, 'http://example.org'::varchar, ''::varchar))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_long_lexical(sparql.rdfbox_create_from_userliteral_with_lexical('abc'::varchar, 'http://example.org'::varchar, ''::varchar), 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_long_lexical(sparql.rdfbox_create_from_userliteral_with_lexical('abc'::varchar, 'http://example.org'::varchar, ''::varchar), 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_long_lexical(sparql.rdfbox_create_from_userliteral_with_lexical('abc'::varchar, 'http://example.org'::varchar, ' abc '::varchar))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_long_lexical(sparql.rdfbox_create_from_userliteral_with_lexical('abc'::varchar, 'http://example.org'::varchar, ' abc '::varchar), 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_long_lexical(sparql.rdfbox_create_from_userliteral_with_lexical('abc'::varchar, 'http://example.org'::varchar, ' abc '::varchar), 'false'::bool)" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.rdfbox_get_long_lexical(sparql.rdfbox_create_from_typedliteral('abc'::varchar, 'http://example.org'::varchar))" {
   expect_output '(null)'
 }

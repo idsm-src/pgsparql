@@ -6,6 +6,7 @@
 #include <parser/parse_coerce.h>
 #include <utils/builtins.h>
 #include <utils/datum.h>
+#include <utils/guc.h>
 #include <utils/lsyscache.h>
 #include "pgsparql.h"
 #include "types/ubox.h"
@@ -46,10 +47,15 @@ UBox *ubox_make(Oid typeoid, Datum value)
  * Type cache entry for the boxed type, remembered in fn_extra across calls
  * (the same pattern array_eq()/array_cmp() use).  Type cache entries are
  * never freed, so the pointer stays valid; a column holding boxes of several
- * types just triggers a new lookup whenever the type changes.
+ * types just triggers a new lookup whenever the type changes.  A caller that
+ * has no FunctionCallInfo of its own passes NULL and pays for a lookup on
+ * every call.
  */
 static TypeCacheEntry *ubox_cached_typentry(FmgrInfo *flinfo, Oid typeoid, int flags)
 {
+    if(flinfo == NULL)
+        return lookup_type_cache(typeoid, flags);
+
     TypeCacheEntry *typentry = (TypeCacheEntry *) flinfo->fn_extra;
 
     if(typentry == NULL || typentry->type_id != typeoid)
@@ -68,7 +74,7 @@ static TypeCacheEntry *ubox_cached_typentry(FmgrInfo *flinfo, Oid typeoid, int f
  * false without setting *equal when the boxes hold values of different types
  * or the type has no equality operator.
  */
-static bool ubox_value_eq(FmgrInfo *flinfo, UBox *a, UBox *b, bool *equal)
+bool ubox_equals(FmgrInfo *flinfo, UBox *a, UBox *b, bool *equal)
 {
     if(a->typeoid != b->typeoid)
         return false;
@@ -90,7 +96,7 @@ static bool ubox_value_eq(FmgrInfo *flinfo, UBox *a, UBox *b, bool *equal)
  * Returns false without setting *cmp when the boxes hold values of different
  * types or the type has no B-tree operator class.
  */
-static bool ubox_value_cmp(FmgrInfo *flinfo, UBox *a, UBox *b, int *cmp)
+bool ubox_compare(FmgrInfo *flinfo, UBox *a, UBox *b, int *cmp)
 {
     if(a->typeoid != b->typeoid)
         return false;
@@ -112,15 +118,38 @@ static bool ubox_value_cmp(FmgrInfo *flinfo, UBox *a, UBox *b, int *cmp)
  * FORMAT_TYPE_FORCE_QUALIFY prints it schema-qualified and quoted whenever
  * needed, independently of search_path (only the SQL-standard names such as
  * integer or character varying stay unqualified, as they cannot be
- * shadowed).  It is parsed by regtypein().  The value may contain anything,
- * while a type name cannot contain a colon outside of double quotes, so the
- * separator is the last colon that is not inside double quotes; everything
- * before it is handed verbatim to the input function of the boxed type.
+ * shadowed).  The value may contain anything, while a type name cannot
+ * contain a colon outside of double quotes, so the separator is the last
+ * colon that is not inside double quotes; everything before it is handed
+ * verbatim to the input function of the boxed type.
  */
-PG_FUNCTION_INFO_V1(ubox_input);
-Datum ubox_input(PG_FUNCTION_ARGS)
+
+/*
+ * Resolve a type name the way regtypein() does, but with the search path
+ * pinned to pg_catalog, so that the result does not depend on the session:
+ * what ubox_type_as_cstring() prints is either an SQL-standard name, which
+ * the grammar resolves on its own, or a schema-qualified one, and both mean
+ * the same type everywhere.  An unqualified name of a type outside of
+ * pg_catalog therefore does not resolve at all.  GUC_ACTION_SAVE remembers
+ * the previous value and AtEOXact_GUC() puts it back, as it also does when
+ * the transaction aborts.
+ */
+static Oid ubox_type_from_cstring(const char *typname)
 {
-    char *str = PG_GETARG_CSTRING(0);
+    int nestlevel = NewGUCNestLevel();
+
+    (void) set_config_option("search_path", "pg_catalog", PGC_USERSET, PGC_S_SESSION, GUC_ACTION_SAVE, true, 0, false);
+
+    Oid typeoid = DatumGetObjectId(DirectFunctionCall1(regtypein, CStringGetDatum(typname)));
+
+    AtEOXact_GUC(false, nestlevel);
+
+    return typeoid;
+}
+
+
+UBox *ubox_parse(const char *str, char **value)
+{
     int sep = -1;
     bool in_quotes = false;
 
@@ -135,17 +164,47 @@ Datum ubox_input(PG_FUNCTION_ARGS)
     if(sep < 0)
         ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid input syntax for type %s: \"%s\"", "ubox", str), errhint("Expected format is \"value:typename\".")));
 
-    char *typname = str + sep + 1;
-    Oid typeoid = DatumGetObjectId(DirectFunctionCall1(regtypein, CStringGetDatum(typname)));
+    const char *typname = str + sep + 1;
+    Oid typeoid = ubox_type_from_cstring(typname);
 
     Oid typinput;
     Oid typioparam;
     getTypeInputInfo(typeoid, &typinput, &typioparam);
 
     char *valstr = pnstrdup(str, sep);
-    Datum value = OidInputFunctionCall(typinput, valstr, typioparam, -1);
+    Datum datum = OidInputFunctionCall(typinput, valstr, typioparam, -1);
 
-    PG_RETURN_UBOX_P(ubox_make(typeoid, value));
+    if(value != NULL)
+        *value = valstr;
+
+    return ubox_make(typeoid, datum);
+}
+
+
+char *ubox_value_as_cstring(UBox *box)
+{
+    TypeCacheEntry *typentry = lookup_type_cache(box->typeoid, 0);
+
+    Oid typoutput;
+    bool typisvarlena;
+    getTypeOutputInfo(box->typeoid, &typoutput, &typisvarlena);
+
+    return OidOutputFunctionCall(typoutput, ubox_value(box, typentry));
+}
+
+
+char *ubox_type_as_cstring(UBox *box)
+{
+    return format_type_extended(box->typeoid, -1, FORMAT_TYPE_FORCE_QUALIFY);
+}
+
+
+PG_FUNCTION_INFO_V1(ubox_input);
+Datum ubox_input(PG_FUNCTION_ARGS)
+{
+    char *str = PG_GETARG_CSTRING(0);
+
+    PG_RETURN_UBOX_P(ubox_parse(str, NULL));
 }
 
 
@@ -153,16 +212,8 @@ PG_FUNCTION_INFO_V1(ubox_output);
 Datum ubox_output(PG_FUNCTION_ARGS)
 {
     UBox *box = PG_GETARG_UBOX_P(0);
-    TypeCacheEntry *typentry = lookup_type_cache(box->typeoid, 0);
 
-    Oid typoutput;
-    bool typisvarlena;
-    getTypeOutputInfo(box->typeoid, &typoutput, &typisvarlena);
-
-    char *valstr = OidOutputFunctionCall(typoutput, ubox_value(box, typentry));
-    char *typname = format_type_extended(box->typeoid, -1, FORMAT_TYPE_FORCE_QUALIFY);
-
-    PG_RETURN_CSTRING(psprintf("%s:%s", valstr, typname));
+    PG_RETURN_CSTRING(psprintf("%s:%s", ubox_value_as_cstring(box), ubox_type_as_cstring(box)));
 }
 
 
@@ -172,12 +223,10 @@ Datum ubox_output(PG_FUNCTION_ARGS)
  * is the last field, so its receive function simply consumes the rest of the
  * message; the caller of ubox_recv verifies that the whole message was used up.
  */
-PG_FUNCTION_INFO_V1(ubox_recv);
-Datum ubox_recv(PG_FUNCTION_ARGS)
+UBox *ubox_receive(StringInfo buf)
 {
-    StringInfo buf = (StringInfo) PG_GETARG_POINTER(0);
     const char *typname = pq_getmsgstring(buf);
-    Oid typeoid = DatumGetObjectId(DirectFunctionCall1(regtypein, CStringGetDatum(typname)));
+    Oid typeoid = ubox_type_from_cstring(typname);
 
     Oid typreceive;
     Oid typioparam;
@@ -185,14 +234,12 @@ Datum ubox_recv(PG_FUNCTION_ARGS)
 
     Datum value = OidReceiveFunctionCall(typreceive, buf, typioparam, -1);
 
-    PG_RETURN_UBOX_P(ubox_make(typeoid, value));
+    return ubox_make(typeoid, value);
 }
 
 
-PG_FUNCTION_INFO_V1(ubox_send);
-Datum ubox_send(PG_FUNCTION_ARGS)
+void ubox_append_binary(StringInfo buf, UBox *box)
 {
-    UBox *box = PG_GETARG_UBOX_P(0);
     TypeCacheEntry *typentry = lookup_type_cache(box->typeoid, 0);
 
     Oid typsend;
@@ -201,10 +248,28 @@ Datum ubox_send(PG_FUNCTION_ARGS)
 
     bytea *valbytes = OidSendFunctionCall(typsend, ubox_value(box, typentry));
 
+    pq_sendstring(buf, ubox_type_as_cstring(box));
+    pq_sendbytes(buf, VARDATA(valbytes), VARSIZE(valbytes) - VARHDRSZ);
+}
+
+
+PG_FUNCTION_INFO_V1(ubox_recv);
+Datum ubox_recv(PG_FUNCTION_ARGS)
+{
+    StringInfo buf = (StringInfo) PG_GETARG_POINTER(0);
+
+    PG_RETURN_UBOX_P(ubox_receive(buf));
+}
+
+
+PG_FUNCTION_INFO_V1(ubox_send);
+Datum ubox_send(PG_FUNCTION_ARGS)
+{
+    UBox *box = PG_GETARG_UBOX_P(0);
+
     StringInfoData buf;
     pq_begintypsend(&buf);
-    pq_sendstring(&buf, format_type_extended(box->typeoid, -1, FORMAT_TYPE_FORCE_QUALIFY));
-    pq_sendbytes(&buf, VARDATA(valbytes), VARSIZE(valbytes) - VARHDRSZ);
+    ubox_append_binary(&buf, box);
 
     PG_RETURN_BYTEA_P(pq_endtypsend(&buf));
 }
@@ -222,6 +287,18 @@ Datum ubox_create(PG_FUNCTION_ARGS)
 }
 
 
+Datum ubox_value_of_type(UBox *box, Oid typeoid)
+{
+    if(!OidIsValid(typeoid))
+        ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE), errmsg("could not determine result data type")));
+
+    if(box->typeoid != typeoid)
+        ereport(ERROR, (errcode(ERRCODE_DATATYPE_MISMATCH), errmsg("ubox contains a value of type %s, not %s", format_type_be(box->typeoid), format_type_be(typeoid))));
+
+    return ubox_value(box, lookup_type_cache(typeoid, 0));
+}
+
+
 /*
  * The second argument only determines the result type and is normally passed
  * as NULL::type, therefore this function must NOT be declared STRICT.
@@ -233,15 +310,8 @@ Datum ubox_get_value(PG_FUNCTION_ARGS)
         PG_RETURN_NULL();
 
     UBox *box = PG_GETARG_UBOX_P(0);
-    Oid rettype = get_fn_expr_rettype(fcinfo->flinfo);
 
-    if(!OidIsValid(rettype))
-        ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE), errmsg("could not determine result data type")));
-
-    if(box->typeoid != rettype)
-        ereport(ERROR, (errcode(ERRCODE_DATATYPE_MISMATCH), errmsg("ubox contains a value of type %s, not %s", format_type_be(box->typeoid), format_type_be(rettype))));
-
-    PG_RETURN_DATUM(ubox_value(box, lookup_type_cache(rettype, 0)));
+    PG_RETURN_DATUM(ubox_value_of_type(box, get_fn_expr_rettype(fcinfo->flinfo)));
 }
 
 
@@ -266,20 +336,24 @@ typedef struct
 UBoxCastCache;
 
 
-PG_FUNCTION_INFO_V1(ubox_as_varchar);
-Datum ubox_as_varchar(PG_FUNCTION_ARGS)
+VarChar *ubox_value_as_varchar(FmgrInfo *flinfo, UBox *box)
 {
-    UBox *box = PG_GETARG_UBOX_P(0);
-    UBoxCastCache *cache = (UBoxCastCache *) fcinfo->flinfo->fn_extra;
+    UBoxCastCache entry;
+    UBoxCastCache *cache = flinfo != NULL ? (UBoxCastCache *) flinfo->fn_extra : NULL;
 
     if(cache == NULL || cache->typeoid != box->typeoid)
     {
-        MemoryContext mcxt = fcinfo->flinfo->fn_mcxt;
+        MemoryContext mcxt = flinfo != NULL ? flinfo->fn_mcxt : CurrentMemoryContext;
 
-        if(cache == NULL)
+        if(cache == NULL && flinfo != NULL)
         {
             cache = (UBoxCastCache *) MemoryContextAllocZero(mcxt, sizeof(UBoxCastCache));
-            fcinfo->flinfo->fn_extra = cache;
+            flinfo->fn_extra = cache;
+        }
+        else if(cache == NULL)
+        {
+            // no place to remember the resolved cast, so it is resolved again on every call
+            cache = memset(&entry, 0, sizeof(UBoxCastCache));
         }
 
         // invalidate the entry until it is completely set up
@@ -332,23 +406,32 @@ Datum ubox_as_varchar(PG_FUNCTION_ARGS)
             Oid collation = cache->typentry->typcollation;
 
             if(cache->castnargs == 1)
-                PG_RETURN_DATUM(FunctionCall1Coll(&cache->castfunc, collation, value));
+                return (VarChar *) DatumGetPointer(FunctionCall1Coll(&cache->castfunc, collation, value));
 
             if(cache->castnargs == 2)
-                PG_RETURN_DATUM(FunctionCall2Coll(&cache->castfunc, collation, value, Int32GetDatum(-1)));
+                return (VarChar *) DatumGetPointer(FunctionCall2Coll(&cache->castfunc, collation, value, Int32GetDatum(-1)));
 
-            PG_RETURN_DATUM(FunctionCall3Coll(&cache->castfunc, collation, value, Int32GetDatum(-1), BoolGetDatum(true)));
+            return (VarChar *) DatumGetPointer(FunctionCall3Coll(&cache->castfunc, collation, value, Int32GetDatum(-1), BoolGetDatum(true)));
         }
 
         case COERCION_PATH_COERCEVIAIO:
         {
             char *str = OutputFunctionCall(&cache->outfunc, value);
-            PG_RETURN_DATUM(InputFunctionCall(&cache->infunc, str, cache->typioparam, -1));
+            return (VarChar *) DatumGetPointer(InputFunctionCall(&cache->infunc, str, cache->typioparam, -1));
         }
 
         default: // COERCION_PATH_RELABELTYPE
-            PG_RETURN_DATUM(value);
+            return (VarChar *) DatumGetPointer(value);
     }
+}
+
+
+PG_FUNCTION_INFO_V1(ubox_as_varchar);
+Datum ubox_as_varchar(PG_FUNCTION_ARGS)
+{
+    UBox *box = PG_GETARG_UBOX_P(0);
+
+    PG_RETURN_VARCHAR_P(ubox_value_as_varchar(fcinfo->flinfo, box));
 }
 
 
@@ -377,7 +460,7 @@ Datum ubox_is_equal_to(PG_FUNCTION_ARGS)
     UBox *b = PG_GETARG_UBOX_P(1);
     bool equal = false;
 
-    if(!ubox_value_eq(fcinfo->flinfo, a, b, &equal))
+    if(!ubox_equals(fcinfo->flinfo, a, b, &equal))
         PG_RETURN_NULL();
 
     PG_RETURN_BOOL(equal);
@@ -391,7 +474,7 @@ Datum ubox_is_not_equal_to(PG_FUNCTION_ARGS)
     UBox *b = PG_GETARG_UBOX_P(1);
     bool equal = false;
 
-    if(!ubox_value_eq(fcinfo->flinfo, a, b, &equal))
+    if(!ubox_equals(fcinfo->flinfo, a, b, &equal))
         PG_RETURN_NULL();
 
     PG_RETURN_BOOL(!equal);
@@ -405,7 +488,7 @@ Datum ubox_is_less_than(PG_FUNCTION_ARGS)
     UBox *b = PG_GETARG_UBOX_P(1);
     int cmp = 0;
 
-    if(!ubox_value_cmp(fcinfo->flinfo, a, b, &cmp))
+    if(!ubox_compare(fcinfo->flinfo, a, b, &cmp))
         PG_RETURN_NULL();
 
     PG_RETURN_BOOL(cmp < 0);
@@ -419,7 +502,7 @@ Datum ubox_is_greater_than(PG_FUNCTION_ARGS)
     UBox *b = PG_GETARG_UBOX_P(1);
     int cmp = 0;
 
-    if(!ubox_value_cmp(fcinfo->flinfo, a, b, &cmp))
+    if(!ubox_compare(fcinfo->flinfo, a, b, &cmp))
         PG_RETURN_NULL();
 
     PG_RETURN_BOOL(cmp > 0);
@@ -433,7 +516,7 @@ Datum ubox_is_not_less_than(PG_FUNCTION_ARGS)
     UBox *b = PG_GETARG_UBOX_P(1);
     int cmp = 0;
 
-    if(!ubox_value_cmp(fcinfo->flinfo, a, b, &cmp))
+    if(!ubox_compare(fcinfo->flinfo, a, b, &cmp))
         PG_RETURN_NULL();
 
     PG_RETURN_BOOL(cmp >= 0);
@@ -447,7 +530,7 @@ Datum ubox_is_not_greater_than(PG_FUNCTION_ARGS)
     UBox *b = PG_GETARG_UBOX_P(1);
     int cmp = 0;
 
-    if(!ubox_value_cmp(fcinfo->flinfo, a, b, &cmp))
+    if(!ubox_compare(fcinfo->flinfo, a, b, &cmp))
         PG_RETURN_NULL();
 
     PG_RETURN_BOOL(cmp <= 0);
@@ -497,14 +580,14 @@ static void ubox_raw_bytes(UBox *box, TypeCacheEntry *typentry, const unsigned c
 }
 
 
-static int ubox_order_cmp(FmgrInfo *flinfo, UBox *a, UBox *b)
+int ubox_order(FmgrInfo *flinfo, UBox *a, UBox *b)
 {
     if(a->typeoid != b->typeoid)
         return a->typeoid < b->typeoid ? -1 : 1;
 
     int cmp = 0;
 
-    if(ubox_value_cmp(flinfo, a, b, &cmp))
+    if(ubox_compare(flinfo, a, b, &cmp))
         return cmp;
 
     // no B-tree comparison for this type: compare the bytes
@@ -533,7 +616,7 @@ Datum ubox_order_compare(PG_FUNCTION_ARGS)
     UBox *a = PG_GETARG_UBOX_P(0);
     UBox *b = PG_GETARG_UBOX_P(1);
 
-    PG_RETURN_INT32(ubox_order_cmp(fcinfo->flinfo, a, b));
+    PG_RETURN_INT32(ubox_order(fcinfo->flinfo, a, b));
 }
 
 
@@ -543,7 +626,7 @@ Datum ubox_order_is_equal_to(PG_FUNCTION_ARGS)
     UBox *a = PG_GETARG_UBOX_P(0);
     UBox *b = PG_GETARG_UBOX_P(1);
 
-    PG_RETURN_BOOL(ubox_order_cmp(fcinfo->flinfo, a, b) == 0);
+    PG_RETURN_BOOL(ubox_order(fcinfo->flinfo, a, b) == 0);
 }
 
 
@@ -553,7 +636,7 @@ Datum ubox_order_is_not_equal_to(PG_FUNCTION_ARGS)
     UBox *a = PG_GETARG_UBOX_P(0);
     UBox *b = PG_GETARG_UBOX_P(1);
 
-    PG_RETURN_BOOL(ubox_order_cmp(fcinfo->flinfo, a, b) != 0);
+    PG_RETURN_BOOL(ubox_order(fcinfo->flinfo, a, b) != 0);
 }
 
 
@@ -563,7 +646,7 @@ Datum ubox_order_is_less_than(PG_FUNCTION_ARGS)
     UBox *a = PG_GETARG_UBOX_P(0);
     UBox *b = PG_GETARG_UBOX_P(1);
 
-    PG_RETURN_BOOL(ubox_order_cmp(fcinfo->flinfo, a, b) < 0);
+    PG_RETURN_BOOL(ubox_order(fcinfo->flinfo, a, b) < 0);
 }
 
 
@@ -573,7 +656,7 @@ Datum ubox_order_is_greater_than(PG_FUNCTION_ARGS)
     UBox *a = PG_GETARG_UBOX_P(0);
     UBox *b = PG_GETARG_UBOX_P(1);
 
-    PG_RETURN_BOOL(ubox_order_cmp(fcinfo->flinfo, a, b) > 0);
+    PG_RETURN_BOOL(ubox_order(fcinfo->flinfo, a, b) > 0);
 }
 
 
@@ -583,7 +666,7 @@ Datum ubox_order_is_not_less_than(PG_FUNCTION_ARGS)
     UBox *a = PG_GETARG_UBOX_P(0);
     UBox *b = PG_GETARG_UBOX_P(1);
 
-    PG_RETURN_BOOL(ubox_order_cmp(fcinfo->flinfo, a, b) >= 0);
+    PG_RETURN_BOOL(ubox_order(fcinfo->flinfo, a, b) >= 0);
 }
 
 
@@ -593,7 +676,7 @@ Datum ubox_order_is_not_greater_than(PG_FUNCTION_ARGS)
     UBox *a = PG_GETARG_UBOX_P(0);
     UBox *b = PG_GETARG_UBOX_P(1);
 
-    PG_RETURN_BOOL(ubox_order_cmp(fcinfo->flinfo, a, b) <= 0);
+    PG_RETURN_BOOL(ubox_order(fcinfo->flinfo, a, b) <= 0);
 }
 
 
@@ -633,12 +716,9 @@ Datum ubox_hash(PG_FUNCTION_ARGS)
 }
 
 
-PG_FUNCTION_INFO_V1(ubox_hash_extended);
-Datum ubox_hash_extended(PG_FUNCTION_ARGS)
+uint64 ubox_hash_value(FmgrInfo *flinfo, UBox *box, uint64 seed)
 {
-    UBox *box = PG_GETARG_UBOX_P(0);
-    uint64 seed = PG_GETARG_INT64(1);
-    TypeCacheEntry *typentry = ubox_cached_typentry(fcinfo->flinfo, box->typeoid, TYPECACHE_EQ_OPR | TYPECACHE_CMP_PROC | TYPECACHE_HASH_EXTENDED_PROC_FINFO);
+    TypeCacheEntry *typentry = ubox_cached_typentry(flinfo, box->typeoid, TYPECACHE_EQ_OPR | TYPECACHE_CMP_PROC | TYPECACHE_HASH_EXTENDED_PROC_FINFO);
     uint64 valhash = 0;
 
     if(OidIsValid(typentry->hash_extended_proc_finfo.fn_oid))
@@ -655,7 +735,16 @@ Datum ubox_hash_extended(PG_FUNCTION_ARGS)
     }
 
     uint64 result = hash_bytes_uint32_extended(box->typeoid, seed);
-    result = (result << 5) - result + valhash;
 
-    PG_RETURN_UINT64(result);
+    return (result << 5) - result + valhash;
+}
+
+
+PG_FUNCTION_INFO_V1(ubox_hash_extended);
+Datum ubox_hash_extended(PG_FUNCTION_ARGS)
+{
+    UBox *box = PG_GETARG_UBOX_P(0);
+    uint64 seed = PG_GETARG_INT64(1);
+
+    PG_RETURN_UINT64(ubox_hash_value(fcinfo->flinfo, box, seed));
 }

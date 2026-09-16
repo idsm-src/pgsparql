@@ -84,6 +84,41 @@ setup_file() {
   expect_output 't'
 }
 
+@test "fn: sparql.rdfbox_hash(sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar)) = sparql.rdfbox_hash(sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash(sparql.rdfbox_create_from_userliteral('1.0'::decimal, 'http://example.org'::varchar)) = sparql.rdfbox_hash(sparql.rdfbox_create_from_userliteral('1.00'::decimal, 'http://example.org'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash(sparql.rdfbox_create_from_userliteral(sparql.ubox_create('0:integer'::sparql.ubox), 'http://example.org'::varchar)) = sparql.rdfbox_hash(sparql.rdfbox_create_from_userliteral(sparql.ubox_create('0:integer'::sparql.ubox), 'http://example.org'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash(sparql.rdfbox_create_from_userliteral_with_lexical('0'::int4, 'http://example.org'::varchar, ' 0 '::varchar)) = sparql.rdfbox_hash(sparql.rdfbox_create_from_userliteral_with_lexical('0'::int4, 'http://example.org'::varchar, ' 0 '::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash(sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar)) <> sparql.rdfbox_hash(sparql.rdfbox_create_from_userliteral('1'::int4, 'http://example.org'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash(sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar)) <> sparql.rdfbox_hash(sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org/other'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash(sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar)) <> sparql.rdfbox_hash(sparql.rdfbox_create_from_userliteral('0'::int8, 'http://example.org'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash(sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar)) <> sparql.rdfbox_hash(sparql.rdfbox_create_from_userliteral_with_lexical('0'::int4, 'http://example.org'::varchar, ' 0 '::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash(sparql.rdfbox_create_from_userliteral('abc'::varchar, 'http://example.org'::varchar)) <> sparql.rdfbox_hash(sparql.rdfbox_create_from_typedliteral('abc'::varchar, 'http://example.org'::varchar))" {
+  expect_output 't'
+}
 
 
 ####
@@ -114,6 +149,17 @@ setup_file() {
   expect_output 't'
 }
 
+@test "fn: (sparql.rdfbox_hash_extended(sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar), 0::int8) & 4294967295) = (sparql.rdfbox_hash(sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar))::int8 & 4294967295)" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash_extended(sparql.rdfbox_create_from_userliteral('1.0'::decimal, 'http://example.org'::varchar), 7::int8) = sparql.rdfbox_hash_extended(sparql.rdfbox_create_from_userliteral('1.00'::decimal, 'http://example.org'::varchar), 7::int8)" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash_extended(sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar), 0::int8) <> sparql.rdfbox_hash_extended(sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar), 1::int8)" {
+  expect_output 't'
+}
 
 
 ####
@@ -130,4 +176,8 @@ setup_file() {
 
 @test "oc: (select count(*) from unnest(array[sparql.rdfbox_create_from_int('1'::int4), sparql.rdfbox_create_from_int('2'::int4), sparql.rdfbox_create_from_decimal('1.0'::decimal)]) a join unnest(array[sparql.rdfbox_create_from_int('1'::int4), sparql.rdfbox_create_from_decimal('1.00'::decimal), sparql.rdfbox_create_from_long('1'::int8)]) b on a operator(sparql.@=) b)" {
   expect_output '2'
+}
+
+@test "oc: (select count(*) from (select distinct x from unnest(array[sparql.rdfbox_create_from_userliteral('1.0'::decimal, 'http://example.org'::varchar), sparql.rdfbox_create_from_userliteral('1.00'::decimal, 'http://example.org'::varchar), sparql.rdfbox_create_from_userliteral('1.0'::decimal, 'http://example.org/other'::varchar), sparql.rdfbox_create_from_userliteral('1'::int4, 'http://example.org'::varchar), sparql.rdfbox_create_from_userliteral_with_lexical('1'::int4, 'http://example.org'::varchar, ' 1 '::varchar)]) x) t)" {
+  expect_output '4'
 }

@@ -90,6 +90,14 @@ load ../psql_tests.bash
   expect_output 'f'
 }
 
+@test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_userliteral('true'::varchar, 'http://example.org'::varchar))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_userliteral('123'::int4, 'http://example.org'::varchar))" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_typedliteral('true'::varchar, 'http://example.org'::varchar))" {
   expect_output '(null)'
 }

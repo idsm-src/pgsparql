@@ -1212,8 +1212,8 @@ load ../psql_tests.bash
   expect_output '"1.6777216E7"^^<http://www.w3.org/2001/XMLSchema#float> "1.67772165E7"^^<http://www.w3.org/2001/XMLSchema#double> "16777217"^^<http://www.w3.org/2001/XMLSchema#integer>'
 }
 
-@test "op: (select string_agg(x::text, ' ' order by x) from unnest(array[sparql.rdfbox_create_from_boolean('f'::bool), sparql.rdfbox_create_from_double('2.5'::float8), sparql.rdfbox_create_from_int('3'::int4), sparql.rdfbox_create_from_decimal('2.5'::decimal), sparql.rdfbox_create_from_datetime('2022-10-05T10:00:00Z'::timestamptz, 0::int4), sparql.rdfbox_create_from_date('2022-10-05'::date, 0::int4), sparql.rdfbox_create_from_daytimeduration('60000000'::int8), sparql.rdfbox_create_from_string('b'::varchar), sparql.rdfbox_create_from_langstring('a'::varchar, 'en'::varchar), sparql.rdfbox_create_from_typedliteral('x'::varchar, 'http://example.org/type'::varchar), sparql.rdfbox_create_from_iri('http://example.org/b'::varchar), sparql.rdfbox_create_from_iri('http://example.org/a'::varchar), sparql.rdfbox_create_from_iblanknode('7'::int8), sparql.rdfbox_create_from_sblanknode('x'::varchar), sparql.rdfbox_create_from_float('NaN'::float4), sparql.rdfbox_create_from_long('-1'::int8)]) x)" {
-  expect_output '_:sx _:i0000000000000007 <http://example.org/a> <http://example.org/b> "x"^^<http://example.org/type> "a"@en "b"^^<http://www.w3.org/2001/XMLSchema#string> "PT1M"^^<http://www.w3.org/2001/XMLSchema#dayTimeDuration> "2022-10-05Z"^^<http://www.w3.org/2001/XMLSchema#date> "2022-10-05T10:00:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> "-1"^^<http://www.w3.org/2001/XMLSchema#long> "2.5"^^<http://www.w3.org/2001/XMLSchema#decimal> "2.5E0"^^<http://www.w3.org/2001/XMLSchema#double> "3"^^<http://www.w3.org/2001/XMLSchema#int> "NaN"^^<http://www.w3.org/2001/XMLSchema#float> "false"^^<http://www.w3.org/2001/XMLSchema#boolean>'
+@test "op: (select string_agg(x::text, ' ' order by x) from unnest(array[sparql.rdfbox_create_from_boolean('f'::bool), sparql.rdfbox_create_from_double('2.5'::float8), sparql.rdfbox_create_from_int('3'::int4), sparql.rdfbox_create_from_decimal('2.5'::decimal), sparql.rdfbox_create_from_datetime('2022-10-05T10:00:00Z'::timestamptz, 0::int4), sparql.rdfbox_create_from_date('2022-10-05'::date, 0::int4), sparql.rdfbox_create_from_daytimeduration('60000000'::int8), sparql.rdfbox_create_from_string('b'::varchar), sparql.rdfbox_create_from_langstring('a'::varchar, 'en'::varchar), sparql.rdfbox_create_from_typedliteral('x'::varchar, 'http://example.org/type'::varchar), sparql.rdfbox_create_from_userliteral('123'::int4, 'http://example.org/type'::varchar), sparql.rdfbox_create_from_iri('http://example.org/b'::varchar), sparql.rdfbox_create_from_iri('http://example.org/a'::varchar), sparql.rdfbox_create_from_iblanknode('7'::int8), sparql.rdfbox_create_from_sblanknode('x'::varchar), sparql.rdfbox_create_from_float('NaN'::float4), sparql.rdfbox_create_from_long('-1'::int8)]) x)" {
+  expect_output '_:sx _:i0000000000000007 <http://example.org/a> <http://example.org/b> "x"^^<http://example.org/type> '"'"'123:integer'"'"'^^<http://example.org/type> "a"@en "b"^^<http://www.w3.org/2001/XMLSchema#string> "PT1M"^^<http://www.w3.org/2001/XMLSchema#dayTimeDuration> "2022-10-05Z"^^<http://www.w3.org/2001/XMLSchema#date> "2022-10-05T10:00:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> "-1"^^<http://www.w3.org/2001/XMLSchema#long> "2.5"^^<http://www.w3.org/2001/XMLSchema#decimal> "2.5E0"^^<http://www.w3.org/2001/XMLSchema#double> "3"^^<http://www.w3.org/2001/XMLSchema#int> "NaN"^^<http://www.w3.org/2001/XMLSchema#float> "false"^^<http://www.w3.org/2001/XMLSchema#boolean>'
 }
 
 
@@ -1346,4 +1346,82 @@ load ../psql_tests.bash
 
 @test "op: '\"2022-10-05T10:00:00Z\"^^<http://www.w3.org/2001/XMLSchema#dateTime>'::sparql.rdfbox operator(sparql.@<) '\"2022-10-05T10:00:00+00:00\"^^<http://www.w3.org/2001/XMLSchema#dateTime>'::sparql.rdfbox" {
   expect_output 't'
+}
+
+
+
+####
+# user literals
+#
+
+@test "op: sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar) operator(sparql.@=) sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar) operator(sparql.@<>) sparql.rdfbox_create_from_userliteral('1'::int4, 'http://example.org'::varchar)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar) operator(sparql.@<) sparql.rdfbox_create_from_userliteral('1'::int4, 'http://example.org'::varchar)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_userliteral('1'::int4, 'http://example.org'::varchar) operator(sparql.@<) sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar)" {
+  expect_output 'f'
+}
+
+@test "op: sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar) operator(sparql.@=) sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org/other'::varchar)" {
+  expect_output 'f'
+}
+
+@test "op: sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar) operator(sparql.@<) sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org/other'::varchar)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar) operator(sparql.@<>) sparql.rdfbox_create_from_userliteral('0'::int8, 'http://example.org'::varchar)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_userliteral('1.0'::decimal, 'http://example.org'::varchar) operator(sparql.@=) sparql.rdfbox_create_from_userliteral('1.00'::decimal, 'http://example.org'::varchar)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar) operator(sparql.@<>) sparql.rdfbox_create_from_userliteral_with_lexical('0'::int4, 'http://example.org'::varchar, ' 0 '::varchar)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar) operator(sparql.@<) sparql.rdfbox_create_from_userliteral_with_lexical('0'::int4, 'http://example.org'::varchar, ' 0 '::varchar)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_userliteral_with_lexical('0'::int4, 'http://example.org'::varchar, ' 0 '::varchar) operator(sparql.@=) sparql.rdfbox_create_from_userliteral_with_lexical('0'::int4, 'http://example.org'::varchar, ' 0 '::varchar)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_userliteral(sparql.ubox_create('0:integer'::sparql.ubox), 'http://example.org'::varchar) operator(sparql.@=) sparql.rdfbox_create_from_userliteral(sparql.ubox_create('0:integer'::sparql.ubox), 'http://example.org'::varchar)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_userliteral(sparql.ubox_create('0:integer'::sparql.ubox), 'http://example.org'::varchar) operator(sparql.@<) sparql.rdfbox_create_from_userliteral(sparql.ubox_create('1:integer'::sparql.ubox), 'http://example.org'::varchar)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_typedliteral('x'::varchar, 'http://example.org'::varchar) operator(sparql.@<) sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar) operator(sparql.@<) sparql.rdfbox_create_from_langstring('a'::varchar, 'en'::varchar)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_iri('http://example.org'::varchar) operator(sparql.@<) sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_order_compare(sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar), sparql.rdfbox_create_from_userliteral('1'::int4, 'http://example.org'::varchar))" {
+  expect_output '-1'
+}
+
+@test "op: sparql.rdfbox_order_compare(sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar), sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar))" {
+  expect_output '0'
 }

@@ -27,12 +27,15 @@
 #define LANG_DELIM      "@"
 #define TYPE_DELIM      "^^"
 #define VALUE_DELIM     "\""
+#define UVALUE_DELIM    "'"
 #define BLKNODE_IPREFIX "_:i"
 #define BLKNODE_SPREFIX "_:s"
 #define PREFIX          VALUE_DELIM
+#define UPREFIX         UVALUE_DELIM
 #define SUFFIX(X)       VALUE_DELIM TYPE_DELIM IRI_BEGIN X IRI_END
 #define STRLEN(X)       (sizeof(X) - 1)
 #define PREFIX_SIZE     (STRLEN(PREFIX))
+#define UPREFIX_SIZE    (STRLEN(UPREFIX))
 #define SUFFIX_SIZE(X)  (STRLEN(SUFFIX(X)))
 
 
@@ -41,7 +44,7 @@ static inline size_t strlen_escaped(const char *str, size_t size)
     size_t count = 0;
 
     for(size_t i = 0; i < size; i++)
-        if(str[i] == '\\' || str[i] == '\t' || str[i] == '\b' || str[i] == '\n' || str[i] == '\r' || str[i] == '\f' || str[i] == '"')
+        if(str[i] == '\\' || str[i] == '\t' || str[i] == '\b' || str[i] == '\n' || str[i] == '\r' || str[i] == '\f' || str[i] == '"' || str[i] == '\'')
             count++;
 
     return count + size;
@@ -88,6 +91,11 @@ static inline void memcpy_escaped(char *buffer, const char *str, size_t size)
         {
             buffer[pos++] = '\\';
             buffer[pos++] = '"';
+        }
+        else if(str[i] == '\'')
+        {
+            buffer[pos++] = '\\';
+            buffer[pos++] = '\'';
         }
         else
         {
@@ -184,6 +192,27 @@ Datum rdfbox_input(PG_FUNCTION_ARGS)
                 ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid language tag")));
 
             box = GetLangStringRdfBox(data, size, lang, lang_size);
+        }
+        else if(str[i] == '^' && str[i + 1] == '^' && str[i + 2] == '<' && str[length - 1] == '>' && begin == '\'')
+        {
+            /*
+             * Apostrophes tell a user literal from a built-in or typed one.  What they enclose is
+             * the text representation of a ubox, whose value part is the lexical form of the
+             * literal: the input function of the boxed type turns it back into the stored value.
+             */
+            char *type = str + i + 3;
+            int32 type_size = length - i - 4;
+
+            if(!check_iri(type, type_size))
+                ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid datatype IRI")));
+
+            char *lexical;
+            UBox *value = ubox_parse(data, &lexical);
+
+            if(strcmp(ubox_value_as_cstring(value), lexical) == 0)
+                box = GetUserLiteralRdfBox(value, type, type_size);
+            else
+                box = GetUserLiteralRdfBoxWithLexical(value, type, type_size, lexical, strlen(lexical));
         }
         else if(str[i] == '^' && str[i + 1] == '^' && str[i + 2] == '<' && str[length - 1] == '>')
         {
@@ -646,6 +675,37 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
             break;
         }
 
+        case USER_LITERAL:
+        {
+            UBox *ubox = RdfBoxGetUBox(box);
+            VarChar *type = RdfBoxGetAttachment(box);
+            char *value;
+
+            if(box->lexical)
+            {
+                VarChar *lexical = RdfBoxGetUserLiteralLexical(box);
+                value = psprintf("%.*s:%s", (int) (VARSIZE(lexical) - VARHDRSZ), VARDATA(lexical), ubox_type_as_cstring(ubox));
+            }
+            else
+            {
+                value = psprintf("%s:%s", ubox_value_as_cstring(ubox), ubox_type_as_cstring(ubox));
+            }
+
+            int value_size = strlen(value);
+            int type_size = VARSIZE(type) - VARHDRSZ;
+            int escaped_size = strlen_escaped(value, value_size);
+
+            result = (char *) palloc0(UPREFIX_SIZE + escaped_size + STRLEN(UVALUE_DELIM TYPE_DELIM IRI_BEGIN) + type_size + STRLEN(IRI_END) + 1);
+
+            memcpy(result, UPREFIX, UPREFIX_SIZE);
+            memcpy_escaped(result + UPREFIX_SIZE, value, value_size);
+            memcpy(result + UPREFIX_SIZE + escaped_size, UVALUE_DELIM TYPE_DELIM IRI_BEGIN, STRLEN(UVALUE_DELIM TYPE_DELIM IRI_BEGIN));
+            memcpy(result + UPREFIX_SIZE + escaped_size + STRLEN(UVALUE_DELIM TYPE_DELIM IRI_BEGIN), VARDATA(type), type_size);
+            memcpy(result + UPREFIX_SIZE + escaped_size + STRLEN(UVALUE_DELIM TYPE_DELIM IRI_BEGIN) + type_size, IRI_END, STRLEN(IRI_END));
+
+            break;
+        }
+
         case TYPED_LITERAL:
         {
             VarChar *value = RdfBoxGetVarChar(box);
@@ -991,6 +1051,39 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
             break;
         }
 
+        case USER_LITERAL:
+        {
+            int32 value_size = pq_getmsgint(buf, sizeof(int32));
+            int32 type_size = pq_getmsgint(buf, sizeof(int32));
+
+            /* the receive function of the boxed type consumes the whole message it is given */
+            StringInfoData value;
+            value.data = buf->data + buf->cursor;
+            value.len = value_size;
+            value.maxlen = value_size;
+            value.cursor = 0;
+
+            UBox *ubox = ubox_receive(&value);
+            buf->cursor += value_size;
+
+            char *type = buf->data + buf->cursor;
+            buf->cursor += type_size;
+
+            if(lexical)
+            {
+                int32 size = pq_getmsgint(buf, sizeof(int32));
+                char *data = buf->data + buf->cursor;
+                box = GetUserLiteralRdfBoxWithLexical(ubox, type, type_size, data, size);
+                buf->cursor += size;
+            }
+            else
+            {
+                box = GetUserLiteralRdfBox(ubox, type, type_size);
+            }
+
+            break;
+        }
+
         case TYPED_LITERAL:
         {
             int32 value_size = pq_getmsgint(buf, sizeof(int32));
@@ -1219,6 +1312,30 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
             pq_sendint32(&buf, VARSIZE(lang) - VARHDRSZ);
             appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
             appendBinaryStringInfoNT(&buf, VARDATA(lang), VARSIZE(lang) - VARHDRSZ);
+            break;
+        }
+
+        case USER_LITERAL:
+        {
+            VarChar *type = RdfBoxGetAttachment(box);
+
+            StringInfoData value;
+            initStringInfo(&value);
+            ubox_append_binary(&value, RdfBoxGetUBox(box));
+
+            pq_sendint32(&buf, value.len);
+            pq_sendint32(&buf, VARSIZE(type) - VARHDRSZ);
+            appendBinaryStringInfoNT(&buf, value.data, value.len);
+            appendBinaryStringInfoNT(&buf, VARDATA(type), VARSIZE(type) - VARHDRSZ);
+            pfree(value.data);
+
+            if(box->lexical)
+            {
+                VarChar *lexical = RdfBoxGetUserLiteralLexical(box);
+                pq_sendint32(&buf, VARSIZE(lexical) - VARHDRSZ);
+                appendBinaryStringInfoNT(&buf, VARDATA(lexical), VARSIZE(lexical) - VARHDRSZ);
+            }
+
             break;
         }
 

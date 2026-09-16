@@ -19,7 +19,7 @@ load ../psql_tests.bash
 }
 
 @test "rs: '''''''The librarian said, \"Perhaps you would enjoy ''War and Peace''.\"'''''''::sparql.rdfbox" {
-  expect_output "\"The librarian said, \\\"Perhaps you would enjoy 'War and Peace'.\\\"\"^^<http://www.w3.org/2001/XMLSchema#string>"
+  expect_output "\"The librarian said, \\\"Perhaps you would enjoy \\'War and Peace\\'.\\\"\"^^<http://www.w3.org/2001/XMLSchema#string>"
 }
 
 @test "rs: '1'::sparql.rdfbox" {
@@ -536,6 +536,52 @@ load ../psql_tests.bash
 
 @test "rs: '\"\"\"value\"\"'::sparql.rdfbox" {
   expect_error
+}
+
+
+
+####
+# user literals
+#
+
+@test "rs: '''1:integer''^^<http://example.org/type>'::sparql.rdfbox" {
+  expect_output "'1:integer'^^<http://example.org/type>"
+}
+
+@test "rs: '''  1  :integer''^^<http://example.org/type>'::sparql.rdfbox" {
+  expect_output "'  1  :integer'^^<http://example.org/type>"
+}
+
+@test "rs: '''abc:character varying''^^<http://example.org/type>'::sparql.rdfbox" {
+  expect_output "'abc:character varying'^^<http://example.org/type>"
+}
+
+@test "rs: '''abc:text''^^<http://example.org/type>'::sparql.rdfbox" {
+  expect_output "'abc:pg_catalog.text'^^<http://example.org/type>"
+}
+
+@test "rs: '''1.50:numeric''^^<http://example.org/type>'::sparql.rdfbox" {
+  expect_output "'1.50:numeric'^^<http://example.org/type>"
+}
+
+@test "rs: '''2010-11-18:date''^^<http://example.org/type>'::sparql.rdfbox" {
+  expect_output "'2010-11-18:pg_catalog.date'^^<http://example.org/type>"
+}
+
+@test "rs: '''t:boolean''^^<http://example.org/type>'::sparql.rdfbox" {
+  expect_output "'t:boolean'^^<http://example.org/type>"
+}
+
+@test "rs: '''1:integer:sparql.ubox''^^<http://example.org/type>'::sparql.rdfbox" {
+  expect_output "'1:integer:sparql.ubox'^^<http://example.org/type>"
+}
+
+@test "rs: '''  1  :integer:sparql.ubox''^^<http://example.org/type>'::sparql.rdfbox" {
+  expect_output "'  1  :integer:sparql.ubox'^^<http://example.org/type>"
+}
+
+@test "rs: sparql.rdfbox_create_from_userliteral('a''b'::varchar, 'http://example.org/dir?query#tag'::varchar)" {
+  expect_output "'a\'b:character varying'^^<http://example.org/dir?query#tag>"
 }
 
 

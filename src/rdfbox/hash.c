@@ -95,6 +95,10 @@ static uint64 hash_term(RdfBox *box, uint64 seed)
             value = hash_combine64(hash_varchar(RdfBoxGetVarChar(box), seed), hash_varchar(RdfBoxGetAttachment(box), seed));
             break;
 
+        case USER_LITERAL:
+            value = hash_combine64(ubox_hash_value(NULL, RdfBoxGetUBox(box), seed), hash_varchar(RdfBoxGetAttachment(box), seed));
+            break;
+
         default:
             elog(ERROR, "unexpected rdfbox type");
     }

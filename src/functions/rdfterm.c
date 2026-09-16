@@ -249,6 +249,12 @@ Datum str_rdfbox(PG_FUNCTION_ARGS)
             else
                 PG_RETURN_VARCHAR_P(daytimeduration_as_varchar(RdfBoxGetInt64(box)));
 
+        case USER_LITERAL:
+            if(box->lexical)
+                PG_RETURN_VARCHAR_P(RdfBoxGetUserLiteralLexical(box));
+            else
+                PG_RETURN_VARCHAR_P(ubox_value_as_varchar(fcinfo->flinfo, RdfBoxGetUBox(box)));
+
         case XSD_STRING:
         case IRI:
         case RDF_LANGSTRING:
@@ -289,7 +295,7 @@ Datum datatype_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
 
-    if(box->type == TYPED_LITERAL)
+    if(box->type == TYPED_LITERAL || box->type == USER_LITERAL)
         PG_RETURN_VARCHAR_P(RdfBoxGetAttachment(box));
     else if(rdfbox_is_literal(box))
         PG_RETURN_TEXT_P(cstring_to_text(rdfbox_types[box->type]));

@@ -256,6 +256,64 @@ Datum rdfbox_create_from_langstring(PG_FUNCTION_ARGS)
 }
 
 
+PG_FUNCTION_INFO_V1(rdfbox_create_from_userliteral);
+Datum rdfbox_create_from_userliteral(PG_FUNCTION_ARGS)
+{
+    Oid typeoid = get_fn_expr_argtype(fcinfo->flinfo, 0);
+    VarChar *type = PG_GETARG_VARCHAR_PP(1);
+
+    if(!OidIsValid(typeoid))
+        ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE), errmsg("could not determine input data type")));
+
+    UBox *value = ubox_make(typeoid, PG_GETARG_DATUM(0));
+
+    PG_RETURN_RDFBOX_P(GetUserLiteralRdfBox(value, VARDATA_ANY(type), VARSIZE_ANY_EXHDR(type)));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_create_from_userliteral_with_lexical);
+Datum rdfbox_create_from_userliteral_with_lexical(PG_FUNCTION_ARGS)
+{
+    Oid typeoid = get_fn_expr_argtype(fcinfo->flinfo, 0);
+    VarChar *type = PG_GETARG_VARCHAR_PP(1);
+    VarChar *lexical = PG_GETARG_VARCHAR_PP(2);
+
+    if(!OidIsValid(typeoid))
+        ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE), errmsg("could not determine input data type")));
+
+    UBox *value = ubox_make(typeoid, PG_GETARG_DATUM(0));
+
+    if(VARSIZE_ANY_EXHDR(lexical) == 0)
+        PG_RETURN_RDFBOX_P(GetUserLiteralRdfBox(value, VARDATA_ANY(type), VARSIZE_ANY_EXHDR(type)));
+
+    PG_RETURN_RDFBOX_P(GetUserLiteralRdfBoxWithLexical(value, VARDATA_ANY(type), VARSIZE_ANY_EXHDR(type), VARDATA_ANY(lexical), VARSIZE_ANY_EXHDR(lexical)));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_create_from_boxed_userliteral);
+Datum rdfbox_create_from_boxed_userliteral(PG_FUNCTION_ARGS)
+{
+    UBox *value = PG_GETARG_UBOX_P(0);
+    VarChar *type = PG_GETARG_VARCHAR_PP(1);
+
+    PG_RETURN_RDFBOX_P(GetUserLiteralRdfBox(value, VARDATA_ANY(type), VARSIZE_ANY_EXHDR(type)));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_create_from_boxed_userliteral_with_lexical);
+Datum rdfbox_create_from_boxed_userliteral_with_lexical(PG_FUNCTION_ARGS)
+{
+    UBox *value = PG_GETARG_UBOX_P(0);
+    VarChar *type = PG_GETARG_VARCHAR_PP(1);
+    VarChar *lexical = PG_GETARG_VARCHAR_PP(2);
+
+    if(VARSIZE_ANY_EXHDR(lexical) == 0)
+        PG_RETURN_RDFBOX_P(GetUserLiteralRdfBox(value, VARDATA_ANY(type), VARSIZE_ANY_EXHDR(type)));
+
+    PG_RETURN_RDFBOX_P(GetUserLiteralRdfBoxWithLexical(value, VARDATA_ANY(type), VARSIZE_ANY_EXHDR(type), VARDATA_ANY(lexical), VARSIZE_ANY_EXHDR(lexical)));
+}
+
+
 PG_FUNCTION_INFO_V1(rdfbox_create_from_typedliteral);
 Datum rdfbox_create_from_typedliteral(PG_FUNCTION_ARGS)
 {

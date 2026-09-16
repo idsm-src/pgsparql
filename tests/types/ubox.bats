@@ -6,6 +6,10 @@ setup_file() {
   # a sort and exercises the B-tree one
   pg_session_start sparql.ubox
   pg_send 'set enable_sort = off; set enable_nestloop = off; set enable_mergejoin = off;'
+
+  # sparql on the search path would resolve the bare name ubox; the input function
+  # pins the search path to pg_catalog, so it must not
+  pg_send 'set search_path = sparql, public;'
 }
 
 
@@ -124,6 +128,10 @@ setup_file() {
 
 @test "io: '1:integer:sparql.ubox'::sparql.ubox" {
   expect_output '1:integer:sparql.ubox'
+}
+
+@test "io: '1:integer:ubox'::sparql.ubox" {
+  expect_error
 }
 
 @test "io: '{\"1:integer\",\"a:b:text\"}'::sparql.ubox[]" {

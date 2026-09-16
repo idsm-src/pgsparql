@@ -150,6 +150,18 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.rdfbox_get_langstring_value_of_lang(sparql.rdfbox_create_from_userliteral('abc'::varchar, 'http://example.org'::varchar), 'cy'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_langstring_value_of_lang(sparql.rdfbox_create_from_userliteral_with_lexical('abc'::varchar, 'http://example.org'::varchar, ''::varchar), 'cy'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_langstring_value_of_lang(sparql.rdfbox_create_from_userliteral_with_lexical('abc'::varchar, 'http://example.org'::varchar, ' abc '::varchar), 'cy'::varchar)" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.rdfbox_get_langstring_value_of_lang(sparql.rdfbox_create_from_typedliteral('abc'::varchar, 'http://example.org'::varchar), 'cy'::varchar)" {
   expect_output '(null)'
 }

@@ -550,6 +550,66 @@ load ../psql_tests.bash
   expect_output '"abc"@cy'
 }
 
+@test "fn: sparql.rdfbox_create_from_userliteral(''::varchar, 'http://example.org'::varchar)" {
+  expect_output "':character varying'^^<http://example.org>"
+}
+
+@test "fn: sparql.rdfbox_create_from_userliteral('abc'::varchar, 'http://example.org/dir?query#tag'::varchar)" {
+  expect_output "'abc:character varying'^^<http://example.org/dir?query#tag>"
+}
+
+@test "fn: sparql.rdfbox_create_from_userliteral('123'::int4, 'http://example.org'::varchar)" {
+  expect_output "'123:integer'^^<http://example.org>"
+}
+
+@test "fn: sparql.rdfbox_create_from_userliteral('123'::int8, 'http://example.org'::varchar)" {
+  expect_output "'123:bigint'^^<http://example.org>"
+}
+
+@test "fn: sparql.rdfbox_create_from_userliteral('1.50'::decimal, 'http://example.org'::varchar)" {
+  expect_output "'1.50:numeric'^^<http://example.org>"
+}
+
+@test "fn: sparql.rdfbox_create_from_userliteral('t'::bool, 'http://example.org'::varchar)" {
+  expect_output "'t:boolean'^^<http://example.org>"
+}
+
+@test "fn: sparql.rdfbox_create_from_userliteral('2010-11-18'::date, 'http://example.org'::varchar)" {
+  expect_output "'2010-11-18:pg_catalog.date'^^<http://example.org>"
+}
+
+@test "fn: sparql.rdfbox_create_from_userliteral('a''b'::varchar, 'http://example.org'::varchar)" {
+  expect_output "'a\\'b:character varying'^^<http://example.org>"
+}
+
+@test "fn: sparql.rdfbox_create_from_userliteral('123:integer'::sparql.ubox, 'http://example.org'::varchar)" {
+  expect_output "'123:integer'^^<http://example.org>"
+}
+
+@test "fn: sparql.rdfbox_create_from_userliteral(sparql.ubox_create('123:integer'::sparql.ubox), 'http://example.org'::varchar)" {
+  expect_output "'123:integer:sparql.ubox'^^<http://example.org>"
+}
+
+@test "fn: sparql.rdfbox_create_from_userliteral_with_lexical('123'::int4, 'http://example.org'::varchar, ''::varchar)" {
+  expect_output "'123:integer'^^<http://example.org>"
+}
+
+@test "fn: sparql.rdfbox_create_from_userliteral_with_lexical('123'::int4, 'http://example.org'::varchar, ' 123 '::varchar)" {
+  expect_output "' 123 :integer'^^<http://example.org>"
+}
+
+@test "fn: sparql.rdfbox_create_from_userliteral_with_lexical('123:integer'::sparql.ubox, 'http://example.org'::varchar, ''::varchar)" {
+  expect_output "'123:integer'^^<http://example.org>"
+}
+
+@test "fn: sparql.rdfbox_create_from_userliteral_with_lexical('123:integer'::sparql.ubox, 'http://example.org'::varchar, ' 123 '::varchar)" {
+  expect_output "' 123 :integer'^^<http://example.org>"
+}
+
+@test "fn: sparql.rdfbox_create_from_userliteral_with_lexical(sparql.ubox_create('123:integer'::sparql.ubox), 'http://example.org'::varchar, ' 123 '::varchar)" {
+  expect_output "' 123 :sparql.ubox'^^<http://example.org>"
+}
+
 @test "fn: sparql.rdfbox_create_from_typedliteral(''::varchar, 'http://example.org'::varchar)" {
   expect_output '""^^<http://example.org>'
 }

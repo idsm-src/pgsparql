@@ -154,6 +154,18 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.rdfbox_get_sblanknode_value_of_segment(sparql.rdfbox_create_from_userliteral('abc'::varchar, 'http://example.org'::varchar), '-2147483648'::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_sblanknode_value_of_segment(sparql.rdfbox_create_from_userliteral_with_lexical('abc'::varchar, 'http://example.org'::varchar, ''::varchar), '-2147483648'::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_sblanknode_value_of_segment(sparql.rdfbox_create_from_userliteral_with_lexical('abc'::varchar, 'http://example.org'::varchar, ' abc '::varchar), '-2147483648'::int4)" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.rdfbox_get_sblanknode_value_of_segment(sparql.rdfbox_create_from_typedliteral('abc'::varchar, 'http://example.org'::varchar), '-2147483648'::int4)" {
   expect_output '(null)'
 }

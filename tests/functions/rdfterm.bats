@@ -70,6 +70,10 @@ load ../psql_tests.bash
   expect_output 'f'
 }
 
+@test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_userliteral('123'::int4, 'http://example.org'::varchar))" {
+  expect_output 'f'
+}
+
 @test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
   expect_output 't'
 }
@@ -157,6 +161,10 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_typedliteral(''::varchar, 'http://example.org'::varchar))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_userliteral('123'::int4, 'http://example.org'::varchar))" {
   expect_output 'f'
 }
 
@@ -250,6 +258,10 @@ load ../psql_tests.bash
   expect_output 't'
 }
 
+@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_userliteral('123'::int4, 'http://example.org'::varchar))" {
+  expect_output 't'
+}
+
 @test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
   expect_output 'f'
 }
@@ -337,6 +349,10 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_typedliteral(''::varchar, 'http://example.org'::varchar))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_userliteral('123'::int4, 'http://example.org'::varchar))" {
   expect_output 'f'
 }
 
@@ -598,6 +614,26 @@ load ../psql_tests.bash
   expect_output 'value'
 }
 
+@test "fn: sparql.str_rdfbox(sparql.rdfbox_create_from_userliteral('value'::varchar, 'http://example.org'::varchar))" {
+  expect_output 'value'
+}
+
+@test "fn: sparql.str_rdfbox(sparql.rdfbox_create_from_userliteral('123'::int4, 'http://example.org'::varchar))" {
+  expect_output '123'
+}
+
+@test "fn: sparql.str_rdfbox(sparql.rdfbox_create_from_userliteral('1.50'::decimal, 'http://example.org'::varchar))" {
+  expect_output '1.50'
+}
+
+@test "fn: sparql.str_rdfbox(sparql.rdfbox_create_from_userliteral(sparql.ubox_create('123:integer'::sparql.ubox), 'http://example.org'::varchar))" {
+  expect_output '123:integer'
+}
+
+@test "fn: sparql.str_rdfbox(sparql.rdfbox_create_from_userliteral_with_lexical('123'::int4, 'http://example.org'::varchar, ' 123 '::varchar))" {
+  expect_output ' 123 '
+}
+
 @test "fn: sparql.str_rdfbox(sparql.rdfbox_create_from_iri('http://false.org'::varchar))" {
   expect_output 'http://false.org'
 }
@@ -688,6 +724,10 @@ load ../psql_tests.bash
   expect_output ''
 }
 
+@test "fn: sparql.lang_rdfbox(sparql.rdfbox_create_from_userliteral('123'::int4, 'http://example.org'::varchar))" {
+  expect_output ''
+}
+
 @test "fn: sparql.lang_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
   expect_output '(null)'
 }
@@ -775,6 +815,10 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.datatype_rdfbox(sparql.rdfbox_create_from_typedliteral(''::varchar, 'http://example.org'::varchar))" {
+  expect_output 'http://example.org'
+}
+
+@test "fn: sparql.datatype_rdfbox(sparql.rdfbox_create_from_userliteral('123'::int4, 'http://example.org'::varchar))" {
   expect_output 'http://example.org'
 }
 

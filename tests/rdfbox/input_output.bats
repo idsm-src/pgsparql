@@ -19,7 +19,7 @@ load ../psql_tests.bash
 }
 
 @test "io: '''''''The librarian said, \"Perhaps you would enjoy ''War and Peace''.\"'''''''::sparql.rdfbox" {
-  expect_output "\"The librarian said, \\\"Perhaps you would enjoy 'War and Peace'.\\\"\"^^<http://www.w3.org/2001/XMLSchema#string>"
+  expect_output "\"The librarian said, \\\"Perhaps you would enjoy \\'War and Peace\\'.\\\"\"^^<http://www.w3.org/2001/XMLSchema#string>"
 }
 
 @test "io: '1'::sparql.rdfbox" {
@@ -535,6 +535,84 @@ load ../psql_tests.bash
 }
 
 @test "io: '\"\"\"value\"\"'::sparql.rdfbox" {
+  expect_error
+}
+
+
+
+####
+# user literals
+#
+
+@test "io: '''1:integer''^^<http://example.org/type>'::sparql.rdfbox" {
+  expect_output "'1:integer'^^<http://example.org/type>"
+}
+
+@test "io: '''1:int4''^^<http://example.org/type>'::sparql.rdfbox" {
+  expect_output "'1:integer'^^<http://example.org/type>"
+}
+
+@test "io: '''1:  integer  ''^^<http://example.org/type>'::sparql.rdfbox" {
+  expect_output "'1:integer'^^<http://example.org/type>"
+}
+
+@test "io: '''  1  :integer''^^<http://example.org/type>'::sparql.rdfbox" {
+  expect_output "'  1  :integer'^^<http://example.org/type>"
+}
+
+@test "io: '''abc:text''^^<http://example.org/type>'::sparql.rdfbox" {
+  expect_output "'abc:pg_catalog.text'^^<http://example.org/type>"
+}
+
+@test "io: '''1.50:numeric''^^<http://example.org/type>'::sparql.rdfbox" {
+  expect_output "'1.50:numeric'^^<http://example.org/type>"
+}
+
+@test "io: '''2010-11-18:date''^^<http://example.org/type>'::sparql.rdfbox" {
+  expect_output "'2010-11-18:pg_catalog.date'^^<http://example.org/type>"
+}
+
+@test "io: '''a\''b:character varying''^^<http://example.org/type>'::sparql.rdfbox" {
+  expect_output "'a\'b:character varying'^^<http://example.org/type>"
+}
+
+@test "io: '''a\tb:character varying''^^<http://example.org/type>'::sparql.rdfbox" {
+  expect_output "'a\tb:character varying'^^<http://example.org/type>"
+}
+
+@test "io: '''a\"b:character varying''^^<http://example.org/type>'::sparql.rdfbox" {
+  expect_output "'a\\\"b:character varying'^^<http://example.org/type>"
+}
+
+@test "io: '''''''abc:character varying''''''^^<http://example.org/type>'::sparql.rdfbox" {
+  expect_output "'abc:character varying'^^<http://example.org/type>"
+}
+
+@test "io: '''1:integer:sparql.ubox''^^<http://example.org/type>'::sparql.rdfbox" {
+  expect_output "'1:integer:sparql.ubox'^^<http://example.org/type>"
+}
+
+@test "io: '''1:integer'''::sparql.rdfbox" {
+  expect_output '"1:integer"^^<http://www.w3.org/2001/XMLSchema#string>'
+}
+
+@test "io: '\"1:integer\"^^<http://example.org/type>'::sparql.rdfbox" {
+  expect_output '"1:integer"^^<http://example.org/type>'
+}
+
+@test "io: '''1:nosuchtype''^^<http://example.org/type>'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "io: '''noseparator''^^<http://example.org/type>'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "io: '''abc:integer''^^<http://example.org/type>'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "io: '''1:integer''^^<example.org/type>'::sparql.rdfbox" {
   expect_error
 }
 

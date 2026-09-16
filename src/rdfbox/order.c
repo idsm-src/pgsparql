@@ -27,6 +27,11 @@
  * and > whenever they hold. Only if the exact values are equal, the types are compared (short < int < long <
  * integer < decimal < float < double). NaN is greater than any other number and equal to another NaN.
  *
+ * User literals are compared by their boxed values with the total order of ubox (which orders values of
+ * different PostgreSQL types by the OID of the type) and then by the IRIs of their datatypes. The operator @<
+ * therefore extends < here as well, as far as < is defined at all: < only compares user literals of the same
+ * datatype IRI and is based on the same comparison function of the boxed type.
+ *
  * Terms of the same type are compared by their values first, then by the presence of a stored lexical form
  * (the terms in the canonical form come first) and finally by the lexical forms themselves. The values are
  * compared as they are presented by the canonical lexical forms: xsd:decimal values 1.0 and 1.00 are equal,
@@ -321,6 +326,16 @@ static int compare_values_of_same_type(RdfBox *left, RdfBox *right)
         case TYPED_LITERAL:
         {
             int result = varchar_cmp(RdfBoxGetVarChar(left), RdfBoxGetVarChar(right));
+
+            if(result != 0)
+                return result;
+
+            return varchar_cmp(RdfBoxGetAttachment(left), RdfBoxGetAttachment(right));
+        }
+
+        case USER_LITERAL:
+        {
+            int result = ubox_order(NULL, RdfBoxGetUBox(left), RdfBoxGetUBox(right));
 
             if(result != 0)
                 return result;

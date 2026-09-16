@@ -8,6 +8,7 @@
 #include <utils/numeric.h>
 #include "types/date.h"
 #include "types/datetime.h"
+#include "types/ubox.h"
 
 
 typedef enum
@@ -25,10 +26,11 @@ typedef enum
     XSD_DAYTIMEDURATION = 10,
     XSD_STRING = 11,
     RDF_LANGSTRING = 12,
-    TYPED_LITERAL = 13,
-    IRI = 14,
-    IBLANKNODE = 15,
-    SBLANKNODE = 16
+    USER_LITERAL = 13,
+    TYPED_LITERAL = 14,
+    IRI = 15,
+    IBLANKNODE = 16,
+    SBLANKNODE = 17
 }
 RdfType;
 
@@ -207,7 +209,7 @@ static inline bool RdfBoxCheckLexicalFlag(RdfBox *box, LexicalFlag flag)
 
 static inline uint32 align_size(uint32 n)
 {
-    return (n + 3) & 0xFFFFFFFF;
+    return (n + 3) & 0xFFFFFFFC;
 }
 
 
@@ -278,6 +280,12 @@ static inline VarChar *RdfBoxGetAttachment(RdfBox *box)
 }
 
 
+static inline UBox *RdfBoxGetUBox(RdfBox *box)
+{
+    return (UBox *) ((RdfBoxVarlena *) box)->value;
+}
+
+
 static inline VarChar *RdfBoxGetBoolLexical(RdfBox *box)
 {
     return (VarChar *) ((RdfBoxBoolWithLexical *) box)->lexical;
@@ -326,6 +334,15 @@ static inline VarChar *RdfBoxGetZonedDateLexical(RdfBox *box)
 }
 
 
+static inline VarChar *RdfBoxGetUserLiteralLexical(RdfBox *box)
+{
+    char *value = ((RdfBoxVarlena *) box)->value;
+    char *type = value + align_size(VARSIZE(value));
+
+    return (VarChar *) (type + align_size(VARSIZE(type)));
+}
+
+
 static inline VarChar *RdfBoxGetLexical(RdfBox *box)
 {
     switch(box->type)
@@ -358,6 +375,9 @@ static inline VarChar *RdfBoxGetLexical(RdfBox *box)
 
         case XSD_DATE:
             return RdfBoxGetZonedDateLexical(box);
+
+        case USER_LITERAL:
+            return RdfBoxGetUserLiteralLexical(box);
 
         default:
             elog(ERROR, "unexpected rdfbox type");
@@ -497,6 +517,19 @@ static inline RdfBox *GetLangStringRdfBox(const char *data, int size, const char
     memcpy(VARDATA(result->value), data, size);
     SET_VARSIZE(result->value + align_size(size + VARHDRSZ), lang_size + VARHDRSZ);
     memcpy(VARDATA(result->value + align_size(size + VARHDRSZ)), lang, lang_size);
+    return (RdfBox *) result;
+}
+
+
+static inline RdfBox *GetUserLiteralRdfBox(UBox *value, const char *type, int type_size)
+{
+    int size = VARSIZE(value);
+    RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + align_size(size) + type_size + VARHDRSZ);
+    SET_VARSIZE(result, sizeof(RdfBoxVarlena) + align_size(size) + type_size + VARHDRSZ);
+    result->header.type = USER_LITERAL;
+    memcpy(result->value, value, size);
+    SET_VARSIZE(result->value + align_size(size), type_size + VARHDRSZ);
+    memcpy(VARDATA(result->value + align_size(size)), type, type_size);
     return (RdfBox *) result;
 }
 
@@ -655,6 +688,23 @@ static inline RdfBox *GetDayTimeDurationRdfBoxWithLexical(int64 value, const cha
     result->box.value = value;
     SET_VARSIZE(result->lexical, size + VARHDRSZ);
     memcpy(VARDATA(result->lexical), data, size);
+    return (RdfBox *) result;
+}
+
+
+static inline RdfBox *GetUserLiteralRdfBoxWithLexical(UBox *value, const char *type, int type_size, const char *data, int size)
+{
+    int vsize = VARSIZE(value);
+    int tsize = type_size + VARHDRSZ;
+    RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + align_size(vsize) + align_size(tsize) + size + VARHDRSZ);
+    SET_VARSIZE(result, sizeof(RdfBoxVarlena) + align_size(vsize) + align_size(tsize) + size + VARHDRSZ);
+    result->header.type = USER_LITERAL;
+    result->header.lexical = true;
+    memcpy(result->value, value, vsize);
+    SET_VARSIZE(result->value + align_size(vsize), tsize);
+    memcpy(VARDATA(result->value + align_size(vsize)), type, type_size);
+    SET_VARSIZE(result->value + align_size(vsize) + align_size(tsize), size + VARHDRSZ);
+    memcpy(VARDATA(result->value + align_size(vsize) + align_size(tsize)), data, size);
     return (RdfBox *) result;
 }
 

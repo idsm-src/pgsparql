@@ -92,6 +92,18 @@ Datum rdfbox_is_equal_to(PG_FUNCTION_ARGS)
     {
         PG_RETURN_BOOL(memcmp(left, right, Min(VARSIZE(left), VARSIZE(right))) == 0);
     }
+    else if(left->type == USER_LITERAL && right->type == USER_LITERAL)
+    {
+        bool equal;
+
+        if(!varchar_eq(RdfBoxGetAttachment(left), RdfBoxGetAttachment(right)))
+            PG_RETURN_NULL();
+
+        if(!ubox_equals(NULL, RdfBoxGetUBox(left), RdfBoxGetUBox(right), &equal))
+            PG_RETURN_NULL();
+
+        PG_RETURN_BOOL(equal);
+    }
     else if(left->type == TYPED_LITERAL && right->type == TYPED_LITERAL)
     {
         if(memcmp(left, right, Min(VARSIZE(left), VARSIZE(right))) == 0)
@@ -193,6 +205,18 @@ Datum rdfbox_is_not_equal_to(PG_FUNCTION_ARGS)
     {
         PG_RETURN_BOOL(memcmp(left, right, Min(VARSIZE(left), VARSIZE(right))) != 0);
     }
+    else if(left->type == USER_LITERAL && right->type == USER_LITERAL)
+    {
+        bool equal;
+
+        if(!varchar_eq(RdfBoxGetAttachment(left), RdfBoxGetAttachment(right)))
+            PG_RETURN_NULL();
+
+        if(!ubox_equals(NULL, RdfBoxGetUBox(left), RdfBoxGetUBox(right), &equal))
+            PG_RETURN_NULL();
+
+        PG_RETURN_BOOL(!equal);
+    }
     else if(left->type == TYPED_LITERAL && right->type == TYPED_LITERAL)
     {
         if(memcmp(left, right, Min(VARSIZE(left), VARSIZE(right))) == 0)
@@ -292,6 +316,18 @@ Datum rdfbox_is_less_than(PG_FUNCTION_ARGS)
         VarChar *r = RdfBoxGetVarChar(right);
         PG_RETURN_BOOL(varchar_cmp(l, r) < 0);
     }
+    else if(left->type == USER_LITERAL && right->type == USER_LITERAL)
+    {
+        int cmp;
+
+        if(!varchar_eq(RdfBoxGetAttachment(left), RdfBoxGetAttachment(right)))
+            PG_RETURN_NULL();
+
+        if(!ubox_compare(NULL, RdfBoxGetUBox(left), RdfBoxGetUBox(right), &cmp))
+            PG_RETURN_NULL();
+
+        PG_RETURN_BOOL(cmp < 0);
+    }
     else
     {
         PG_RETURN_NULL();
@@ -365,6 +401,18 @@ Datum rdfbox_is_not_greater_than(PG_FUNCTION_ARGS)
         VarChar *l = RdfBoxGetVarChar(left);
         VarChar *r = RdfBoxGetVarChar(right);
         PG_RETURN_BOOL(varchar_cmp(l, r) <= 0);
+    }
+    else if(left->type == USER_LITERAL && right->type == USER_LITERAL)
+    {
+        int cmp;
+
+        if(!varchar_eq(RdfBoxGetAttachment(left), RdfBoxGetAttachment(right)))
+            PG_RETURN_NULL();
+
+        if(!ubox_compare(NULL, RdfBoxGetUBox(left), RdfBoxGetUBox(right), &cmp))
+            PG_RETURN_NULL();
+
+        PG_RETURN_BOOL(cmp <= 0);
     }
     else
     {
@@ -440,6 +488,18 @@ Datum rdfbox_is_not_less_than(PG_FUNCTION_ARGS)
         VarChar *r = RdfBoxGetVarChar(right);
         PG_RETURN_BOOL(varchar_cmp(l, r) >= 0);
     }
+    else if(left->type == USER_LITERAL && right->type == USER_LITERAL)
+    {
+        int cmp;
+
+        if(!varchar_eq(RdfBoxGetAttachment(left), RdfBoxGetAttachment(right)))
+            PG_RETURN_NULL();
+
+        if(!ubox_compare(NULL, RdfBoxGetUBox(left), RdfBoxGetUBox(right), &cmp))
+            PG_RETURN_NULL();
+
+        PG_RETURN_BOOL(cmp >= 0);
+    }
     else
     {
         PG_RETURN_NULL();
@@ -513,6 +573,18 @@ Datum rdfbox_is_greater_than(PG_FUNCTION_ARGS)
         VarChar *l = RdfBoxGetVarChar(left);
         VarChar *r = RdfBoxGetVarChar(right);
         PG_RETURN_BOOL(varchar_cmp(l, r) > 0);
+    }
+    else if(left->type == USER_LITERAL && right->type == USER_LITERAL)
+    {
+        int cmp;
+
+        if(!varchar_eq(RdfBoxGetAttachment(left), RdfBoxGetAttachment(right)))
+            PG_RETURN_NULL();
+
+        if(!ubox_compare(NULL, RdfBoxGetUBox(left), RdfBoxGetUBox(right), &cmp))
+            PG_RETURN_NULL();
+
+        PG_RETURN_BOOL(cmp > 0);
     }
     else
     {

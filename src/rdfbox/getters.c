@@ -459,6 +459,99 @@ Datum rdfbox_get_langstring_lang(PG_FUNCTION_ARGS)
 }
 
 
+PG_FUNCTION_INFO_V1(rdfbox_get_userliteral_value);
+Datum rdfbox_get_userliteral_value(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
+
+    if(box->type != USER_LITERAL || !RdfBoxCheckLexicalFlag(box, flag))
+        PG_RETURN_NULL();
+
+    PG_RETURN_UBOX_P(RdfBoxGetUBox(box));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_userliteral_value_of_type);
+Datum rdfbox_get_userliteral_value_of_type(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    VarChar *type = PG_GETARG_VARCHAR_PP(1);
+    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(2);
+
+    if(box->type != USER_LITERAL || !RdfBoxCheckLexicalFlag(box, flag))
+        PG_RETURN_NULL();
+
+    if(!varchar_eq(type, RdfBoxGetAttachment(box)))
+        PG_RETURN_NULL();
+
+    PG_RETURN_UBOX_P(RdfBoxGetUBox(box));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_userliteral_typedvalue_of_type);
+Datum rdfbox_get_userliteral_typedvalue_of_type(PG_FUNCTION_ARGS)
+{
+    if(PG_ARGISNULL(0) || PG_ARGISNULL(1) || (PG_NARGS() == 4 && PG_ARGISNULL(3)))
+        PG_RETURN_NULL();
+
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    VarChar *type = PG_GETARG_VARCHAR_PP(1);
+    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(3);
+
+    if(box->type != USER_LITERAL || !RdfBoxCheckLexicalFlag(box, flag))
+        PG_RETURN_NULL();
+
+    if(!varchar_eq(type, RdfBoxGetAttachment(box)))
+        PG_RETURN_NULL();
+
+    PG_RETURN_DATUM(ubox_value_of_type(RdfBoxGetUBox(box), get_fn_expr_rettype(fcinfo->flinfo)));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_userliteral_type);
+Datum rdfbox_get_userliteral_type(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
+
+    if(box->type != USER_LITERAL || !RdfBoxCheckLexicalFlag(box, flag))
+        PG_RETURN_NULL();
+
+    PG_RETURN_VARCHAR_P(RdfBoxGetAttachment(box));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_userliteral_lexical);
+Datum rdfbox_get_userliteral_lexical(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
+
+    if(box->type != USER_LITERAL || !RdfBoxCheckLexicalFlag(box, flag))
+        PG_RETURN_NULL();
+
+    PG_RETURN_VARCHAR_P(box->lexical ? RdfBoxGetUserLiteralLexical(box) : get_empty_varchar());
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_userliteral_lexical_of_type);
+Datum rdfbox_get_userliteral_lexical_of_type(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    VarChar *type = PG_GETARG_VARCHAR_PP(1);
+    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(2);
+
+    if(box->type != USER_LITERAL || !RdfBoxCheckLexicalFlag(box, flag))
+        PG_RETURN_NULL();
+
+    if(!varchar_eq(type, RdfBoxGetAttachment(box)))
+        PG_RETURN_NULL();
+
+    PG_RETURN_VARCHAR_P(box->lexical ? RdfBoxGetUserLiteralLexical(box) : get_empty_varchar());
+}
+
+
 PG_FUNCTION_INFO_V1(rdfbox_get_typedliteral_value);
 Datum rdfbox_get_typedliteral_value(PG_FUNCTION_ARGS)
 {

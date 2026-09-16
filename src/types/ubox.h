@@ -6,6 +6,7 @@
 #include <varatt.h>
 #endif
 #include <fmgr.h>
+#include <lib/stringinfo.h>
 #include <access/tupmacs.h>
 #include <utils/typcache.h>
 
@@ -45,6 +46,33 @@ UBox;
 
 
 UBox *ubox_make(Oid typeoid, Datum value);
+
+
+/*
+ * The pieces of the text and the binary representation, shared with the
+ * user literal variant of rdfbox, which embeds a whole box in itself.
+ * ubox_parse() hands back the value part of the text it consumed when
+ * "value" is not NULL, so that the caller can tell a canonical lexical
+ * form from one that has to be stored.
+ */
+UBox *ubox_parse(const char *str, char **value);
+char *ubox_value_as_cstring(UBox *box);
+char *ubox_type_as_cstring(UBox *box);
+UBox *ubox_receive(StringInfo buf);
+void ubox_append_binary(StringInfo buf, UBox *box);
+
+
+/*
+ * The operations behind the SQL-visible functions, callable without a
+ * FunctionCallInfo.  "flinfo" is only used to cache the resolved type
+ * information between calls and may be NULL.
+ */
+Datum ubox_value_of_type(UBox *box, Oid typeoid);
+VarChar *ubox_value_as_varchar(FmgrInfo *flinfo, UBox *box);
+bool ubox_equals(FmgrInfo *flinfo, UBox *a, UBox *b, bool *equal);
+bool ubox_compare(FmgrInfo *flinfo, UBox *a, UBox *b, int *cmp);
+int ubox_order(FmgrInfo *flinfo, UBox *a, UBox *b);
+uint64 ubox_hash_value(FmgrInfo *flinfo, UBox *box, uint64 seed);
 
 
 /*
