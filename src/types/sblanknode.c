@@ -3,6 +3,7 @@
 #include <varatt.h>
 #endif
 #include <fmgr.h>
+#include "types/sblanknode.h"
 
 
 static inline uint32 htoi(char value)
@@ -36,6 +37,19 @@ static inline uint32 read_segment(char *buffer)
     }
 
     return value;
+}
+
+
+bool is_sblanknode_value(const char *data, int32 size)
+{
+    if(size < 8)
+        return false;
+
+    for(int i = 0; i < 8; i++)
+        if(!(data[i] >= '0' && data[i] <= '9') && !(data[i] >= 'a' && data[i] <= 'f'))
+            return false;
+
+    return true;
 }
 
 

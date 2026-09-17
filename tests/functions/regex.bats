@@ -22,6 +22,42 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.regex_string('a.c'::varchar, 'a.c'::varchar, 'q'::varchar)" {
+  expect_output 't'
+}
+
+@test "fn: sparql.regex_string('abc'::varchar, 'a.c'::varchar, 'q'::varchar)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.regex_string('abc'::varchar, 'a.c'::varchar)" {
+  expect_output 't'
+}
+
+@test "fn: sparql.regex_string('a['::varchar, 'a['::varchar, 'q'::varchar)" {
+  expect_output 't'
+}
+
+@test "fn: sparql.regex_string('ABC'::varchar, 'abc'::varchar, 'qi'::varchar)" {
+  expect_output 't'
+}
+
+@test "fn: sparql.regex_string('Ä'::varchar, 'ä'::varchar, 'qi'::varchar)" {
+  expect_output 't'
+}
+
+@test "fn: sparql.regex_string('Ä'::varchar, 'ä'::varchar, 'i'::varchar)" {
+  expect_output 't'
+}
+
+@test "fn: sparql.regex_string('Ä'::varchar, 'ä'::varchar, 'q'::varchar)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.regex_string('abcd'::varchar, 'B'::varchar, 'z'::varchar)" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.regex_rdfbox(sparql.rdfbox_create_from_string('abcd'::varchar), 'b'::varchar)" {
   expect_output 't'
 }

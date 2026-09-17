@@ -10,7 +10,7 @@ Datum rdfbox_promote_to_short(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
 
-    if(box->type < XSD_SHORT || box->type > XSD_SHORT)
+    if(box->type != XSD_SHORT)
         PG_RETURN_NULL();
 
     PG_RETURN_INT16(RdfBoxGetInt16(box));

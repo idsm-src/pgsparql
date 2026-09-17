@@ -93,6 +93,16 @@ Datum cast_as_long_from_float(PG_FUNCTION_ARGS)
 {
     float4 value = PG_GETARG_FLOAT4(0);
 
+    /*
+     * Converting a floating point value to an integer is undefined for NaN and
+     * for anything outside the range of the target type, so the range has to be
+     * checked before the conversion and not after it.  PG_INT64_MAX is not
+     * representable as a double, hence the strict comparison against 2^63; NaN
+     * fails the test as well, every comparison with NaN being false.
+     */
+    if(!(value >= -9223372036854775808.0 && value < 9223372036854775808.0))
+        PG_RETURN_NULL();
+
     if((int64) value != truncf(value))
         PG_RETURN_NULL();
 
@@ -104,6 +114,16 @@ PG_FUNCTION_INFO_V1(cast_as_long_from_double);
 Datum cast_as_long_from_double(PG_FUNCTION_ARGS)
 {
     float8 value = PG_GETARG_FLOAT8(0);
+
+    /*
+     * Converting a floating point value to an integer is undefined for NaN and
+     * for anything outside the range of the target type, so the range has to be
+     * checked before the conversion and not after it.  PG_INT64_MAX is not
+     * representable as a double, hence the strict comparison against 2^63; NaN
+     * fails the test as well, every comparison with NaN being false.
+     */
+    if(!(value >= -9223372036854775808.0 && value < 9223372036854775808.0))
+        PG_RETURN_NULL();
 
     if((int64) value != trunc(value))
         PG_RETURN_NULL();

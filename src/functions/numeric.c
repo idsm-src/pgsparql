@@ -1,9 +1,51 @@
 #include <postgres.h>
 #include <utils/builtins.h>
 #include <utils/numeric.h>
+#include <math.h>
 #include "call.h"
+#include "constants.h"
 #include "rdfbox/rdfbox.h"
 #include "rdfbox/promotion.h"
+
+
+/*
+ * SPARQL ROUND(), like fn:round(), rounds a half towards positive infinity:
+ * ROUND(-2.5) is -2, not -3.  round()/roundf() and numeric_round() round a half
+ * away from zero instead, so they cannot be used directly.
+ *
+ * floor(value + 0.5) is not an answer either, because the addition itself rounds:
+ * for the double just below 0.5 it already yields 1.0.  Taking the floor first and
+ * looking at the fractional part is exact for every finite value -- the difference
+ * of a double and its floor is representable -- and leaves NaN and +-infinity
+ * alone, as value - value is NaN and NaN >= 0.5 is false.
+ */
+static inline float8 round_half_up(float8 value)
+{
+    float8 result = floor(value);
+
+    if(value - result >= 0.5)
+        result += 1.0;
+
+    // fn:round keeps the sign of a negative argument that rounds to zero
+    if(result == 0 && signbit(value))
+        return -0.0;
+
+    return result;
+}
+
+
+static inline float4 round_half_up_float(float4 value)
+{
+    float4 result = floorf(value);
+
+    if(value - result >= 0.5f)
+        result += 1.0f;
+
+    if(result == 0 && signbit(value))
+        return -0.0f;
+
+    return result;
+}
 
 
 PG_FUNCTION_INFO_V1(abs_rdfbox);
@@ -90,15 +132,16 @@ Datum round_rdfbox(PG_FUNCTION_ARGS)
         case XSD_DECIMAL:
         {
             Numeric value = RdfBoxGetNumeric(box);
-            Numeric res = DatumGetNumeric(DirectFunctionCall2(numeric_round, NumericGetDatum(value), Int32GetDatum(0)));
+            Numeric sum = DatumGetNumeric(DirectFunctionCall2(numeric_add, NumericGetDatum(value), NumericGetDatum(get_half())));
+            Numeric res = DatumGetNumeric(DirectFunctionCall1(numeric_floor, NumericGetDatum(sum)));
             PG_RETURN_RDFBOX_P(GetDecimalRdfBox(res));
         }
 
         case XSD_FLOAT:
-            PG_RETURN_RDFBOX_P(GetFloatRdfBox(roundf(RdfBoxGetFloat4(box))));
+            PG_RETURN_RDFBOX_P(GetFloatRdfBox(round_half_up_float(RdfBoxGetFloat4(box))));
 
         case XSD_DOUBLE:
-            PG_RETURN_RDFBOX_P(GetDoubleRdfBox(round(RdfBoxGetFloat8(box))));
+            PG_RETURN_RDFBOX_P(GetDoubleRdfBox(round_half_up(RdfBoxGetFloat8(box))));
 
         default:
             PG_RETURN_NULL();

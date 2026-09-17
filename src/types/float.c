@@ -52,7 +52,7 @@ float4 float_parse(char *data, int size)
         while(pos < size && xsd_isdigit(data[pos]))
             pos++;
 
-        if(pos - num_pos == (data[num_pos] == '.'))
+        if(pos == num_pos || pos - num_pos == (data[num_pos] == '.'))
             ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed xsd:float literal")));
 
         if(pos < size && (data[pos] == 'e' || data[pos] == 'E'))

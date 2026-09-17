@@ -96,6 +96,16 @@ Datum cast_as_int_from_float(PG_FUNCTION_ARGS)
 {
     float4 value = PG_GETARG_FLOAT4(0);
 
+    /*
+     * Converting a floating point value to an integer is undefined for NaN and
+     * for anything outside the range of the target type, so the range has to be
+     * checked before the conversion and not after it.  Both bounds are exactly
+     * representable as a double, so the test is exact; NaN fails it as well,
+     * every comparison with NaN being false.
+     */
+    if(!(value >= -2147483648.0 && value <= 2147483647.0))
+        PG_RETURN_NULL();
+
     if((int32) value != truncf(value))
         PG_RETURN_NULL();
 
@@ -107,6 +117,16 @@ PG_FUNCTION_INFO_V1(cast_as_int_from_double);
 Datum cast_as_int_from_double(PG_FUNCTION_ARGS)
 {
     float8 value = PG_GETARG_FLOAT8(0);
+
+    /*
+     * Converting a floating point value to an integer is undefined for NaN and
+     * for anything outside the range of the target type, so the range has to be
+     * checked before the conversion and not after it.  Both bounds are exactly
+     * representable as a double, so the test is exact; NaN fails it as well,
+     * every comparison with NaN being false.
+     */
+    if(!(value >= -2147483648.0 && value <= 2147483647.0))
+        PG_RETURN_NULL();
 
     if((int32) value != trunc(value))
         PG_RETURN_NULL();

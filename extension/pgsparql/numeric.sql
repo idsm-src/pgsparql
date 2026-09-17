@@ -235,6 +235,36 @@ CREATE OPERATOR / (
 );
 
 
+-- The comparison operators of float4 and float8 follow XPath, not SQL: NaN is
+-- incomparable with everything, itself included, so "NaN = NaN" is false here
+-- while PostgreSQL's own float equality calls it true.  Every definition below
+-- is therefore the corresponding built-in operator with the NaN case cut away;
+-- the "$1 is null" arm only keeps a NULL argument from being turned into false
+-- by the surrounding conjunction when the other one is NaN.
+--
+-- The consequence is that = is not reflexive, while CREATE OPERATOR asks the
+-- equality of a hash operator family to be an equivalence relation.  It is
+-- declared "hashes" all the same, so that the planner can use a hash join for
+-- it, and that is safe because:
+--
+--   * what the hash access method actually needs is that equal values hash
+--     equal.  This = is strictly narrower than the built-in one and hashfloat4
+--     and hashfloat8 agree with the built-in one (they fold -0.0 into 0.0 and
+--     all NaNs into one), so the implication holds.
+--
+--   * a hash join re-evaluates the operator on every pair that lands in the
+--     same bucket, so the two NaNs meet there and are correctly rejected.
+--
+--   * the operator belongs to no B-tree operator family, hence it is not
+--     mergejoinable and the planner never puts it into an equivalence class
+--     and never derives an implied equality from it.
+--
+--   * the operator classes below are not DEFAULT, so GROUP BY, DISTINCT, UNION
+--     and hash aggregation keep using PostgreSQL's own float equality.
+--
+-- A non-reflexive equality can only ever cost a deduplication: it may keep two
+-- rows that could have been merged, never merge two that must stay apart.
+
 CREATE OPERATOR CLASS float_hash_ops FOR TYPE float4 USING hash AS
     OPERATOR   1   @extschema@.= (float4, float4),
     FUNCTION   1   hashfloat4(float4),

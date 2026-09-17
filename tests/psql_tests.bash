@@ -104,13 +104,41 @@ select * from $PG_TABLE;"
 }
 
 
+# Feeds one crafted value to the receive function of the type. The argument is
+# the hexadecimal payload of a single field, not SQL: these are exactly the
+# messages that the send function never produces, so there is no SQL expression
+# that would stand for them. The payload is wrapped in the smallest binary copy
+# file there is -- signature, flags, header extension, one row of one field,
+# trailer -- so that it reaches the receive function the way a value from any
+# other client does.
+receive_raw() {
+  local payload="${1//[[:space:]]/}"
+
+  pg_write_hex "5047434f50590aff0d0a00 00000000 00000000 0001 $(printf '%08x' $(( ${#payload} / 2 ))) $payload ffff" "$PG_COPY"
+
+  pg_send "truncate $PG_TABLE;
+\\copy $PG_TABLE from '$PG_COPY' (format binary)
+select * from $PG_TABLE;"
+}
+
+
+# Writes a hexadecimal string to a file as raw bytes. The escapes are built in a
+# command substitution and expanded by printf only on the way to the file, so
+# that no NUL byte has to survive the substitution.
+pg_write_hex() {
+  printf '%b' "$(sed 's/../\\x&/g' <<< "${1//[[:space:]]/}")" > "$2"
+}
+
+
 # A test description is "<prefix>: <SQL>". The prefix says what the test
-# exercises: io the text input and output, rs the binary send and receive, op
-# an operator, fn a function, oc an operator class. Only rs changes how the
-# test is run, the others just tell the families apart, so that for example
-# "bats -f 'op: '" runs the operator tests alone. A description that carries no
-# prefix is the SQL itself and is run like io.
-PG_TEST_PREFIXES='io|rs|op|fn|oc'
+# exercises: io the text input and output, rs the binary send and receive, rx a
+# crafted binary message given to receive alone, op an operator, fn a function,
+# oc an operator class. Only rs and rx change how the test is run, the others
+# just tell the families apart, so that for example "bats -f 'op: '" runs the
+# operator tests alone. A description that carries no prefix is the SQL itself
+# and is run like io. The description of an rx test is a hexadecimal payload
+# rather than SQL, because no SQL expression denotes a malformed message.
+PG_TEST_PREFIXES='io|rs|rx|op|fn|oc'
 
 
 # Runs the SQL of the current test the way its prefix asks for.
@@ -124,6 +152,8 @@ pg_test() {
 
   if [[ $prefix == rs ]]; then
     receive "$sql"
+  elif [[ $prefix == rx ]]; then
+    receive_raw "$sql"
   else
     query "$sql"
   fi

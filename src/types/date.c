@@ -42,7 +42,9 @@ static char *move_bc_year(char *data, int size)
     errno = 0;
     char *endptr;
 
-    int64 year = strtol(input, &endptr, 10);
+    // the caller has already cut the year down to at most nine digits, so long is
+    // wide enough everywhere and its length modifier matches what strtol() returns
+    long year = strtol(input, &endptr, 10);
 
     if(input == endptr || errno != 0) // should never happen
         ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed xsd:date literal")));
@@ -209,7 +211,7 @@ int date_print(ZonedDate date, char *buffer)
 
 static inline int64 get_time_value(ZonedDate arg)
 {
-    int64 timezone = arg.zone == ZONE_UNSPECIFIED ? implicit_timezone : arg.zone;
+    int64 timezone = arg.zone == ZONE_UNSPECIFIED ? IMPLICIT_TIMEZONE : arg.zone;
 
     return (int64) arg.value * HOURS_PER_DAY * MINS_PER_HOUR * SECS_PER_MINUTE - timezone;
 }
@@ -288,7 +290,7 @@ PG_FUNCTION_INFO_V1(zoneddate_create);
 Datum zoneddate_create(PG_FUNCTION_ARGS)
 {
     DateADT value = PG_GETARG_DATEADT(0);
-    int32 zone = PG_GETARG_INT32(1);
+    int32 zone = checked_zone(PG_GETARG_INT32(1));
     ZonedDate result = { .value = value, .zone = zone };
     PG_RETURN_ZONEDDATE(result);
 }

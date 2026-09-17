@@ -1,8 +1,49 @@
 #include <postgres.h>
 #include <utils/numeric.h>
 #include "call.h"
+#include "rdfbox/syntax.h"
 #include "types/sblanknode.h"
+#include "types/timezone.h"
 #include "rdfbox/rdfbox.h"
+
+
+#ifdef PGSPARQL_EXTRA_CHECKS
+static inline VarChar *checked_iri(VarChar *iri)
+{
+    if(!check_iri(VARDATA_ANY(iri), VARSIZE_ANY_EXHDR(iri)))
+        ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE), errmsg("invalid IRI")));
+
+    return iri;
+}
+#else
+#define checked_iri(x)    (x)
+#endif
+
+
+#ifdef PGSPARQL_EXTRA_CHECKS
+static inline VarChar *checked_language_tag(VarChar *lang)
+{
+    if(!check_language_tag(VARDATA_ANY(lang), VARSIZE_ANY_EXHDR(lang)))
+        ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE), errmsg("invalid language tag")));
+
+    return lang;
+}
+#else
+#define checked_language_tag(x)    (x)
+#endif
+
+
+#ifdef PGSPARQL_EXTRA_CHECKS
+static inline VarChar *checked_sblanknode(VarChar *value)
+{
+    if(!is_sblanknode_value(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value)))
+        ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE), errmsg("invalid blank node")));
+
+    return value;
+}
+#else
+#define checked_sblanknode(x)    (x)
+#endif
 
 
 PG_FUNCTION_INFO_V1(rdfbox_create_from_boolean);
@@ -171,14 +212,14 @@ Datum rdfbox_create_from_datetime(PG_FUNCTION_ARGS)
     if(PG_NARGS() == 1)
         PG_RETURN_RDFBOX_P(GetDateTimeRdfBox(PG_GETARG_ZONEDDATETIME_P(0)));
     else
-        PG_RETURN_RDFBOX_P(GetDateTimeRdfBox(&((ZonedDateTime) { .value = PG_GETARG_TIMESTAMPTZ(0), .zone = PG_GETARG_INT32(1)})));
+        PG_RETURN_RDFBOX_P(GetDateTimeRdfBox(&((ZonedDateTime) { .value = PG_GETARG_TIMESTAMPTZ(0), .zone = checked_zone(PG_GETARG_INT32(1))})));
 }
 
 
 PG_FUNCTION_INFO_V1(rdfbox_create_from_datetime_with_lexical);
 Datum rdfbox_create_from_datetime_with_lexical(PG_FUNCTION_ARGS)
 {
-    ZonedDateTime *value = PG_NARGS() == 2 ? PG_GETARG_ZONEDDATETIME_P(0) : &((ZonedDateTime) { .value = PG_GETARG_TIMESTAMPTZ(0), .zone = PG_GETARG_INT32(1)});
+    ZonedDateTime *value = PG_NARGS() == 2 ? PG_GETARG_ZONEDDATETIME_P(0) : &((ZonedDateTime) { .value = PG_GETARG_TIMESTAMPTZ(0), .zone = checked_zone(PG_GETARG_INT32(1))});
     VarChar *lexical = PG_GETARG_VARCHAR_PP(PG_NARGS() - 1);
 
     if(VARSIZE_ANY_EXHDR(lexical) == 0)
@@ -194,14 +235,14 @@ Datum rdfbox_create_from_date(PG_FUNCTION_ARGS)
     if(PG_NARGS() == 1)
         PG_RETURN_RDFBOX_P(GetDateRdfBox(PG_GETARG_ZONEDDATE(0)));
     else
-        PG_RETURN_RDFBOX_P(GetDateRdfBox((ZonedDate) { .value = PG_GETARG_DATEADT(0), .zone = PG_GETARG_INT32(1)}));
+        PG_RETURN_RDFBOX_P(GetDateRdfBox((ZonedDate) { .value = PG_GETARG_DATEADT(0), .zone = checked_zone(PG_GETARG_INT32(1))}));
 }
 
 
 PG_FUNCTION_INFO_V1(rdfbox_create_from_date_with_lexical);
 Datum rdfbox_create_from_date_with_lexical(PG_FUNCTION_ARGS)
 {
-    ZonedDate value = PG_NARGS() == 2 ? PG_GETARG_ZONEDDATE(0) : (ZonedDate) { .value = PG_GETARG_DATEADT(0), .zone = PG_GETARG_INT32(1)};
+    ZonedDate value = PG_NARGS() == 2 ? PG_GETARG_ZONEDDATE(0) : (ZonedDate) { .value = PG_GETARG_DATEADT(0), .zone = checked_zone(PG_GETARG_INT32(1))};
     VarChar *lexical = PG_GETARG_VARCHAR_PP(PG_NARGS() - 1);
 
     if(VARSIZE_ANY_EXHDR(lexical) == 0)
@@ -242,7 +283,7 @@ Datum rdfbox_create_from_string(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(rdfbox_create_from_iri);
 Datum rdfbox_create_from_iri(PG_FUNCTION_ARGS)
 {
-    VarChar *value = PG_GETARG_VARCHAR_PP(0);
+    VarChar *value = checked_iri(PG_GETARG_VARCHAR_PP(0));
     PG_RETURN_RDFBOX_P(GetIriRdfBox(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value)));
 }
 
@@ -251,7 +292,7 @@ PG_FUNCTION_INFO_V1(rdfbox_create_from_langstring);
 Datum rdfbox_create_from_langstring(PG_FUNCTION_ARGS)
 {
     VarChar *value = PG_GETARG_VARCHAR_PP(0);
-    VarChar *lang = PG_GETARG_VARCHAR_PP(1);
+    VarChar *lang = checked_language_tag(PG_GETARG_VARCHAR_PP(1));
     PG_RETURN_RDFBOX_P(GetLangStringRdfBox(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value), VARDATA_ANY(lang), VARSIZE_ANY_EXHDR(lang)));
 }
 
@@ -260,7 +301,7 @@ PG_FUNCTION_INFO_V1(rdfbox_create_from_userliteral);
 Datum rdfbox_create_from_userliteral(PG_FUNCTION_ARGS)
 {
     Oid typeoid = get_fn_expr_argtype(fcinfo->flinfo, 0);
-    VarChar *type = PG_GETARG_VARCHAR_PP(1);
+    VarChar *type = checked_iri(PG_GETARG_VARCHAR_PP(1));
 
     if(!OidIsValid(typeoid))
         ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE), errmsg("could not determine input data type")));
@@ -275,7 +316,7 @@ PG_FUNCTION_INFO_V1(rdfbox_create_from_userliteral_with_lexical);
 Datum rdfbox_create_from_userliteral_with_lexical(PG_FUNCTION_ARGS)
 {
     Oid typeoid = get_fn_expr_argtype(fcinfo->flinfo, 0);
-    VarChar *type = PG_GETARG_VARCHAR_PP(1);
+    VarChar *type = checked_iri(PG_GETARG_VARCHAR_PP(1));
     VarChar *lexical = PG_GETARG_VARCHAR_PP(2);
 
     if(!OidIsValid(typeoid))
@@ -294,7 +335,7 @@ PG_FUNCTION_INFO_V1(rdfbox_create_from_boxed_userliteral);
 Datum rdfbox_create_from_boxed_userliteral(PG_FUNCTION_ARGS)
 {
     UBox *value = PG_GETARG_UBOX_P(0);
-    VarChar *type = PG_GETARG_VARCHAR_PP(1);
+    VarChar *type = checked_iri(PG_GETARG_VARCHAR_PP(1));
 
     PG_RETURN_RDFBOX_P(GetUserLiteralRdfBox(value, VARDATA_ANY(type), VARSIZE_ANY_EXHDR(type)));
 }
@@ -304,7 +345,7 @@ PG_FUNCTION_INFO_V1(rdfbox_create_from_boxed_userliteral_with_lexical);
 Datum rdfbox_create_from_boxed_userliteral_with_lexical(PG_FUNCTION_ARGS)
 {
     UBox *value = PG_GETARG_UBOX_P(0);
-    VarChar *type = PG_GETARG_VARCHAR_PP(1);
+    VarChar *type = checked_iri(PG_GETARG_VARCHAR_PP(1));
     VarChar *lexical = PG_GETARG_VARCHAR_PP(2);
 
     if(VARSIZE_ANY_EXHDR(lexical) == 0)
@@ -318,7 +359,7 @@ PG_FUNCTION_INFO_V1(rdfbox_create_from_typedliteral);
 Datum rdfbox_create_from_typedliteral(PG_FUNCTION_ARGS)
 {
     VarChar *value = PG_GETARG_VARCHAR_PP(0);
-    VarChar *type = PG_GETARG_VARCHAR_PP(1);
+    VarChar *type = checked_iri(PG_GETARG_VARCHAR_PP(1));
     PG_RETURN_RDFBOX_P(GetTypedLiteralRdfBox(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value), VARDATA_ANY(type), VARSIZE_ANY_EXHDR(type)));
 }
 
@@ -338,7 +379,7 @@ Datum rdfbox_create_from_sblanknode(PG_FUNCTION_ARGS)
 {
     if(PG_NARGS() == 1)
     {
-        VarChar *value = PG_GETARG_VARCHAR_PP(0);
+        VarChar *value = checked_sblanknode(PG_GETARG_VARCHAR_PP(0));
         PG_RETURN_RDFBOX_P(GetSBlankNodeRdfBox(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value)));
     }
     else

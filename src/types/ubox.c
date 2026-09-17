@@ -50,21 +50,48 @@ UBox *ubox_make(Oid typeoid, Datum value)
  * types just triggers a new lookup whenever the type changes.  A caller that
  * has no FunctionCallInfo of its own passes NULL and pays for a lookup on
  * every call.
+ *
+ * The flags are remembered together with the entry: lookup_type_cache() only
+ * fills in the fields that were asked for, so an entry cached for one set of
+ * flags says nothing about the fields another caller needs.  Every function
+ * here happens to pass the same flags on every call, but nothing enforces it
+ * and the failure would be a silently empty FmgrInfo rather than an error.
  */
+typedef struct
+{
+    Oid typeoid;                // the type the entry was looked up for
+    int flags;                  // the fields of the entry that are filled in
+    TypeCacheEntry *typentry;
+}
+UBoxTypeCache;
+
+
 static TypeCacheEntry *ubox_cached_typentry(FmgrInfo *flinfo, Oid typeoid, int flags)
 {
     if(flinfo == NULL)
         return lookup_type_cache(typeoid, flags);
 
-    TypeCacheEntry *typentry = (TypeCacheEntry *) flinfo->fn_extra;
+    UBoxTypeCache *cache = (UBoxTypeCache *) flinfo->fn_extra;
 
-    if(typentry == NULL || typentry->type_id != typeoid)
+    if(cache == NULL)
     {
-        typentry = lookup_type_cache(typeoid, flags);
-        flinfo->fn_extra = typentry;
+        cache = (UBoxTypeCache *) MemoryContextAllocZero(flinfo->fn_mcxt, sizeof(UBoxTypeCache));
+        flinfo->fn_extra = cache;
     }
 
-    return typentry;
+    if(cache->typentry == NULL || cache->typeoid != typeoid)
+    {
+        cache->typentry = lookup_type_cache(typeoid, flags);
+        cache->typeoid = typeoid;
+        cache->flags = flags;
+    }
+    else if((cache->flags & flags) != flags)
+    {
+        cache->typentry = lookup_type_cache(typeoid, flags);
+        cache->flags |= flags;
+    }
+
+    return cache->typentry;
 }
 
 
@@ -112,19 +139,6 @@ bool ubox_compare(FmgrInfo *flinfo, UBox *a, UBox *b, int *cmp)
 
 
 /*
- * Text format:  value:typename
- *
- * The type name is always canonical: format_type_extended() with
- * FORMAT_TYPE_FORCE_QUALIFY prints it schema-qualified and quoted whenever
- * needed, independently of search_path (only the SQL-standard names such as
- * integer or character varying stay unqualified, as they cannot be
- * shadowed).  The value may contain anything, while a type name cannot
- * contain a colon outside of double quotes, so the separator is the last
- * colon that is not inside double quotes; everything before it is handed
- * verbatim to the input function of the boxed type.
- */
-
-/*
  * Resolve a type name the way regtypein() does, but with the search path
  * pinned to pg_catalog, so that the result does not depend on the session:
  * what ubox_type_as_cstring() prints is either an SQL-standard name, which
@@ -148,6 +162,18 @@ static Oid ubox_type_from_cstring(const char *typname)
 }
 
 
+/*
+ * Text format:  value:typename
+ *
+ * The type name is always canonical: format_type_extended() with
+ * FORMAT_TYPE_FORCE_QUALIFY prints it schema-qualified and quoted whenever
+ * needed, independently of search_path (only the SQL-standard names such as
+ * integer or character varying stay unqualified, as they cannot be
+ * shadowed).  The value may contain anything, while a type name cannot
+ * contain a colon outside of double quotes, so the separator is the last
+ * colon that is not inside double quotes; everything before it is handed
+ * verbatim to the input function of the boxed type.
+ */
 UBox *ubox_parse(const char *str, char **value)
 {
     int sep = -1;
@@ -410,28 +436,42 @@ int ubox_order(FmgrInfo *flinfo, UBox *a, UBox *b)
 
 /*
  * The type OID is folded into the value's hash the way hash_array() folds in
- * successive elements; this keeps the low 32 bits of ubox_hash_extended(x, 0)
- * equal to ubox_hash(x), as the hash access method requires.  TYPECACHE_EQ_OPR
- * is requested so that the type cache verifies the hash function against the
- * type's equality operator.
+ * successive elements.  This is the only place the hash is computed, and
+ * ubox_hash() just truncates it at seed 0, so the low 32 bits of
+ * ubox_hash_extended(x, 0) are equal to ubox_hash(x) by construction, as the
+ * hash access method requires.  TYPECACHE_EQ_OPR is requested so that the type
+ * cache verifies the hash function against the type's equality operator.
+ *
+ * Support function 2 of a hash operator class is optional, so a type may have a
+ * plain hash function and no extended one; falling straight through to the
+ * type-only hash in that case would make the two entry points disagree.  The
+ * plain function ignores the seed, which costs seed diversity for such a type
+ * but keeps the two consistent.
  */
 uint64 ubox_hash_value(FmgrInfo *flinfo, UBox *box, uint64 seed)
 {
-    TypeCacheEntry *typentry = ubox_cached_typentry(flinfo, box->typeoid, TYPECACHE_EQ_OPR | TYPECACHE_CMP_PROC | TYPECACHE_HASH_EXTENDED_PROC_FINFO);
+    TypeCacheEntry *typentry = ubox_cached_typentry(flinfo, box->typeoid,
+            TYPECACHE_EQ_OPR | TYPECACHE_CMP_PROC | TYPECACHE_HASH_PROC_FINFO | TYPECACHE_HASH_EXTENDED_PROC_FINFO);
     uint64 valhash = 0;
 
     if(OidIsValid(typentry->hash_extended_proc_finfo.fn_oid))
     {
         valhash = DatumGetUInt64(FunctionCall2Coll(&typentry->hash_extended_proc_finfo, typentry->typcollation, ubox_value(box, typentry), Int64GetDatum(seed)));
     }
+    else if(OidIsValid(typentry->hash_proc_finfo.fn_oid))
+    {
+        valhash = DatumGetUInt32(FunctionCall1Coll(&typentry->hash_proc_finfo, typentry->typcollation, ubox_value(box, typentry)));
+    }
     else if(!OidIsValid(typentry->cmp_proc))
     {
+        // neither ordering nor hashing: equality is bytewise, so hash the bytes
         const unsigned char *ptr;
         int len;
 
         ubox_raw_bytes(box, typentry, &ptr, &len);
         valhash = hash_bytes_extended(ptr, len, seed);
     }
+    // else: ordered by its B-tree comparison but no hash function -- hash the type only
 
     uint64 result = hash_bytes_uint32_extended(box->typeoid, seed);
 
@@ -715,28 +755,9 @@ PG_FUNCTION_INFO_V1(ubox_hash);
 Datum ubox_hash(PG_FUNCTION_ARGS)
 {
     UBox *box = PG_GETARG_UBOX_P(0);
-    TypeCacheEntry *typentry = ubox_cached_typentry(fcinfo->flinfo, box->typeoid, TYPECACHE_EQ_OPR | TYPECACHE_CMP_PROC | TYPECACHE_HASH_PROC_FINFO);
-    uint32 valhash = 0;
 
-    if(OidIsValid(typentry->hash_proc_finfo.fn_oid))
-    {
-        valhash = DatumGetUInt32(FunctionCall1Coll(&typentry->hash_proc_finfo, typentry->typcollation, ubox_value(box, typentry)));
-    }
-    else if(!OidIsValid(typentry->cmp_proc))
-    {
-        // neither ordering nor hashing: equality is bytewise, so hash the bytes
-        const unsigned char *ptr;
-        int len;
-
-        ubox_raw_bytes(box, typentry, &ptr, &len);
-        valhash = hash_bytes(ptr, len);
-    }
-    // else: ordered by its B-tree comparison but no hash function -- hash the type only
-
-    uint32 result = hash_bytes_uint32(box->typeoid);
-    result = (result << 5) - result + valhash;
-
-    PG_RETURN_UINT32(result);
+    // the 32-bit hash is the low half of the 64-bit one at seed 0, by definition
+    PG_RETURN_UINT32((uint32) ubox_hash_value(fcinfo->flinfo, box, 0));
 }
 
 

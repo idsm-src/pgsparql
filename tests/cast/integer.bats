@@ -442,6 +442,6 @@ load ../psql_tests.bash
   expect_output '9223372036854775807'
 }
 
-@test "fn: sparql.cast_as_integer_from_rdfbox(sparql.rdfbox_create_from_iri(' http://123.org '::varchar))" {
+@test "fn: sparql.cast_as_integer_from_rdfbox(sparql.rdfbox_create_from_iri('http://123.org'::varchar))" {
   expect_output '(null)'
 }

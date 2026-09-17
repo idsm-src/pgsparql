@@ -170,7 +170,7 @@ setup_file() {
   expect_output '8'
 }
 
-@test "oc: (select count(*) from (select x from unnest(array[sparql.rdfbox_create_from_string('a'::varchar), sparql.rdfbox_create_from_string('a'::varchar), sparql.rdfbox_create_from_langstring('a'::varchar, 'en'::varchar), sparql.rdfbox_create_from_iri('a'::varchar), sparql.rdfbox_create_from_sblanknode('a'::varchar)]) x group by x) t)" {
+@test "oc: (select count(*) from (select x from unnest(array[sparql.rdfbox_create_from_string('a'::varchar), sparql.rdfbox_create_from_string('a'::varchar), sparql.rdfbox_create_from_langstring('a'::varchar, 'en'::varchar), sparql.rdfbox_create_from_iri('http://example.org/a'::varchar), sparql.rdfbox_create_from_sblanknode('00000000a'::varchar)]) x group by x) t)" {
   expect_output '4'
 }
 

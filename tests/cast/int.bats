@@ -394,6 +394,45 @@ load ../psql_tests.bash
   expect_output '2147483647'
 }
 
-@test "fn: sparql.cast_as_int_from_rdfbox(sparql.rdfbox_create_from_iri(' http://123.org '::varchar))" {
+@test "fn: sparql.cast_as_int_from_rdfbox(sparql.rdfbox_create_from_iri('http://123.org'::varchar))" {
+  expect_output '(null)'
+}
+
+
+
+####
+# the range has to be checked before the conversion, which is undefined for NaN
+# and for anything the target type cannot hold
+#
+
+@test "fn: sparql.cast_as_int_from_double('NaN'::float8)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_int_from_double('Infinity'::float8)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_int_from_double('-Infinity'::float8)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_int_from_double(2147483648.0::float8)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_int_from_double(2147483647.0::float8)" {
+  expect_output '2147483647'
+}
+
+@test "fn: sparql.cast_as_int_from_double(-2147483648.0::float8)" {
+  expect_output '-2147483648'
+}
+
+@test "fn: sparql.cast_as_int_from_float(2147483648.0::float4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_int_from_float('NaN'::float4)" {
   expect_output '(null)'
 }

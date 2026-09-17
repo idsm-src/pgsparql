@@ -2,6 +2,7 @@
 #include <inttypes.h>
 #include <utils/builtins.h>
 #include <libpq/pqformat.h>
+#include <mb/pg_wchar.h>
 #include "call.h"
 #include "try-catch.h"
 #include "rdfbox/rdfbox.h"
@@ -15,10 +16,10 @@
 #include "types/decimal.h"
 #include "types/float.h"
 #include "types/double.h"
-#include "types/integer.h"
-#include "types/decimal.h"
 #include "types/parser.h"
 #include "types/daytimeduration.h"
+#include "types/timezone.h"
+#include "types/sblanknode.h"
 #include "rdfbox/xsd.h"
 
 
@@ -28,15 +29,91 @@
 #define TYPE_DELIM      "^^"
 #define VALUE_DELIM     "\""
 #define UVALUE_DELIM    "'"
+#define VALUE_QUOTE     '"'     // the same character as VALUE_DELIM
+#define UVALUE_QUOTE    '\''    // the same character as UVALUE_DELIM
 #define BLKNODE_IPREFIX "_:i"
 #define BLKNODE_SPREFIX "_:s"
 #define PREFIX          VALUE_DELIM
-#define UPREFIX         UVALUE_DELIM
-#define SUFFIX(X)       VALUE_DELIM TYPE_DELIM IRI_BEGIN X IRI_END
 #define STRLEN(X)       (sizeof(X) - 1)
 #define PREFIX_SIZE     (STRLEN(PREFIX))
-#define UPREFIX_SIZE    (STRLEN(UPREFIX))
-#define SUFFIX_SIZE(X)  (STRLEN(SUFFIX(X)))
+
+
+/*
+ * Everything the receive function reads is raw data from the client, while the
+ * input function is handed text that PostgreSQL has already converted and
+ * verified.  What the receive function has to make of it falls into two kinds,
+ * and only one of them is optional.
+ *
+ * Every part that ends up in a varchar -- the value, the language tag, the
+ * datatype IRI, the lexical form -- must be valid in the server encoding.  This
+ * is not about the box at all: such a varchar is handed out by the getters and
+ * goes on to upper(), to a regular expression, to COPY and to the client, and an
+ * embedded zero byte cuts it short wherever it lands.  textrecv() verifies what
+ * it reads for the same reason, and so do the range checks on a timestamp, a
+ * date and a timezone further down, without which the box could be stored but
+ * never printed again.  These are unconditional.
+ *
+ * The syntax of an IRI, of a language tag and of a blank node label is another
+ * matter.  Not satisfying it costs a box whose text representation
+ * rdfbox_input() will not read back, which is precisely what a constructor is
+ * free to build (see rdfbox/constructors.c), so checking it here establishes no
+ * invariant, only a cost -- a regular expression match per value, on the path
+ * that bulk-loads a store.  It is compiled out unless the extension is
+ * configured with --enable-extra-checks, the same switch the constructors use.
+ */
+static inline const char *getmsgtext(StringInfo buf, int32 size)
+{
+    const char *data = pq_getmsgbytes(buf, size);
+
+    pg_verifymbstr(data, size, false);
+
+    return data;
+}
+
+
+#ifdef PGSPARQL_EXTRA_CHECKS
+static inline const char *getmsgiri(StringInfo buf, int32 size)
+{
+    const char *data = getmsgtext(buf, size);
+
+    if(!check_iri(data, size))
+        ereport(ERROR, (errcode(ERRCODE_INVALID_BINARY_REPRESENTATION), errmsg("invalid IRI")));
+
+    return data;
+}
+#else
+#define getmsgiri(buf, size)            getmsgtext(buf, size)
+#endif
+
+
+#ifdef PGSPARQL_EXTRA_CHECKS
+static inline const char *getmsglang(StringInfo buf, int32 size)
+{
+    const char *data = getmsgtext(buf, size);
+
+    if(!check_language_tag(data, size))
+        ereport(ERROR, (errcode(ERRCODE_INVALID_BINARY_REPRESENTATION), errmsg("invalid language tag")));
+
+    return data;
+}
+#else
+#define getmsglang(buf, size)           getmsgtext(buf, size)
+#endif
+
+
+#ifdef PGSPARQL_EXTRA_CHECKS
+static inline const char *getmsgsblanknode(StringInfo buf, int32 size)
+{
+    const char *data = getmsgtext(buf, size);
+
+    if(!is_sblanknode_value(data, size))
+        ereport(ERROR, (errcode(ERRCODE_INVALID_BINARY_REPRESENTATION), errmsg("invalid blank node")));
+
+    return data;
+}
+#else
+#define getmsgsblanknode(buf, size)     getmsgtext(buf, size)
+#endif
 
 
 static inline size_t strlen_escaped(const char *str, size_t size)
@@ -105,6 +182,28 @@ static inline void memcpy_escaped(char *buffer, const char *str, size_t size)
 }
 
 
+static char *print_literal(char quote, const char *data, size_t size, const char *type, size_t type_size)
+{
+    size_t escaped_size = strlen_escaped(data, size);
+
+    char *result = (char *) palloc0(1 + escaped_size + 1 + STRLEN(TYPE_DELIM IRI_BEGIN) + type_size + STRLEN(IRI_END) + 1);
+    char *str = result;
+
+    *str++ = quote;
+    memcpy_escaped(str, data, size);
+    str += escaped_size;
+    *str++ = quote;
+
+    memcpy(str, TYPE_DELIM IRI_BEGIN, STRLEN(TYPE_DELIM IRI_BEGIN));
+    str += STRLEN(TYPE_DELIM IRI_BEGIN);
+    memcpy(str, type, type_size);
+    str += type_size;
+    memcpy(str, IRI_END, STRLEN(IRI_END));
+
+    return result;
+}
+
+
 PG_FUNCTION_INFO_V1(rdfbox_input);
 Datum rdfbox_input(PG_FUNCTION_ARGS)
 {
@@ -150,7 +249,9 @@ Datum rdfbox_input(PG_FUNCTION_ARGS)
             {
                 char esc = str[i++];
 
-                if(esc == 't')
+                if(esc == '\\')
+                    data[size++] = '\\';
+                else if(esc == 't')
                     data[size++] = '\t';
                 else if(esc == 'b')
                     data[size++] = '\b';
@@ -376,7 +477,7 @@ Datum rdfbox_input(PG_FUNCTION_ARGS)
 
         box = GetIBlankNodeRdfBox(value);
     }
-    else if(str[0] == '_' && str[1] == ':' && str[2] == 's' && length > 11)
+    else if(str[0] == '_' && str[1] == ':' && str[2] == 's' && length >= 11)
     {
         for(int i = 3; i < 11; i++)
             if(!(str[i] >= '0' && str[i] <= '9') && !(str[i] >= 'a' && str[i] <= 'f'))
@@ -414,85 +515,101 @@ Datum rdfbox_input(PG_FUNCTION_ARGS)
             }
         }
 
+        pg_verifymbstr(buffer, pos, false);
+
         box = GetSBlankNodeRdfBox(buffer, pos);
     }
     else
     {
-        bool is_integer = true;
-        bool is_decimal = true;
-        bool is_double = true;
-
-        for(size_t i = 0; i < length; i++)
+        PG_TRY_EX();
         {
-            if(str[i] == '.')
+            bool is_integer = true;
+            bool is_decimal = true;
+            bool is_double = true;
+
+            for(size_t i = 0; i < length; i++)
             {
-                is_integer = false;
+                if(str[i] == '.')
+                {
+                    is_integer = false;
+                }
+                else if(str[i] == 'e' || str[i] == 'E')
+                {
+                    is_integer = false;
+                    is_decimal = false;
+                }
+                else if(!xsd_isdigit(str[i]) && !xsd_isspace(str[i]) && str[i] != '-' && str[i] != '+')
+                {
+                    is_integer = false;
+                    is_decimal = false;
+                    is_double = false;
+                }
             }
-            else if(str[i] == 'e')
+
+            if(is_integer)
             {
-                is_integer = false;
-                is_decimal = false;
+                Numeric val = integer_parse(str, length);
+                VarChar *std = integer_as_varchar(val);
+
+                if(VARSIZE(std) - VARHDRSZ == length && !memcmp(str, VARDATA(std), length))
+                    box = GetIntegerRdfBox(val);
+                else
+                    box = GetIntegerRdfBoxWithLexical(val, str, length);
             }
-            else if(str[i] < '0' || str[i] > '9')
+            else if(is_decimal)
             {
-                is_integer = false;
-                is_decimal = false;
-                is_double = false;
+                Numeric val = decimal_parse(str, length);
+                VarChar *std = decimal_as_varchar(val);
+
+                if(VARSIZE(std) - VARHDRSZ == length && !memcmp(str, VARDATA(std), length))
+                    box = GetDecimalRdfBox(val);
+                else
+                    box = GetDecimalRdfBoxWithLexical(val, str, length);
+            }
+            else if(is_double)
+            {
+                float8 val = double_parse(str, length);
+                char buffer[DOUBLE_MAXLEN];
+
+                if(double_print(val, buffer) == length && !memcmp(str, buffer, length))
+                    box = GetDoubleRdfBox(val);
+                else
+                    box = GetDoubleRdfBoxWithLexical(val, str, length);
+            }
+            else
+            {
+                char *data = str;
+                size_t size = length;
+
+                while(size > 0 && xsd_isspace(*data))
+                    size--, data++;
+
+                while(size > 0 && xsd_isspace(data[size - 1]))
+                    size--;
+
+                bool value;
+
+                if(size == 4 && !strncmp(data, "true", size))
+                    value = true;
+                else if(size == 5 && !strncmp(data, "false", size))
+                    value = false;
+                else
+                    ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid RDF term")));
+
+                box = GetBooleanRdfBox(value);
             }
         }
-
-        if(is_integer)
+        PG_CATCH_EX();
         {
-            Numeric val = integer_parse(str, length);
-            VarChar *std = integer_as_varchar(val);
+            if(sqlerrcode != ERRCODE_INVALID_TEXT_REPRESENTATION)
+                PG_RE_THROW_EX();
 
-            if(VARSIZE(std) - VARHDRSZ == length && !memcmp(str, VARDATA(std), length))
-                box = GetIntegerRdfBox(val);
-            else
-                box = GetIntegerRdfBoxWithLexical(val, str, length);
+            box = NULL;
         }
-        else if(is_decimal)
-        {
-            Numeric val = decimal_parse(str, length);
-            VarChar *std = decimal_as_varchar(val);
+        PG_END_TRY_EX();
 
-            if(VARSIZE(std) - VARHDRSZ == length && !memcmp(str, VARDATA(std), length))
-                box = GetDecimalRdfBox(val);
-            else
-                box = GetDecimalRdfBoxWithLexical(val, str, length);
-        }
-        else if(is_double)
-        {
-            float8 val = double_parse(str, length);
-            char buffer[DOUBLE_MAXLEN];
-
-            if(double_print(val, buffer) == length && !memcmp(str, buffer, length))
-                box = GetDoubleRdfBox(val);
-            else
-                box = GetDoubleRdfBoxWithLexical(val, str, length);
-        }
-        else
-        {
-            char *data = str;
-            size_t size = length;
-
-            while(size > 0 && xsd_isspace(*data))
-                size--, data++;
-
-            while(size > 0 && xsd_isspace(data[size - 1]))
-                size--;
-
-            bool value;
-
-            if(size == 4 && !strncmp(data, "true", size))
-                value = true;
-            else if(size == 5 && !strncmp(data, "false", size))
-                value = false;
-            else
-                ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid RDF term")));
-
-            box = GetBooleanRdfBox(value);
-        }
+        if(box == NULL)
+            ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid RDF term")));
     }
 
     PG_RETURN_RDFBOX_P(box);
@@ -510,148 +627,84 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
         case XSD_BOOLEAN:
         {
             VarChar *value = box->lexical ? RdfBoxGetBoolLexical(box) : boolean_as_varchar(RdfBoxGetBool(box));
-
-            int buffsize = PREFIX_SIZE + VARSIZE(value) - VARHDRSZ + SUFFIX_SIZE(XSD_BOOLEAN_IRI) + 1;
-            result = (char *) palloc(buffsize);
-
-            snprintf(result, buffsize, PREFIX "%.*s" SUFFIX(XSD_BOOLEAN_IRI), VARSIZE(value) - VARHDRSZ, VARDATA(value));
-
+            result = print_literal(VALUE_QUOTE, VARDATA(value), VARSIZE(value) - VARHDRSZ, XSD_BOOLEAN_IRI, STRLEN(XSD_BOOLEAN_IRI));
             break;
         }
 
         case XSD_SHORT:
         {
             VarChar *value = box->lexical ? RdfBoxGetInt16Lexical(box) : short_as_varchar(RdfBoxGetInt16(box));
-
-            int buffsize = PREFIX_SIZE + VARSIZE(value) - VARHDRSZ + SUFFIX_SIZE(XSD_SHORT_IRI) + 1;
-            result = (char *) palloc(buffsize);
-
-            snprintf(result, buffsize, PREFIX "%.*s" SUFFIX(XSD_SHORT_IRI), VARSIZE(value) - VARHDRSZ, VARDATA(value));
-
+            result = print_literal(VALUE_QUOTE, VARDATA(value), VARSIZE(value) - VARHDRSZ, XSD_SHORT_IRI, STRLEN(XSD_SHORT_IRI));
             break;
         }
 
         case XSD_INT:
         {
             VarChar *value = box->lexical ? RdfBoxGetInt32Lexical(box) : int_as_varchar(RdfBoxGetInt32(box));
-
-            int buffsize = PREFIX_SIZE + VARSIZE(value) - VARHDRSZ + SUFFIX_SIZE(XSD_INT_IRI) + 1;
-            result = (char *) palloc(buffsize);
-
-            snprintf(result, buffsize, PREFIX "%.*s" SUFFIX(XSD_INT_IRI), VARSIZE(value) - VARHDRSZ, VARDATA(value));
-
+            result = print_literal(VALUE_QUOTE, VARDATA(value), VARSIZE(value) - VARHDRSZ, XSD_INT_IRI, STRLEN(XSD_INT_IRI));
             break;
         }
 
         case XSD_LONG:
         {
             VarChar *value = box->lexical ? RdfBoxGetInt64Lexical(box) : long_as_varchar(RdfBoxGetInt64(box));
-
-            int buffsize = PREFIX_SIZE + VARSIZE(value) - VARHDRSZ + SUFFIX_SIZE(XSD_LONG_IRI) + 1;
-            result = (char *) palloc(buffsize);
-
-            snprintf(result, buffsize, PREFIX "%.*s" SUFFIX(XSD_LONG_IRI), VARSIZE(value) - VARHDRSZ, VARDATA(value));
-
+            result = print_literal(VALUE_QUOTE, VARDATA(value), VARSIZE(value) - VARHDRSZ, XSD_LONG_IRI, STRLEN(XSD_LONG_IRI));
             break;
         }
 
         case XSD_INTEGER:
         {
             VarChar *value = box->lexical ? RdfBoxGetAttachment(box) : integer_as_varchar(RdfBoxGetNumeric(box));
-
-            int buffsize = PREFIX_SIZE + VARSIZE(value) - VARHDRSZ + SUFFIX_SIZE(XSD_INTEGER_IRI) + 1;
-            result = (char *) palloc(buffsize);
-
-            snprintf(result, buffsize, PREFIX "%.*s" SUFFIX(XSD_INTEGER_IRI), VARSIZE(value) - VARHDRSZ, VARDATA(value));
-
+            result = print_literal(VALUE_QUOTE, VARDATA(value), VARSIZE(value) - VARHDRSZ, XSD_INTEGER_IRI, STRLEN(XSD_INTEGER_IRI));
             break;
         }
 
         case XSD_DECIMAL:
         {
             VarChar *value = box->lexical ? RdfBoxGetAttachment(box) : decimal_as_varchar(RdfBoxGetNumeric(box));
-
-            int buffsize = PREFIX_SIZE + VARSIZE(value) - VARHDRSZ + SUFFIX_SIZE(XSD_DECIMAL_IRI) + 1;
-            result = (char *) palloc(buffsize);
-
-            snprintf(result, buffsize, PREFIX "%.*s" SUFFIX(XSD_DECIMAL_IRI), VARSIZE(value) - VARHDRSZ, VARDATA(value));
-
+            result = print_literal(VALUE_QUOTE, VARDATA(value), VARSIZE(value) - VARHDRSZ, XSD_DECIMAL_IRI, STRLEN(XSD_DECIMAL_IRI));
             break;
         }
 
         case XSD_FLOAT:
         {
             VarChar *value = box->lexical ? RdfBoxGetFloat4Lexical(box) : float_as_varchar(RdfBoxGetFloat4(box));
-
-            int buffsize = PREFIX_SIZE + VARSIZE(value) - VARHDRSZ + SUFFIX_SIZE(XSD_FLOAT_IRI) + 1;
-            result = (char *) palloc(buffsize);
-
-            snprintf(result, buffsize, PREFIX "%.*s" SUFFIX(XSD_FLOAT_IRI), VARSIZE(value) - VARHDRSZ, VARDATA(value));
-
+            result = print_literal(VALUE_QUOTE, VARDATA(value), VARSIZE(value) - VARHDRSZ, XSD_FLOAT_IRI, STRLEN(XSD_FLOAT_IRI));
             break;
         }
 
         case XSD_DOUBLE:
         {
             VarChar *value = box->lexical ? RdfBoxGetFloat8Lexical(box) : double_as_varchar(RdfBoxGetFloat8(box));
-
-            int buffsize = PREFIX_SIZE + VARSIZE(value) - VARHDRSZ + SUFFIX_SIZE(XSD_DOUBLE_IRI) + 1;
-            result = (char *) palloc(buffsize);
-
-            snprintf(result, buffsize, PREFIX "%.*s" SUFFIX(XSD_DOUBLE_IRI), VARSIZE(value) - VARHDRSZ, VARDATA(value));
-
+            result = print_literal(VALUE_QUOTE, VARDATA(value), VARSIZE(value) - VARHDRSZ, XSD_DOUBLE_IRI, STRLEN(XSD_DOUBLE_IRI));
             break;
         }
 
         case XSD_DATETIME:
         {
             VarChar *value = box->lexical ? RdfBoxGetZonedDateTimeLexical(box) : datetime_as_varchar(RdfBoxGetZonedDateTime(box));
-
-            int buffsize = PREFIX_SIZE + VARSIZE(value) - VARHDRSZ + SUFFIX_SIZE(XSD_DATETIME_IRI) + 1;
-            result = (char *) palloc(buffsize);
-
-            snprintf(result, buffsize, PREFIX "%.*s" SUFFIX(XSD_DATETIME_IRI), VARSIZE(value) - VARHDRSZ, VARDATA(value));
-
+            result = print_literal(VALUE_QUOTE, VARDATA(value), VARSIZE(value) - VARHDRSZ, XSD_DATETIME_IRI, STRLEN(XSD_DATETIME_IRI));
             break;
         }
 
         case XSD_DATE:
         {
             VarChar *value = box->lexical ? RdfBoxGetZonedDateLexical(box) : date_as_varchar(RdfBoxGetZonedDate(box));
-
-            int buffsize = PREFIX_SIZE + VARSIZE(value) - VARHDRSZ + SUFFIX_SIZE(XSD_DATE_IRI) + 1;
-            result = (char *) palloc(buffsize);
-
-            snprintf(result, buffsize, PREFIX "%.*s" SUFFIX(XSD_DATE_IRI), VARSIZE(value) - VARHDRSZ, VARDATA(value));
-
+            result = print_literal(VALUE_QUOTE, VARDATA(value), VARSIZE(value) - VARHDRSZ, XSD_DATE_IRI, STRLEN(XSD_DATE_IRI));
             break;
         }
 
         case XSD_DAYTIMEDURATION:
         {
             VarChar *value = box->lexical ? RdfBoxGetInt64Lexical(box) : daytimeduration_as_varchar(RdfBoxGetInt64(box));
-
-            int buffsize = PREFIX_SIZE + VARSIZE(value) - VARHDRSZ + SUFFIX_SIZE(XSD_DAYTIMEDURATION_IRI) + 1;
-            result = (char *) palloc(buffsize);
-
-            snprintf(result, buffsize, PREFIX "%.*s" SUFFIX(XSD_DAYTIMEDURATION_IRI), VARSIZE(value) - VARHDRSZ, VARDATA(value));
-
+            result = print_literal(VALUE_QUOTE, VARDATA(value), VARSIZE(value) - VARHDRSZ, XSD_DAYTIMEDURATION_IRI, STRLEN(XSD_DAYTIMEDURATION_IRI));
             break;
         }
 
         case XSD_STRING:
         {
             VarChar *value = RdfBoxGetVarChar(box);
-
-            int size = VARSIZE(value) - VARHDRSZ;
-            int escaped_size = strlen_escaped(VARDATA(value), size);
-
-            result = (char *) palloc0(PREFIX_SIZE + escaped_size + SUFFIX_SIZE(XSD_STRING_IRI) + 1);
-
-            memcpy(result, PREFIX, PREFIX_SIZE);
-            memcpy_escaped(result + PREFIX_SIZE, VARDATA(value), size);
-            memcpy(result + PREFIX_SIZE + escaped_size, SUFFIX(XSD_STRING_IRI), SUFFIX_SIZE(XSD_STRING_IRI));
-
+            result = print_literal(VALUE_QUOTE, VARDATA(value), VARSIZE(value) - VARHDRSZ, XSD_STRING_IRI, STRLEN(XSD_STRING_IRI));
             break;
         }
 
@@ -666,12 +719,10 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
             int escaped_size = strlen_escaped(VARDATA(value), value_size);
 
             result = (char *) palloc0(PREFIX_SIZE + escaped_size + STRLEN(VALUE_DELIM LANG_DELIM) + lang_size + 1);
-
             memcpy(result, PREFIX, PREFIX_SIZE);
             memcpy_escaped(result + PREFIX_SIZE, VARDATA(value), value_size);
             memcpy(result + PREFIX_SIZE + escaped_size, VALUE_DELIM LANG_DELIM, STRLEN(VALUE_DELIM LANG_DELIM));
             memcpy(result + PREFIX_SIZE + escaped_size + STRLEN(VALUE_DELIM LANG_DELIM), VARDATA(lang), lang_size);
-
             break;
         }
 
@@ -691,64 +742,37 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
                 value = psprintf("%s:%s", ubox_value_as_cstring(ubox), ubox_type_as_cstring(ubox));
             }
 
-            int value_size = strlen(value);
-            int type_size = VARSIZE(type) - VARHDRSZ;
-            int escaped_size = strlen_escaped(value, value_size);
-
-            result = (char *) palloc0(UPREFIX_SIZE + escaped_size + STRLEN(UVALUE_DELIM TYPE_DELIM IRI_BEGIN) + type_size + STRLEN(IRI_END) + 1);
-
-            memcpy(result, UPREFIX, UPREFIX_SIZE);
-            memcpy_escaped(result + UPREFIX_SIZE, value, value_size);
-            memcpy(result + UPREFIX_SIZE + escaped_size, UVALUE_DELIM TYPE_DELIM IRI_BEGIN, STRLEN(UVALUE_DELIM TYPE_DELIM IRI_BEGIN));
-            memcpy(result + UPREFIX_SIZE + escaped_size + STRLEN(UVALUE_DELIM TYPE_DELIM IRI_BEGIN), VARDATA(type), type_size);
-            memcpy(result + UPREFIX_SIZE + escaped_size + STRLEN(UVALUE_DELIM TYPE_DELIM IRI_BEGIN) + type_size, IRI_END, STRLEN(IRI_END));
-
+            result = print_literal(UVALUE_QUOTE, value, strlen(value), VARDATA(type), VARSIZE(type) - VARHDRSZ);
             break;
         }
 
         case TYPED_LITERAL:
         {
             VarChar *value = RdfBoxGetVarChar(box);
-            int size = VARSIZE(value);
             VarChar *type = RdfBoxGetAttachment(box);
-
-            int value_size = size - VARHDRSZ;
-            int type_size = VARSIZE(type) - VARHDRSZ;
-            int escaped_size = strlen_escaped(VARDATA(value), value_size);
-
-            result = (char *) palloc0(PREFIX_SIZE + escaped_size + STRLEN(VALUE_DELIM TYPE_DELIM IRI_BEGIN) + type_size + STRLEN(IRI_END) + 1);
-
-            memcpy(result, PREFIX, PREFIX_SIZE);
-            memcpy_escaped(result + PREFIX_SIZE, VARDATA(value), value_size);
-            memcpy(result + PREFIX_SIZE + escaped_size, VALUE_DELIM TYPE_DELIM IRI_BEGIN, STRLEN(VALUE_DELIM TYPE_DELIM IRI_BEGIN));
-            memcpy(result + PREFIX_SIZE + escaped_size + STRLEN(VALUE_DELIM TYPE_DELIM IRI_BEGIN), VARDATA(type), type_size);
-            memcpy(result + PREFIX_SIZE + escaped_size + STRLEN(VALUE_DELIM TYPE_DELIM IRI_BEGIN) + type_size, IRI_END, STRLEN(IRI_END));
-
+            result = print_literal(VALUE_QUOTE, VARDATA(value), VARSIZE(value) - VARHDRSZ, VARDATA(type), VARSIZE(type) - VARHDRSZ);
             break;
         }
 
         case IRI:
         {
             VarChar *value = RdfBoxGetVarChar(box);
-
             int size = VARSIZE(value) - VARHDRSZ;
-            result = (char *) palloc0(STRLEN(IRI_BEGIN) + size + STRLEN(IRI_END) + 1);
 
+            result = (char *) palloc0(STRLEN(IRI_BEGIN) + size + STRLEN(IRI_END) + 1);
             memcpy(result, IRI_BEGIN, STRLEN(IRI_BEGIN));
             memcpy(result + STRLEN(IRI_BEGIN), VARDATA(value), size);
             memcpy(result + STRLEN(IRI_BEGIN) + size, IRI_END, STRLEN(IRI_END));
-
             break;
         }
 
         case IBLANKNODE:
         {
             int64 value = RdfBoxGetInt64(box);
-
             int buffsize = STRLEN(BLKNODE_IPREFIX) + 21;
-            result = (char *) palloc0(buffsize);
 
-            snprintf(result, buffsize, BLKNODE_IPREFIX "%016" SCNx64, (uint64) value);
+            result = (char *) palloc0(buffsize);
+            snprintf(result, buffsize, BLKNODE_IPREFIX "%016" PRIx64, (uint64) value);
             break;
         }
 
@@ -798,6 +822,15 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
     uint32 type    = header & ~(1u << 31);
     bool lexical = header >> 31;
 
+    /*
+     * Only the types that RdfBoxGetLexical() knows can carry a lexical form.
+     * Ignoring the bit for the others would make rdfbox_send(rdfbox_recv(x))
+     * differ from x, so reject it instead.
+     */
+    if(lexical && (type == XSD_STRING || type == RDF_LANGSTRING || type == TYPED_LITERAL || type == IRI ||
+            type == IBLANKNODE || type == SBLANKNODE))
+        ereport(ERROR, (errcode(ERRCODE_INVALID_BINARY_REPRESENTATION), errmsg("rdfbox of type %u cannot carry a lexical form", type)));
+
     RdfBox *box = NULL;
 
     switch(type)
@@ -809,9 +842,8 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
             if(lexical)
             {
                 int32 size = pq_getmsgint(buf, sizeof(int32));
-                char *data = buf->data + buf->cursor;
+                const char *data = getmsgtext(buf, size);
                 box = GetBooleanRdfBoxWithLexical(value, data, size);
-                buf->cursor += size;
             }
             else
             {
@@ -828,9 +860,8 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
             if(lexical)
             {
                 int32 size = pq_getmsgint(buf, sizeof(int32));
-                char *data = buf->data + buf->cursor;
+                const char *data = getmsgtext(buf, size);
                 box = GetShortRdfBoxWithLexical(value, data, size);
-                buf->cursor += size;
             }
             else
             {
@@ -847,9 +878,8 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
             if(lexical)
             {
                 int32 size = pq_getmsgint(buf, sizeof(int32));
-                char *data = buf->data + buf->cursor;
+                const char *data = getmsgtext(buf, size);
                 box = GetIntRdfBoxWithLexical(value, data, size);
-                buf->cursor += size;
             }
             else
             {
@@ -866,9 +896,8 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
             if(lexical)
             {
                 int32 size = pq_getmsgint(buf, sizeof(int32));
-                char *data = buf->data + buf->cursor;
+                const char *data = getmsgtext(buf, size);
                 box = GetLongRdfBoxWithLexical(value, data, size);
-                buf->cursor += size;
             }
             else
             {
@@ -885,9 +914,8 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
             if(lexical)
             {
                 int32 size = pq_getmsgint(buf, sizeof(int32));
-                char *data = buf->data + buf->cursor;
+                const char *data = getmsgtext(buf, size);
                 box = GetIntegerRdfBoxWithLexical(value, data, size);
-                buf->cursor += size;
             }
             else
             {
@@ -904,9 +932,8 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
             if(lexical)
             {
                 int32 size = pq_getmsgint(buf, sizeof(int32));
-                char *data = buf->data + buf->cursor;
+                const char *data = getmsgtext(buf, size);
                 box = GetDecimalRdfBoxWithLexical(value, data, size);
-                buf->cursor += size;
             }
             else
             {
@@ -923,9 +950,8 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
             if(lexical)
             {
                 int32 size = pq_getmsgint(buf, sizeof(int32));
-                char *data = buf->data + buf->cursor;
+                const char *data = getmsgtext(buf, size);
                 box = GetFloatRdfBoxWithLexical(value, data, size);
-                buf->cursor += size;
             }
             else
             {
@@ -942,9 +968,8 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
             if(lexical)
             {
                 int32 size = pq_getmsgint(buf, sizeof(int32));
-                char *data = buf->data + buf->cursor;
+                const char *data = getmsgtext(buf, size);
                 box = GetDoubleRdfBoxWithLexical(value, data, size);
-                buf->cursor += size;
             }
             else
             {
@@ -958,24 +983,21 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
         {
             Timestamp timestamp = (Timestamp) pq_getmsgint64(buf);
             int32 zone = pq_getmsgint(buf, sizeof(int32));
+            
+            struct pg_tm tt;
+            fsec_t fsec;
 
-            if(!TIMESTAMP_NOT_FINITE(timestamp))
-            {
-                struct pg_tm tt;
-                fsec_t fsec;
-
-                if(timestamp2tm(timestamp, NULL, &tt, &fsec, NULL, NULL) != 0 || !IS_VALID_TIMESTAMP(timestamp))
-                    ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("xsd:dateTime out of range")));
-            }
+            // both the timestamp and the zone have to satisfy the invariants that datetime_print() relies on
+            if(!IS_VALID_TIMEZONE(zone) || !IS_VALID_TIMESTAMP(timestamp) || timestamp2tm(timestamp, NULL, &tt, &fsec, NULL, NULL) != 0)
+                ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("xsd:dateTime out of range")));
 
             ZonedDateTime value = { .value = timestamp, .zone = zone};
 
             if(lexical)
             {
                 int32 size = pq_getmsgint(buf, sizeof(int32));
-                char *data = buf->data + buf->cursor;
+                const char *data = getmsgtext(buf, size);
                 box = GetDateTimeRdfBoxWithLexical(&value, data, size);
-                buf->cursor += size;
             }
             else
             {
@@ -990,7 +1012,8 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
             DateADT date = (DateADT) pq_getmsgint(buf, sizeof(DateADT));
             int32 zone = pq_getmsgint(buf, sizeof(int32));
 
-            if(!DATE_NOT_FINITE(date) && !IS_VALID_DATE(date))
+            // both the date and the zone have to satisfy the invariants that date_print() relies on
+            if(!IS_VALID_DATE(date) || !IS_VALID_TIMEZONE(zone))
                 ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("xsd:date out of range")));
 
             ZonedDate value = { .value = date, .zone = zone};
@@ -998,9 +1021,8 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
             if(lexical)
             {
                 int32 size = pq_getmsgint(buf, sizeof(int32));
-                char *data = buf->data + buf->cursor;
+                const char *data = getmsgtext(buf, size);
                 box = GetDateRdfBoxWithLexical(value, data, size);
-                buf->cursor += size;
             }
             else
             {
@@ -1017,9 +1039,8 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
             if(lexical)
             {
                 int32 size = pq_getmsgint(buf, sizeof(int32));
-                char *data = buf->data + buf->cursor;
+                const char *data = getmsgtext(buf, size);
                 box = GetDayTimeDurationRdfBoxWithLexical(value, data, size);
-                buf->cursor += size;
             }
             else
             {
@@ -1032,8 +1053,7 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
         case XSD_STRING:
         {
             int32 size = pq_getmsgint(buf, sizeof(int32));
-            char *value = buf->data + buf->cursor;
-            buf->cursor += size;
+            const char *value = getmsgtext(buf, size);
 
             box = GetStringRdfBox(value, size);
             break;
@@ -1043,9 +1063,9 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
         {
             int32 value_size = pq_getmsgint(buf, sizeof(int32));
             int32 lang_size = pq_getmsgint(buf, sizeof(int32));
-            char *value = buf->data + buf->cursor;
-            char *lang = buf->data + buf->cursor + value_size;
-            buf->cursor += value_size + lang_size;
+
+            const char *value = getmsgtext(buf, value_size);
+            const char *lang = getmsglang(buf, lang_size);
 
             box = GetLangStringRdfBox(value, value_size, lang, lang_size);
             break;
@@ -1058,27 +1078,27 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
 
             /* the receive function of the boxed type consumes the whole message it is given */
             StringInfoData value;
-            value.data = buf->data + buf->cursor;
+            value.data = unconstify(char *, pq_getmsgbytes(buf, value_size));
             value.len = value_size;
             value.maxlen = value_size;
             value.cursor = 0;
 
             UBox *ubox = ubox_receive(&value);
-            buf->cursor += value_size;
 
-            char *type = buf->data + buf->cursor;
-            buf->cursor += type_size;
+            if(value.cursor != value.len)
+                ereport(ERROR, (errcode(ERRCODE_INVALID_BINARY_REPRESENTATION), errmsg("improper binary format in boxed value")));
+
+            const char *datatype = getmsgiri(buf, type_size);
 
             if(lexical)
             {
                 int32 size = pq_getmsgint(buf, sizeof(int32));
-                char *data = buf->data + buf->cursor;
-                box = GetUserLiteralRdfBoxWithLexical(ubox, type, type_size, data, size);
-                buf->cursor += size;
+                const char *data = getmsgtext(buf, size);
+                box = GetUserLiteralRdfBoxWithLexical(ubox, datatype, type_size, data, size);
             }
             else
             {
-                box = GetUserLiteralRdfBox(ubox, type, type_size);
+                box = GetUserLiteralRdfBox(ubox, datatype, type_size);
             }
 
             break;
@@ -1088,19 +1108,17 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
         {
             int32 value_size = pq_getmsgint(buf, sizeof(int32));
             int32 type_size = pq_getmsgint(buf, sizeof(int32));
-            char *value = buf->data + buf->cursor;
-            char *type = buf->data + buf->cursor + value_size;
-            buf->cursor += value_size + type_size;
+            const char *value = getmsgtext(buf, value_size);
+            const char *datatype = getmsgiri(buf, type_size);
 
-            box = GetTypedLiteralRdfBox(value, value_size, type, type_size);
+            box = GetTypedLiteralRdfBox(value, value_size, datatype, type_size);
             break;
         }
 
         case IRI:
         {
             int32 size = pq_getmsgint(buf, sizeof(int32));
-            char *value = buf->data + buf->cursor;
-            buf->cursor += size;
+            const char *value = getmsgiri(buf, size);
 
             box = GetIriRdfBox(value, size);
             break;
@@ -1115,12 +1133,14 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
         case SBLANKNODE:
         {
             int32 size = pq_getmsgint(buf, sizeof(int32));
-            char *value = buf->data + buf->cursor;
-            buf->cursor += size;
+            const char *value = getmsgsblanknode(buf, size);
 
             box = GetSBlankNodeRdfBox(value, size);
             break;
         }
+
+        default:
+            ereport(ERROR, (errcode(ERRCODE_INVALID_BINARY_REPRESENTATION), errmsg("invalid type of rdfbox: %u", type)));
     }
 
     PG_RETURN_RDFBOX_P(box);
@@ -1210,9 +1230,9 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
 
             if(box->lexical)
             {
-                VarChar *value = RdfBoxGetAttachment(box);
-                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
-                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                VarChar *lexical = RdfBoxGetAttachment(box);
+                pq_sendint32(&buf, VARSIZE(lexical) - VARHDRSZ);
+                appendBinaryStringInfoNT(&buf, VARDATA(lexical), VARSIZE(lexical) - VARHDRSZ);
                 break;
             }
 

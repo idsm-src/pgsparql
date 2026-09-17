@@ -1334,3 +1334,27 @@ setup_file() {
 @test "oc: (select length(t.x::text) from (select x from unnest(array[sparql.ubox_create(repeat('a', 100000)::text), sparql.ubox_create('a'::text)]) x order by x desc limit 1) t)" {
   expect_output '100016'
 }
+
+
+
+####
+# the 32-bit hash must be the low half of the 64-bit one at seed 0; support
+# function 2 of a hash operator class is optional, so a boxed type may have a
+# plain hash function and no extended one
+#
+
+@test "fn: (select sparql.ubox_hash(b)::bigint & 4294967295 = sparql.ubox_hash_extended(b, 0) & 4294967295 from (select sparql.ubox_create('a'::text) b) t)" {
+  expect_output 't'
+}
+
+@test "fn: (select sparql.ubox_hash(b)::bigint & 4294967295 = sparql.ubox_hash_extended(b, 0) & 4294967295 from (select sparql.ubox_create(1::money) b) t)" {
+  expect_output 't'
+}
+
+@test "fn: (select sparql.ubox_hash(b)::bigint & 4294967295 = sparql.ubox_hash_extended(b, 0) & 4294967295 from (select sparql.ubox_create('123'::xid) b) t)" {
+  expect_output 't'
+}
+
+@test "fn: (select sparql.ubox_hash(b)::bigint & 4294967295 = sparql.ubox_hash_extended(b, 0) & 4294967295 from (select sparql.ubox_create('(1,2)'::point) b) t)" {
+  expect_output 't'
+}

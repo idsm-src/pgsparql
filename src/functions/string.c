@@ -47,7 +47,7 @@ static int varchar_contains(VarChar *value, VarChar *searched)
 
 static int positive_numeric_to_int(Numeric value)
 {
-    int result = PG_INT32_MAX;
+    int result = 0;
 
     PG_TRY_EX();
     {
@@ -57,6 +57,8 @@ static int positive_numeric_to_int(Numeric value)
     {
         if(sqlerrcode != ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE)
             PG_RE_THROW_EX();
+
+        result = PG_INT32_MAX;
     }
     PG_END_TRY_EX();
 
@@ -151,8 +153,10 @@ Datum substr_string(PG_FUNCTION_ARGS)
     if(DatumGetBool(DirectFunctionCall2(numeric_gt, NumericGetDatum(length), NumericGetDatum(get_zero()))))
         limit = positive_numeric_to_int(length);
 
-    if(begin + limit < begin)
-        limit = PG_INT32_MAX - begin; // to avoid the error: 'negative substring length not allowed'
+    // to avoid the error: 'negative substring length not allowed'; written so that the sum never overflows,
+    // as signed overflow is undefined and the compiler is free to optimize the test that relies on it away
+    if(limit > PG_INT32_MAX - begin)
+        limit = PG_INT32_MAX - begin;
 
     Datum result = DirectFunctionCall3(text_substr, value, Int32GetDatum(begin), Int32GetDatum(limit));
 

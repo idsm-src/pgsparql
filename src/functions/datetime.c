@@ -35,7 +35,7 @@ static void date_decompose(ZonedDate *date, struct pg_tm *tm)
 }
 
 
-static text *timezone_to_text(int64 zone)
+static text *timezone_to_text(int32 zone)
 {
     char data[MAXDATELEN + 1];
     char *str = data;

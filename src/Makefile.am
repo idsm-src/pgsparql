@@ -77,10 +77,9 @@ libpgsparql_la_SOURCES = \
     types/long.h \
     types/parser.h \
     types/sblanknode.c \
-	types/sblanknode.h \
+    types/sblanknode.h \
     types/short.c \
-	types/short.h \
-    types/timezone.c \
+    types/short.h \
     types/timezone.h \
     types/ubox.c \
     types/ubox.h
@@ -90,5 +89,5 @@ EXTRA_DIST = \
 	ryu/LICENSE-Boost
 
 
-libpgsparql_la_LDFLAGS = $(PCRE2_LIBS)
-libpgsparql_la_CPPFLAGS = $(POSTGRESQL_CPPFLAGS) $(PCRE2_CFLAGS) -DPCRE2_CODE_UNIT_WIDTH=8
+libpgsparql_la_LIBADD = $(PCRE2_LIBS)
+libpgsparql_la_CPPFLAGS = $(POSTGRESQL_CPPFLAGS) $(PCRE2_CFLAGS) -DPCRE2_CODE_UNIT_WIDTH=8 $(EXTRA_CHECKS_CPPFLAGS)

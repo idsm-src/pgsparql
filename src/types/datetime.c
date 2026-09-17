@@ -42,7 +42,9 @@ static char *move_bc_year(char *data, int size)
     errno = 0;
     char *endptr;
 
-    int64 year = strtol(input, &endptr, 10);
+    // the caller has already cut the year down to at most nine digits, so long is
+    // wide enough everywhere and its length modifier matches what strtol() returns
+    long year = strtol(input, &endptr, 10);
 
     if(input == endptr || errno != 0) // should never happen
         ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed xsd:dateTime literal")));
@@ -257,7 +259,7 @@ static Timestamp get_time_value(ZonedDateTime *arg)
     if(arg->zone != ZONE_UNSPECIFIED)
         return arg->value;
 
-    return arg->value - (int64) implicit_timezone * USECS_PER_SEC;
+    return arg->value - (int64) IMPLICIT_TIMEZONE * USECS_PER_SEC;
 }
 
 
@@ -333,7 +335,7 @@ PG_FUNCTION_INFO_V1(zoneddatetime_create);
 Datum zoneddatetime_create(PG_FUNCTION_ARGS)
 {
     TimestampTz value = PG_GETARG_TIMESTAMPTZ(0);
-    int32 zone = PG_GETARG_INT32(1);
+    int32 zone = checked_zone(PG_GETARG_INT32(1));
 
     ZonedDateTime *result = palloc0(sizeof(ZonedDateTime));
     result->value = value;

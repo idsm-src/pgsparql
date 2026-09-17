@@ -38,6 +38,46 @@ load ../psql_tests.bash
   expect_output '"1.0e6"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
+@test "io: '-1'::sparql.rdfbox" {
+  expect_output '"-1"^^<http://www.w3.org/2001/XMLSchema#integer>'
+}
+
+@test "io: '+1'::sparql.rdfbox" {
+  expect_output '"+1"^^<http://www.w3.org/2001/XMLSchema#integer>'
+}
+
+@test "io: '-1.3'::sparql.rdfbox" {
+  expect_output '"-1.3"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+}
+
+@test "io: '1.0E6'::sparql.rdfbox" {
+  expect_output '"1.0E6"^^<http://www.w3.org/2001/XMLSchema#double>'
+}
+
+@test "io: '-1.0e6'::sparql.rdfbox" {
+  expect_output '"-1.0e6"^^<http://www.w3.org/2001/XMLSchema#double>'
+}
+
+@test "io: '1.0e-6'::sparql.rdfbox" {
+  expect_output '"1.0e-6"^^<http://www.w3.org/2001/XMLSchema#double>'
+}
+
+@test "io: '+1.0e+6'::sparql.rdfbox" {
+  expect_output '"+1.0e+6"^^<http://www.w3.org/2001/XMLSchema#double>'
+}
+
+@test "io: '1-2'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "io: '1e2e3'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "io: '--1'::sparql.rdfbox" {
+  expect_error
+}
+
 @test "io: 'true'::sparql.rdfbox" {
   expect_output '"true"^^<http://www.w3.org/2001/XMLSchema#boolean>'
 }
@@ -674,4 +714,89 @@ load ../psql_tests.bash
 
 @test "io: '_:s0000000id'::sparql.rdfbox" {
   expect_error
+}
+
+
+
+####
+# a lexical form is escaped like any other string: the parsers honour the
+# whitespace facet of XSD, so it may hold a line break, and a raw CR or LF is
+# rejected inside a literal delimited by a single quotation mark
+#
+
+@test "io: '\"\\n1\"^^<http://www.w3.org/2001/XMLSchema#integer>'::sparql.rdfbox" {
+  expect_output '"\n1"^^<http://www.w3.org/2001/XMLSchema#integer>'
+}
+
+@test "io: '\"\\r1\"^^<http://www.w3.org/2001/XMLSchema#int>'::sparql.rdfbox" {
+  expect_output '"\r1"^^<http://www.w3.org/2001/XMLSchema#int>'
+}
+
+@test "io: '\"\\ttrue\"^^<http://www.w3.org/2001/XMLSchema#boolean>'::sparql.rdfbox" {
+  expect_output '"\ttrue"^^<http://www.w3.org/2001/XMLSchema#boolean>'
+}
+
+@test "io: '\"\\n2000-01-01T00:00:00Z\"^^<http://www.w3.org/2001/XMLSchema#dateTime>'::sparql.rdfbox" {
+  expect_output '"\n2000-01-01T00:00:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>'
+}
+
+@test "io: '\"\\n1.0\"^^<http://www.w3.org/2001/XMLSchema#decimal>'::sparql.rdfbox::varchar::sparql.rdfbox" {
+  expect_output '"\n1.0"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+}
+
+@test "io: '\"\\n1.0E0\"^^<http://www.w3.org/2001/XMLSchema#double>'::sparql.rdfbox::varchar::sparql.rdfbox" {
+  expect_output '"\n1.0E0"^^<http://www.w3.org/2001/XMLSchema#double>'
+}
+
+
+
+####
+# a blank node with an empty label: eleven characters, and it has to read back
+#
+
+@test "io: '_:s00000001'::sparql.rdfbox" {
+  expect_output '_:s00000001'
+}
+
+@test "io: sparql.rdfbox_create_from_sblanknode(''::varchar, 1)::varchar::sparql.rdfbox" {
+  expect_output '_:s00000001'
+}
+
+
+
+####
+# a label that decodes to bytes which are not valid in the server encoding
+#
+
+@test "io: '_:s00000001a-ff'::sparql.rdfbox" {
+  expect_error
+}
+
+
+
+####
+# memcpy_escaped() writes a backslash as "\\", so the input function has to
+# decode it again -- a value holding one could not be read back from its own
+# text representation
+#
+
+@test "io: sparql.rdfbox_create_from_string(('a' || chr(92) || 'b')::varchar)" {
+  expect_output '"a\\b"^^<http://www.w3.org/2001/XMLSchema#string>'
+}
+
+@test "io: sparql.rdfbox_create_from_string(('a' || chr(92) || 'b')::varchar)::varchar::sparql.rdfbox" {
+  expect_output '"a\\b"^^<http://www.w3.org/2001/XMLSchema#string>'
+}
+
+@test "io: sparql.rdfbox_create_from_langstring(('a' || chr(92) || 'b')::varchar, 'en'::varchar)::varchar::sparql.rdfbox" {
+  expect_output '"a\\b"@en'
+}
+
+@test "io: sparql.rdfbox_create_from_typedliteral(('a' || chr(92) || 'b')::varchar, 'http://example.org/t'::varchar)::varchar::sparql.rdfbox" {
+  expect_output '"a\\b"^^<http://example.org/t>'
+}
+
+# every escape memcpy_escaped() can write, in one value
+@test "io: sparql.rdfbox_get_string(sparql.rdfbox_create_from_string((chr(92) || chr(9) || chr(8) || chr(10) || chr(13) || chr(12) || chr(34) || chr(39))::varchar)::varchar::sparql.rdfbox) = (chr(92) || chr(9) || chr(8) || chr(10) || chr(13) || chr(12) || chr(34) || chr(39))::varchar" {
+  expect_output 't'
 }

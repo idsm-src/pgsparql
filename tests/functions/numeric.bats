@@ -233,7 +233,7 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.round_rdfbox(sparql.rdfbox_create_from_float('-1234.5'::float4))" {
-  expect_output '"-1.235E3"^^<http://www.w3.org/2001/XMLSchema#float>'
+  expect_output '"-1.234E3"^^<http://www.w3.org/2001/XMLSchema#float>'
 }
 
 @test "fn: sparql.round_rdfbox(sparql.rdfbox_create_from_float('-1234.25'::float4))" {
@@ -293,11 +293,43 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.round_rdfbox(sparql.rdfbox_create_from_double('-1234.5'::float8))" {
-  expect_output '"-1.235E3"^^<http://www.w3.org/2001/XMLSchema#double>'
+  expect_output '"-1.234E3"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "fn: sparql.round_rdfbox(sparql.rdfbox_create_from_double('-1234.25'::float8))" {
   expect_output '"-1.234E3"^^<http://www.w3.org/2001/XMLSchema#double>'
+}
+
+
+####
+# a half is rounded towards positive infinity, as fn:round does, not away from
+# zero as round(), roundf() and numeric_round() do
+#
+
+@test "fn: sparql.round_rdfbox('\"-2.5\"^^<http://www.w3.org/2001/XMLSchema#decimal>'::sparql.rdfbox)" {
+  expect_output '"-2.0"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+}
+
+@test "fn: sparql.round_rdfbox('\"2.5\"^^<http://www.w3.org/2001/XMLSchema#decimal>'::sparql.rdfbox)" {
+  expect_output '"3.0"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+}
+
+@test "fn: sparql.round_rdfbox(sparql.rdfbox_create_from_double('-2.5'::float8))" {
+  expect_output '"-2.0E0"^^<http://www.w3.org/2001/XMLSchema#double>'
+}
+
+@test "fn: sparql.round_rdfbox(sparql.rdfbox_create_from_float('-2.5'::float4))" {
+  expect_output '"-2.0E0"^^<http://www.w3.org/2001/XMLSchema#float>'
+}
+
+# the sign of a negative value that rounds to zero is kept
+@test "fn: sparql.round_rdfbox(sparql.rdfbox_create_from_double('-0.5'::float8))" {
+  expect_output '"-0.0E0"^^<http://www.w3.org/2001/XMLSchema#double>'
+}
+
+# the double just below a half must not be rounded up, which floor(x + 0.5) would do
+@test "fn: sparql.round_rdfbox(sparql.rdfbox_create_from_double('0.49999999999999994'::float8))" {
+  expect_output '"0.0E0"^^<http://www.w3.org/2001/XMLSchema#double>'
 }
 
 @test "fn: sparql.round_rdfbox(sparql.rdfbox_create_from_double('-0.0'::float8))" {

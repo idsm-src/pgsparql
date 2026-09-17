@@ -6,6 +6,7 @@
 
 
 void write_sblanknode_segment(char *buffer, uint32 value);
+bool is_sblanknode_value(const char *data, int32 size);
 
 Datum sblanknode_create(PG_FUNCTION_ARGS);
 Datum sblanknode_get_value(PG_FUNCTION_ARGS);

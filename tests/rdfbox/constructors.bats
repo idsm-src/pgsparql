@@ -649,3 +649,17 @@ load ../psql_tests.bash
 @test "fn: sparql.rdfbox_create_from_sblanknode('id'::varchar, '2147483647'::int4)" {
   expect_output '_:s7fffffffid'
 }
+
+
+
+####
+# the one-argument form takes the whole stored value, segment and label together
+#
+
+@test "fn: sparql.rdfbox_create_from_sblanknode('00000001'::varchar)" {
+  expect_output '_:s00000001'
+}
+
+@test "fn: sparql.rdfbox_create_from_sblanknode('00000001label'::varchar)" {
+  expect_output '_:s00000001label'
+}

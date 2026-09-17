@@ -4,7 +4,12 @@
 #include "constants.h"
 
 
+/*
+ * The constants live in TopMemoryContext for as long as the backend does and
+ * are never freed as PostgreSQL never unloads a loadable module.
+ */
 static Numeric zero = NULL;
+static Numeric half = NULL;
 static VarChar *empty = NULL;
 
 
@@ -21,6 +26,19 @@ Numeric get_zero()
 }
 
 
+Numeric get_half()
+{
+    if(half == NULL)
+    {
+        MemoryContext old = MemoryContextSwitchTo(TopMemoryContext);
+        half = DatumGetNumeric(DirectFunctionCall3(numeric_in, CStringGetDatum("0.5"), ObjectIdGetDatum(InvalidOid), Int32GetDatum(-1)));
+        MemoryContextSwitchTo(old);
+    }
+
+    return half;
+}
+
+
 VarChar *get_empty_varchar()
 {
     if(empty == NULL)
@@ -31,14 +49,4 @@ VarChar *get_empty_varchar()
     }
 
     return empty;
-}
-
-
-static __attribute__((destructor)) void destroy_constants()
-{
-    if(zero != NULL)
-        pfree(zero);
-
-    if(empty != NULL)
-        pfree(empty);
 }

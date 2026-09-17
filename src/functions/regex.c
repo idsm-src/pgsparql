@@ -7,6 +7,10 @@
 #include "rdfbox/rdfbox.h"
 
 
+/*
+ * The constants live in TopMemoryContext for as long as the backend does and
+ * are never freed as PostgreSQL never unloads a loadable module.
+ */
 static pcre2_general_context *general_context = NULL;
 static pcre2_compile_context *compile_context = NULL;
 static pcre2_match_context *match_context = NULL;
@@ -72,20 +76,6 @@ static pcre2_match_context *get_match_context()
     return match_context;
 }
 
-
-static __attribute__((destructor)) void destroy_contexts()
-{
-    if(match_context != NULL)
-        pcre2_match_context_free(match_context);
-
-    if(compile_context != NULL)
-        pcre2_compile_context_free(compile_context);
-
-    if(general_context != NULL)
-        pcre2_general_context_free(general_context);
-}
-
-
 static bool parse_flags(VarChar *flags, uint32_t *options)
 {
     char *data = VARDATA_ANY(flags);
@@ -121,7 +111,7 @@ static bool parse_flags(VarChar *flags, uint32_t *options)
     }
 
     if(*options & PCRE2_LITERAL)
-            *options &= (PCRE2_LITERAL | PCRE2_CASELESS);
+        *options &= (PCRE2_LITERAL | PCRE2_CASELESS | PCRE2_UTF);
 
     return true;
 }
@@ -232,18 +222,18 @@ Datum replace_string(PG_FUNCTION_ARGS)
 
         if(re != NULL)
         {
-            uint32_t options = PCRE2_SUBSTITUTE_GLOBAL | PCRE2_SUBSTITUTE_UNSET_EMPTY;
+            uint32_t suboptions = PCRE2_SUBSTITUTE_GLOBAL | PCRE2_SUBSTITUTE_UNSET_EMPTY;
             PCRE2_SIZE size = (4 * 1024 - VARHDRSZ);
             result = palloc(size + VARHDRSZ);
 
-            int rc = pcre2_substitute(re, (unsigned char *) VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value),  0, options | PCRE2_SUBSTITUTE_OVERFLOW_LENGTH,
+            int rc = pcre2_substitute(re, (unsigned char *) VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value),  0, suboptions | PCRE2_SUBSTITUTE_OVERFLOW_LENGTH,
                     NULL, get_match_context(), (unsigned char *) VARDATA_ANY(replacement), VARSIZE_ANY_EXHDR(replacement), (unsigned char *) VARDATA(result), &size);
 
             if(rc == PCRE2_ERROR_NOMEMORY)
             {
                 result = palloc(size + VARHDRSZ);
 
-                rc = pcre2_substitute(re, (unsigned char *) VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value),  0, options,
+                rc = pcre2_substitute(re, (unsigned char *) VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value),  0, suboptions,
                         NULL, get_match_context(), (unsigned char *) VARDATA_ANY(replacement), VARSIZE_ANY_EXHDR(replacement), (unsigned char *) VARDATA(result), &size);
             }
 
@@ -281,18 +271,18 @@ Datum replace_rdfbox(PG_FUNCTION_ARGS)
         {
             VarChar *value = RdfBoxGetVarChar(box);
 
-            uint32_t options = PCRE2_SUBSTITUTE_GLOBAL | PCRE2_SUBSTITUTE_UNSET_EMPTY;
+            uint32_t suboptions = PCRE2_SUBSTITUTE_GLOBAL | PCRE2_SUBSTITUTE_UNSET_EMPTY;
             PCRE2_SIZE size = 4 * 1024;
             char *buffer = palloc(size);
 
-            int rc = pcre2_substitute(re, (unsigned char *) VARDATA(value), VARSIZE(value) - VARHDRSZ,  0, options | PCRE2_SUBSTITUTE_OVERFLOW_LENGTH,
+            int rc = pcre2_substitute(re, (unsigned char *) VARDATA(value), VARSIZE(value) - VARHDRSZ,  0, suboptions | PCRE2_SUBSTITUTE_OVERFLOW_LENGTH,
                     NULL, get_match_context(), (unsigned char *) VARDATA_ANY(replacement), VARSIZE_ANY_EXHDR(replacement), (unsigned char *) buffer, &size);
 
             if(rc == PCRE2_ERROR_NOMEMORY)
             {
                 buffer = repalloc(buffer, size);
 
-                rc = pcre2_substitute(re, (unsigned char *) VARDATA(value), VARSIZE(value) - VARHDRSZ,  0, options,
+                rc = pcre2_substitute(re, (unsigned char *) VARDATA(value), VARSIZE(value) - VARHDRSZ,  0, suboptions,
                         NULL, get_match_context(), (unsigned char *) VARDATA_ANY(replacement), VARSIZE_ANY_EXHDR(replacement), (unsigned char *) buffer, &size);
             }
 

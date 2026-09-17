@@ -394,6 +394,33 @@ load ../psql_tests.bash
   expect_output '32767'
 }
 
-@test "fn: sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_iri(' http://123.org '::varchar))" {
+@test "fn: sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_iri('http://123.org'::varchar))" {
+  expect_output '(null)'
+}
+
+
+
+####
+# the range has to be checked before the conversion, which is undefined for NaN
+# and for anything the target type cannot hold
+#
+
+@test "fn: sparql.cast_as_short_from_double('NaN'::float8)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_short_from_double(32768.0::float8)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_short_from_double(32767.0::float8)" {
+  expect_output '32767'
+}
+
+@test "fn: sparql.cast_as_short_from_double(-32768.0::float8)" {
+  expect_output '-32768'
+}
+
+@test "fn: sparql.cast_as_short_from_float('NaN'::float4)" {
   expect_output '(null)'
 }
