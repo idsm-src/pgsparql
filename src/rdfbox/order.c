@@ -6,6 +6,8 @@
 #include "rdfbox/rdfbox.h"
 #include "rdfbox/order.h"
 #include "rdfbox/promotion.h"
+#include "types/decimal.h"
+#include "types/unsignedlong.h"
 
 
 /*
@@ -24,8 +26,10 @@
  * common type as the operator < does. The promoted comparison depends on the pair of types involved and is not
  * transitive (for example, integer 16777217 = float 16777216 < double 16777216.5 < integer 16777217), so it
  * cannot be a part of a total order. Because all promotions are monotonic, the exact comparison agrees with <
- * and > whenever they hold. Only if the exact values are equal, the types are compared (short < int < long <
- * integer < decimal < float < double). NaN is greater than any other number and equal to another NaN.
+ * and > whenever they hold. Only if the exact values are equal, the types are compared in the order of the RdfType
+ * enumeration (byte < unsignedByte < short < unsignedShort < int < unsignedInt < long < unsignedLong < integer <
+ * nonPositiveInteger < negativeInteger < nonNegativeInteger < positiveInteger < decimal < float < double). NaN is
+ * greater than any other number and equal to another NaN.
  *
  * User literals are compared by their boxed values with the total order of ubox (which orders values of
  * different PostgreSQL types by the OID of the type) and then by the IRIs of their datatypes. The operator @<
@@ -39,9 +43,17 @@
  */
 
 
+/* the numbers held in an int64, in a uint64 and in a double; the others are held in a numeric */
+
 static inline bool rdfbox_is_integral(RdfBox *box)
 {
-    return box->type >= XSD_SHORT && box->type <= XSD_LONG;
+    return box->type >= XSD_BYTE && box->type <= XSD_LONG;
+}
+
+
+static inline bool rdfbox_is_unsigned_long(RdfBox *box)
+{
+    return box->type == XSD_UNSIGNEDLONG;
 }
 
 
@@ -60,53 +72,6 @@ static inline float8 rdfbox_get_floating_as_double(RdfBox *box)
 static inline int numeric_compare(Numeric left, Numeric right)
 {
     return DatumGetInt32(DirectFunctionCall2(numeric_cmp, NumericGetDatum(left), NumericGetDatum(right)));
-}
-
-
-static inline Numeric numeric_multiply(Numeric left, Numeric right)
-{
-    return DatumGetNumeric(DirectFunctionCall2(numeric_mul, NumericGetDatum(left), NumericGetDatum(right)));
-}
-
-
-static inline Numeric numeric_from_int64(int64 value)
-{
-    return DatumGetNumeric(DirectFunctionCall1(int8_numeric, Int64GetDatum(value)));
-}
-
-
-static inline Numeric numeric_from_string(const char *string)
-{
-    return DatumGetNumeric(DirectFunctionCall3(numeric_in, CStringGetDatum(string), ObjectIdGetDatum(InvalidOid), Int32GetDatum(-1)));
-}
-
-
-static Numeric get_numeric_power(int base, int exponent)
-{
-    Numeric result = numeric_from_int64(1);
-    Numeric power = numeric_from_int64(base);
-
-    while(exponent > 0)
-    {
-        if(exponent & 1)
-        {
-            Numeric product = numeric_multiply(result, power);
-            pfree(result);
-            result = product;
-        }
-
-        exponent >>= 1;
-
-        if(exponent > 0)
-        {
-            Numeric square = numeric_multiply(power, power);
-            pfree(power);
-            power = square;
-        }
-    }
-
-    pfree(power);
-    return result;
 }
 
 
@@ -202,6 +167,24 @@ static int compare_double_with_integral(float8 left, int64 right)
 }
 
 
+static int compare_double_with_unsigned_long(float8 left, uint64 right)
+{
+    if(isnan(left) || left >= 18446744073709551616.0)
+        return 1;
+
+    if(left < 0)
+        return -1;
+
+    uint64 whole = (uint64) left;
+
+    if(whole != right)
+        return compare(whole, right);
+
+    /* sign of the fractional part */
+    return compare(left, (float8) whole);
+}
+
+
 static int compare_double_with_numeric(float8 left, Numeric right)
 {
     float8 approx = numeric_get_as_double(right);
@@ -223,9 +206,28 @@ static int compare_double_with_numeric(float8 left, Numeric right)
 }
 
 
+static int compare_integral_with_unsigned_long(int64 left, uint64 right)
+{
+    if(left < 0)
+        return -1;
+
+    return compare((uint64) left, right);
+}
+
+
 static int compare_integral_with_numeric(int64 left, Numeric right)
 {
     Numeric value = numeric_from_int64(left);
+    int result = numeric_compare(value, right);
+    pfree(value);
+
+    return result;
+}
+
+
+static int compare_unsigned_long_with_numeric(uint64 left, Numeric right)
+{
+    Numeric value = unsignedlong_as_numeric(left);
     int result = numeric_compare(value, right);
     pfree(value);
 
@@ -243,6 +245,8 @@ static int compare_numeric_values(RdfBox *left, RdfBox *right)
             return compare_double_values(value, rdfbox_get_floating_as_double(right));
         else if(rdfbox_is_integral(right))
             return compare_double_with_integral(value, rdfbox_get_numeric_as_long(right));
+        else if(rdfbox_is_unsigned_long(right))
+            return compare_double_with_unsigned_long(value, RdfBoxGetUInt64(right));
         else
             return compare_double_with_numeric(value, RdfBoxGetNumeric(right));
     }
@@ -256,10 +260,25 @@ static int compare_numeric_values(RdfBox *left, RdfBox *right)
 
         if(rdfbox_is_integral(right))
             return compare(value, rdfbox_get_numeric_as_long(right));
+        else if(rdfbox_is_unsigned_long(right))
+            return compare_integral_with_unsigned_long(value, RdfBoxGetUInt64(right));
         else
             return compare_integral_with_numeric(value, RdfBoxGetNumeric(right));
     }
     else if(rdfbox_is_integral(right))
+    {
+        return -compare_numeric_values(right, left);
+    }
+    else if(rdfbox_is_unsigned_long(left))
+    {
+        uint64 value = RdfBoxGetUInt64(left);
+
+        if(rdfbox_is_unsigned_long(right))
+            return compare(value, RdfBoxGetUInt64(right));
+        else
+            return compare_unsigned_long_with_numeric(value, RdfBoxGetNumeric(right));
+    }
+    else if(rdfbox_is_unsigned_long(right))
     {
         return -compare_numeric_values(right, left);
     }
@@ -290,18 +309,31 @@ static int compare_values_of_same_type(RdfBox *left, RdfBox *right)
         case XSD_BOOLEAN:
             return compare(RdfBoxGetBool(left), RdfBoxGetBool(right));
 
+        case XSD_BYTE:
+        case XSD_UNSIGNEDBYTE:
         case XSD_SHORT:
             return compare(RdfBoxGetInt16(left), RdfBoxGetInt16(right));
 
+        case XSD_UNSIGNEDSHORT:
         case XSD_INT:
             return compare(RdfBoxGetInt32(left), RdfBoxGetInt32(right));
+
+        case XSD_UNSIGNEDINT:
+            return compare(RdfBoxGetUInt32(left), RdfBoxGetUInt32(right));
 
         case XSD_LONG:
         case XSD_DAYTIMEDURATION:
         case IBLANKNODE:
             return compare(RdfBoxGetInt64(left), RdfBoxGetInt64(right));
 
+        case XSD_UNSIGNEDLONG:
+            return compare(RdfBoxGetUInt64(left), RdfBoxGetUInt64(right));
+
         case XSD_INTEGER:
+        case XSD_NONPOSITIVEINTEGER:
+        case XSD_NEGATIVEINTEGER:
+        case XSD_NONNEGATIVEINTEGER:
+        case XSD_POSITIVEINTEGER:
         case XSD_DECIMAL:
             return numeric_compare(RdfBoxGetNumeric(left), RdfBoxGetNumeric(right));
 

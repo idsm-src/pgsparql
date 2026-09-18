@@ -10,6 +10,7 @@
 #include "types/datetime.h"
 #include "types/iblanknode.h"
 #include "types/sblanknode.h"
+#include "types/unsignedlong.h"
 
 
 PG_FUNCTION_INFO_V1(rdfbox_get_boolean);
@@ -35,6 +36,58 @@ Datum rdfbox_get_boolean_lexical(PG_FUNCTION_ARGS)
         PG_RETURN_NULL();
 
     PG_RETURN_VARCHAR_P(box->lexical ? RdfBoxGetBoolLexical(box) : get_empty_varchar());
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_byte);
+Datum rdfbox_get_byte(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
+
+    if(box->type != XSD_BYTE || !RdfBoxCheckLexicalFlag(box, flag))
+        PG_RETURN_NULL();
+
+    PG_RETURN_INT16(RdfBoxGetInt8(box));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_byte_lexical);
+Datum rdfbox_get_byte_lexical(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
+
+    if(box->type != XSD_BYTE || !RdfBoxCheckLexicalFlag(box, flag))
+        PG_RETURN_NULL();
+
+    PG_RETURN_VARCHAR_P(box->lexical ? RdfBoxGetInt16Lexical(box) : get_empty_varchar());
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_unsignedbyte);
+Datum rdfbox_get_unsignedbyte(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
+
+    if(box->type != XSD_UNSIGNEDBYTE || !RdfBoxCheckLexicalFlag(box, flag))
+        PG_RETURN_NULL();
+
+    PG_RETURN_INT16(RdfBoxGetUInt8(box));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_unsignedbyte_lexical);
+Datum rdfbox_get_unsignedbyte_lexical(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
+
+    if(box->type != XSD_UNSIGNEDBYTE || !RdfBoxCheckLexicalFlag(box, flag))
+        PG_RETURN_NULL();
+
+    PG_RETURN_VARCHAR_P(box->lexical ? RdfBoxGetInt16Lexical(box) : get_empty_varchar());
 }
 
 
@@ -64,6 +117,32 @@ Datum rdfbox_get_short_lexical(PG_FUNCTION_ARGS)
 }
 
 
+PG_FUNCTION_INFO_V1(rdfbox_get_unsignedshort);
+Datum rdfbox_get_unsignedshort(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
+
+    if(box->type != XSD_UNSIGNEDSHORT || !RdfBoxCheckLexicalFlag(box, flag))
+        PG_RETURN_NULL();
+
+    PG_RETURN_INT32(RdfBoxGetUInt16(box));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_unsignedshort_lexical);
+Datum rdfbox_get_unsignedshort_lexical(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
+
+    if(box->type != XSD_UNSIGNEDSHORT || !RdfBoxCheckLexicalFlag(box, flag))
+        PG_RETURN_NULL();
+
+    PG_RETURN_VARCHAR_P(box->lexical ? RdfBoxGetInt32Lexical(box) : get_empty_varchar());
+}
+
+
 PG_FUNCTION_INFO_V1(rdfbox_get_int);
 Datum rdfbox_get_int(PG_FUNCTION_ARGS)
 {
@@ -90,6 +169,32 @@ Datum rdfbox_get_int_lexical(PG_FUNCTION_ARGS)
 }
 
 
+PG_FUNCTION_INFO_V1(rdfbox_get_unsignedint);
+Datum rdfbox_get_unsignedint(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
+
+    if(box->type != XSD_UNSIGNEDINT || !RdfBoxCheckLexicalFlag(box, flag))
+        PG_RETURN_NULL();
+
+    PG_RETURN_INT64(RdfBoxGetUInt32(box));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_unsignedint_lexical);
+Datum rdfbox_get_unsignedint_lexical(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
+
+    if(box->type != XSD_UNSIGNEDINT || !RdfBoxCheckLexicalFlag(box, flag))
+        PG_RETURN_NULL();
+
+    PG_RETURN_VARCHAR_P(box->lexical ? RdfBoxGetUInt32Lexical(box) : get_empty_varchar());
+}
+
+
 PG_FUNCTION_INFO_V1(rdfbox_get_long);
 Datum rdfbox_get_long(PG_FUNCTION_ARGS)
 {
@@ -113,6 +218,188 @@ Datum rdfbox_get_long_lexical(PG_FUNCTION_ARGS)
         PG_RETURN_NULL();
 
     PG_RETURN_VARCHAR_P(box->lexical ? RdfBoxGetInt64Lexical(box) : get_empty_varchar());
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_unsignedlong);
+Datum rdfbox_get_unsignedlong(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
+
+    if(box->type != XSD_UNSIGNEDLONG || !RdfBoxCheckLexicalFlag(box, flag))
+        PG_RETURN_NULL();
+
+    PG_RETURN_NUMERIC(unsignedlong_as_numeric(RdfBoxGetUInt64(box)));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_unsignedlong_lexical);
+Datum rdfbox_get_unsignedlong_lexical(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
+
+    if(box->type != XSD_UNSIGNEDLONG || !RdfBoxCheckLexicalFlag(box, flag))
+        PG_RETURN_NULL();
+
+    PG_RETURN_VARCHAR_P(box->lexical ? RdfBoxGetUInt64Lexical(box) : get_empty_varchar());
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_integer);
+Datum rdfbox_get_integer(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
+
+    if(box->type != XSD_INTEGER || !RdfBoxCheckLexicalFlag(box, flag))
+        PG_RETURN_NULL();
+
+    PG_RETURN_NUMERIC(RdfBoxGetNumeric(box));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_integer_lexical);
+Datum rdfbox_get_integer_lexical(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
+
+    if(box->type != XSD_INTEGER || !RdfBoxCheckLexicalFlag(box, flag))
+        PG_RETURN_NULL();
+
+    PG_RETURN_VARCHAR_P(box->lexical ? RdfBoxGetAttachment(box) : get_empty_varchar());
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_nonpositiveinteger);
+Datum rdfbox_get_nonpositiveinteger(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
+
+    if(box->type != XSD_NONPOSITIVEINTEGER || !RdfBoxCheckLexicalFlag(box, flag))
+        PG_RETURN_NULL();
+
+    PG_RETURN_NUMERIC(RdfBoxGetNumeric(box));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_nonpositiveinteger_lexical);
+Datum rdfbox_get_nonpositiveinteger_lexical(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
+
+    if(box->type != XSD_NONPOSITIVEINTEGER || !RdfBoxCheckLexicalFlag(box, flag))
+        PG_RETURN_NULL();
+
+    PG_RETURN_VARCHAR_P(box->lexical ? RdfBoxGetAttachment(box) : get_empty_varchar());
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_negativeinteger);
+Datum rdfbox_get_negativeinteger(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
+
+    if(box->type != XSD_NEGATIVEINTEGER || !RdfBoxCheckLexicalFlag(box, flag))
+        PG_RETURN_NULL();
+
+    PG_RETURN_NUMERIC(RdfBoxGetNumeric(box));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_negativeinteger_lexical);
+Datum rdfbox_get_negativeinteger_lexical(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
+
+    if(box->type != XSD_NEGATIVEINTEGER || !RdfBoxCheckLexicalFlag(box, flag))
+        PG_RETURN_NULL();
+
+    PG_RETURN_VARCHAR_P(box->lexical ? RdfBoxGetAttachment(box) : get_empty_varchar());
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_nonnegativeinteger);
+Datum rdfbox_get_nonnegativeinteger(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
+
+    if(box->type != XSD_NONNEGATIVEINTEGER || !RdfBoxCheckLexicalFlag(box, flag))
+        PG_RETURN_NULL();
+
+    PG_RETURN_NUMERIC(RdfBoxGetNumeric(box));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_nonnegativeinteger_lexical);
+Datum rdfbox_get_nonnegativeinteger_lexical(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
+
+    if(box->type != XSD_NONNEGATIVEINTEGER || !RdfBoxCheckLexicalFlag(box, flag))
+        PG_RETURN_NULL();
+
+    PG_RETURN_VARCHAR_P(box->lexical ? RdfBoxGetAttachment(box) : get_empty_varchar());
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_positiveinteger);
+Datum rdfbox_get_positiveinteger(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
+
+    if(box->type != XSD_POSITIVEINTEGER || !RdfBoxCheckLexicalFlag(box, flag))
+        PG_RETURN_NULL();
+
+    PG_RETURN_NUMERIC(RdfBoxGetNumeric(box));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_positiveinteger_lexical);
+Datum rdfbox_get_positiveinteger_lexical(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
+
+    if(box->type != XSD_POSITIVEINTEGER || !RdfBoxCheckLexicalFlag(box, flag))
+        PG_RETURN_NULL();
+
+    PG_RETURN_VARCHAR_P(box->lexical ? RdfBoxGetAttachment(box) : get_empty_varchar());
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_decimal);
+Datum rdfbox_get_decimal(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
+
+    if(box->type != XSD_DECIMAL || !RdfBoxCheckLexicalFlag(box, flag))
+        PG_RETURN_NULL();
+
+    PG_RETURN_NUMERIC(RdfBoxGetNumeric(box));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_decimal_lexical);
+Datum rdfbox_get_decimal_lexical(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
+
+    if(box->type != XSD_DECIMAL || !RdfBoxCheckLexicalFlag(box, flag))
+        PG_RETURN_NULL();
+
+    PG_RETURN_VARCHAR_P(box->lexical ? RdfBoxGetAttachment(box) : get_empty_varchar());
 }
 
 
@@ -165,58 +452,6 @@ Datum rdfbox_get_double_lexical(PG_FUNCTION_ARGS)
         PG_RETURN_NULL();
 
     PG_RETURN_VARCHAR_P(box->lexical ? RdfBoxGetFloat8Lexical(box) : get_empty_varchar());
-}
-
-
-PG_FUNCTION_INFO_V1(rdfbox_get_integer);
-Datum rdfbox_get_integer(PG_FUNCTION_ARGS)
-{
-    RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
-
-    if(box->type != XSD_INTEGER || !RdfBoxCheckLexicalFlag(box, flag))
-        PG_RETURN_NULL();
-
-    PG_RETURN_NUMERIC(RdfBoxGetNumeric(box));
-}
-
-
-PG_FUNCTION_INFO_V1(rdfbox_get_integer_lexical);
-Datum rdfbox_get_integer_lexical(PG_FUNCTION_ARGS)
-{
-    RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
-
-    if(box->type != XSD_INTEGER || !RdfBoxCheckLexicalFlag(box, flag))
-        PG_RETURN_NULL();
-
-    PG_RETURN_VARCHAR_P(box->lexical ? RdfBoxGetAttachment(box) : get_empty_varchar());
-}
-
-
-PG_FUNCTION_INFO_V1(rdfbox_get_decimal);
-Datum rdfbox_get_decimal(PG_FUNCTION_ARGS)
-{
-    RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
-
-    if(box->type != XSD_DECIMAL || !RdfBoxCheckLexicalFlag(box, flag))
-        PG_RETURN_NULL();
-
-    PG_RETURN_NUMERIC(RdfBoxGetNumeric(box));
-}
-
-
-PG_FUNCTION_INFO_V1(rdfbox_get_decimal_lexical);
-Datum rdfbox_get_decimal_lexical(PG_FUNCTION_ARGS)
-{
-    RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    LexicalFlag flag = PG_GETARG_LEXICAL_FLAG(1);
-
-    if(box->type != XSD_DECIMAL || !RdfBoxCheckLexicalFlag(box, flag))
-        PG_RETURN_NULL();
-
-    PG_RETURN_VARCHAR_P(box->lexical ? RdfBoxGetAttachment(box) : get_empty_varchar());
 }
 
 

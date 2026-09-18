@@ -1965,3 +1965,65 @@ load ../psql_tests.bash
 @test "fn: sparql.sample(x) from (values (NULL::sparql.rdfbox), (sparql.rdfbox_create_from_string('a'::varchar)), (NULL::sparql.rdfbox)) as tab(x)" {
   expect_output '"a"^^<http://www.w3.org/2001/XMLSchema#string>'
 }
+
+
+
+####
+# the integer types derived from xsd:integer
+#
+
+@test "fn: sparql.sum_rdfbox(x) from (values (sparql.rdfbox_create_from_byte('2'::int2)), (sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal))) as tab(x)" {
+  expect_output '"18446744073709551617"^^<http://www.w3.org/2001/XMLSchema#integer>'
+}
+
+@test "fn: sparql.sum_rdfbox(x) from (values (sparql.rdfbox_create_from_unsignedbyte('2'::int2)), (sparql.rdfbox_create_from_unsignedshort('3'::int4)), (sparql.rdfbox_create_from_unsignedint('4'::int8)), (sparql.rdfbox_create_from_nonpositiveinteger('-5'::decimal)), (sparql.rdfbox_create_from_negativeinteger('-6'::decimal)), (sparql.rdfbox_create_from_nonnegativeinteger('7'::decimal)), (sparql.rdfbox_create_from_positiveinteger('8'::decimal))) as tab(x)" {
+  expect_output '"13"^^<http://www.w3.org/2001/XMLSchema#integer>'
+}
+
+@test "fn: sparql.sum_rdfbox(x) from (values (sparql.rdfbox_create_from_positiveinteger('2'::decimal)), (sparql.rdfbox_create_from_decimal('3'::decimal))) as tab(x)" {
+  expect_output '"5.0"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+}
+
+@test "fn: sparql.sum_rdfbox(x) from (values (sparql.rdfbox_create_from_unsignedbyte('2'::int2)), (sparql.rdfbox_create_from_float('3'::float4))) as tab(x)" {
+  expect_output '"5.0E0"^^<http://www.w3.org/2001/XMLSchema#float>'
+}
+
+@test "fn: sparql.sum_rdfbox(x) from (values (sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal)), (sparql.rdfbox_create_from_double('1'::float8))) as tab(x)" {
+  expect_output '"1.8446744073709552E19"^^<http://www.w3.org/2001/XMLSchema#double>'
+}
+
+@test "fn: sparql.sum_rdfbox(x) from (values (sparql.rdfbox_create_from_byte('2'::int2)), (sparql.rdfbox_create_from_string('3'::varchar))) as tab(x)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.avg_rdfbox(x) from (values (sparql.rdfbox_create_from_unsignedbyte('2'::int2)), (sparql.rdfbox_create_from_unsignedshort('4'::int4))) as tab(x)" {
+  expect_output '"3.0"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+}
+
+@test "fn: sparql.avg_rdfbox(x) from (values (sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal)), (sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal))) as tab(x)" {
+  expect_output '"18446744073709551615.0"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+}
+
+@test "fn: sparql.avg_rdfbox(x) from (values (sparql.rdfbox_create_from_negativeinteger('-1'::decimal)), (sparql.rdfbox_create_from_double('2'::float8))) as tab(x)" {
+  expect_output '"5.0E-1"^^<http://www.w3.org/2001/XMLSchema#double>'
+}
+
+@test "fn: sparql.max_rdfbox(x) from (values (sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal)), (sparql.rdfbox_create_from_long('1'::int8))) as tab(x)" {
+  expect_output '"18446744073709551615"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'
+}
+
+@test "fn: sparql.max_rdfbox(x) from (values (sparql.rdfbox_create_from_byte('1'::int2)), (sparql.rdfbox_create_from_unsignedbyte('1'::int2))) as tab(x)" {
+  expect_output '"1"^^<http://www.w3.org/2001/XMLSchema#unsignedByte>'
+}
+
+@test "fn: sparql.max_rdfbox(x) from (values (sparql.rdfbox_create_from_nonnegativeinteger('0'::decimal)), (sparql.rdfbox_create_from_nonpositiveinteger('0'::decimal))) as tab(x)" {
+  expect_output '"0"^^<http://www.w3.org/2001/XMLSchema#nonNegativeInteger>'
+}
+
+@test "fn: sparql.min(x) from (values (sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal)), (sparql.rdfbox_create_from_long('1'::int8))) as tab(x)" {
+  expect_output '"1"^^<http://www.w3.org/2001/XMLSchema#long>'
+}
+
+@test "fn: sparql.min(x) from (values (sparql.rdfbox_create_from_byte('-1'::int2)), (sparql.rdfbox_create_from_unsignedbyte('0'::int2))) as tab(x)" {
+  expect_output '"-1"^^<http://www.w3.org/2001/XMLSchema#byte>'
+}

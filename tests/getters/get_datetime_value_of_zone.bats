@@ -186,6 +186,78 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_byte('127'::int2), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_byte('127'::int2), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_byte('127'::int2), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_byte_with_lexical('127'::int2, ''::varchar), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_byte_with_lexical('127'::int2, ''::varchar), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_byte_with_lexical('127'::int2, ''::varchar), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_byte_with_lexical('127'::int2, ' 127 '::varchar), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_byte_with_lexical('127'::int2, ' 127 '::varchar), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_byte_with_lexical('127'::int2, ' 127 '::varchar), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedbyte('255'::int2), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedbyte('255'::int2), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedbyte('255'::int2), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedbyte_with_lexical('255'::int2, ''::varchar), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedbyte_with_lexical('255'::int2, ''::varchar), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedbyte_with_lexical('255'::int2, ''::varchar), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedbyte_with_lexical('255'::int2, ' 255 '::varchar), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedbyte_with_lexical('255'::int2, ' 255 '::varchar), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedbyte_with_lexical('255'::int2, ' 255 '::varchar), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_short('32767'::int2), (14*60*60)::int4)" {
   expect_output '(null)'
 }
@@ -219,6 +291,42 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_short_with_lexical('32767'::int2, ' 32767 '::varchar), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedshort('65535'::int4), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedshort('65535'::int4), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedshort('65535'::int4), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedshort_with_lexical('65535'::int4, ''::varchar), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedshort_with_lexical('65535'::int4, ''::varchar), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedshort_with_lexical('65535'::int4, ''::varchar), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedshort_with_lexical('65535'::int4, ' 65535 '::varchar), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedshort_with_lexical('65535'::int4, ' 65535 '::varchar), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedshort_with_lexical('65535'::int4, ' 65535 '::varchar), (14*60*60)::int4, 'false'::bool)" {
   expect_output '(null)'
 }
 
@@ -258,6 +366,42 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedint('4294967295'::int8), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedint('4294967295'::int8), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedint('4294967295'::int8), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedint_with_lexical('4294967295'::int8, ''::varchar), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedint_with_lexical('4294967295'::int8, ''::varchar), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedint_with_lexical('4294967295'::int8, ''::varchar), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedint_with_lexical('4294967295'::int8, ' 4294967295 '::varchar), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedint_with_lexical('4294967295'::int8, ' 4294967295 '::varchar), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedint_with_lexical('4294967295'::int8, ' 4294967295 '::varchar), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_long('9223372036854775807'::int8), (14*60*60)::int4)" {
   expect_output '(null)'
 }
@@ -294,6 +438,42 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedlong_with_lexical('18446744073709551615'::decimal, ''::varchar), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedlong_with_lexical('18446744073709551615'::decimal, ''::varchar), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedlong_with_lexical('18446744073709551615'::decimal, ''::varchar), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedlong_with_lexical('18446744073709551615'::decimal, ' 18446744073709551615 '::varchar), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedlong_with_lexical('18446744073709551615'::decimal, ' 18446744073709551615 '::varchar), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_unsignedlong_with_lexical('18446744073709551615'::decimal, ' 18446744073709551615 '::varchar), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_integer('9223372036854775808'::decimal), (14*60*60)::int4)" {
   expect_output '(null)'
 }
@@ -327,6 +507,150 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_integer_with_lexical('9223372036854775808'::decimal, ' 9223372036854775808 '::varchar), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_nonpositiveinteger('-18446744073709551616'::decimal), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_nonpositiveinteger('-18446744073709551616'::decimal), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_nonpositiveinteger('-18446744073709551616'::decimal), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_nonpositiveinteger_with_lexical('-18446744073709551616'::decimal, ''::varchar), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_nonpositiveinteger_with_lexical('-18446744073709551616'::decimal, ''::varchar), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_nonpositiveinteger_with_lexical('-18446744073709551616'::decimal, ''::varchar), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_nonpositiveinteger_with_lexical('-18446744073709551616'::decimal, ' -18446744073709551616 '::varchar), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_nonpositiveinteger_with_lexical('-18446744073709551616'::decimal, ' -18446744073709551616 '::varchar), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_nonpositiveinteger_with_lexical('-18446744073709551616'::decimal, ' -18446744073709551616 '::varchar), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_negativeinteger('-18446744073709551616'::decimal), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_negativeinteger('-18446744073709551616'::decimal), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_negativeinteger('-18446744073709551616'::decimal), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_negativeinteger_with_lexical('-18446744073709551616'::decimal, ''::varchar), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_negativeinteger_with_lexical('-18446744073709551616'::decimal, ''::varchar), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_negativeinteger_with_lexical('-18446744073709551616'::decimal, ''::varchar), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_negativeinteger_with_lexical('-18446744073709551616'::decimal, ' -18446744073709551616 '::varchar), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_negativeinteger_with_lexical('-18446744073709551616'::decimal, ' -18446744073709551616 '::varchar), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_negativeinteger_with_lexical('-18446744073709551616'::decimal, ' -18446744073709551616 '::varchar), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_nonnegativeinteger('18446744073709551616'::decimal), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_nonnegativeinteger('18446744073709551616'::decimal), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_nonnegativeinteger('18446744073709551616'::decimal), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_nonnegativeinteger_with_lexical('18446744073709551616'::decimal, ''::varchar), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_nonnegativeinteger_with_lexical('18446744073709551616'::decimal, ''::varchar), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_nonnegativeinteger_with_lexical('18446744073709551616'::decimal, ''::varchar), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_nonnegativeinteger_with_lexical('18446744073709551616'::decimal, ' 18446744073709551616 '::varchar), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_nonnegativeinteger_with_lexical('18446744073709551616'::decimal, ' 18446744073709551616 '::varchar), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_nonnegativeinteger_with_lexical('18446744073709551616'::decimal, ' 18446744073709551616 '::varchar), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_positiveinteger('18446744073709551616'::decimal), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_positiveinteger('18446744073709551616'::decimal), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_positiveinteger('18446744073709551616'::decimal), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_positiveinteger_with_lexical('18446744073709551616'::decimal, ''::varchar), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_positiveinteger_with_lexical('18446744073709551616'::decimal, ''::varchar), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_positiveinteger_with_lexical('18446744073709551616'::decimal, ''::varchar), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_positiveinteger_with_lexical('18446744073709551616'::decimal, ' 18446744073709551616 '::varchar), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_positiveinteger_with_lexical('18446744073709551616'::decimal, ' 18446744073709551616 '::varchar), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_datetime_value_of_zone(sparql.rdfbox_create_from_positiveinteger_with_lexical('18446744073709551616'::decimal, ' 18446744073709551616 '::varchar), (14*60*60)::int4, 'false'::bool)" {
   expect_output '(null)'
 }
 

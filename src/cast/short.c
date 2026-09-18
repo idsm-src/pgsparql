@@ -19,6 +19,15 @@ Datum cast_as_short_from_boolean(PG_FUNCTION_ARGS)
 }
 
 
+/* xsd:byte and xsd:unsignedByte are represented by int2, so their values are kept as they are */
+PG_FUNCTION_INFO_V1(cast_as_short_from_byte);
+Datum cast_as_short_from_byte(PG_FUNCTION_ARGS)
+{
+    int16 value = PG_GETARG_INT16(0);
+    PG_RETURN_INT16(value);
+}
+
+
 PG_FUNCTION_INFO_V1(cast_as_short_from_int);
 Datum cast_as_short_from_int(PG_FUNCTION_ARGS)
 {
@@ -172,16 +181,36 @@ Datum cast_as_short_from_rdfbox(PG_FUNCTION_ARGS)
         case XSD_BOOLEAN:
             PG_RETURN(NullableFunctionCall1(cast_as_short_from_boolean, BoolGetDatum(RdfBoxGetBool(box))));
 
+        case XSD_BYTE:
+        case XSD_UNSIGNEDBYTE:
         case XSD_SHORT:
             PG_RETURN_INT16(RdfBoxGetInt16(box));
 
+        case XSD_UNSIGNEDSHORT:
         case XSD_INT:
             PG_RETURN(NullableFunctionCall1(cast_as_short_from_int, Int32GetDatum(RdfBoxGetInt32(box))));
+
+        case XSD_UNSIGNEDINT:
+            PG_RETURN(NullableFunctionCall1(cast_as_short_from_long, Int64GetDatum(RdfBoxGetUInt32(box))));
 
         case XSD_LONG:
             PG_RETURN(NullableFunctionCall1(cast_as_short_from_long, Int64GetDatum(RdfBoxGetInt64(box))));
 
+        case XSD_UNSIGNEDLONG:
+        {
+            uint64 value = RdfBoxGetUInt64(box);
+
+            if(value > PG_INT16_MAX)
+                PG_RETURN_NULL();
+
+            PG_RETURN_INT16((int16) value);
+        }
+
         case XSD_INTEGER:
+        case XSD_NONPOSITIVEINTEGER:
+        case XSD_NEGATIVEINTEGER:
+        case XSD_NONNEGATIVEINTEGER:
+        case XSD_POSITIVEINTEGER:
             PG_RETURN(NullableFunctionCall1(cast_as_short_from_integer, NumericGetDatum(RdfBoxGetNumeric(box))));
 
         case XSD_DECIMAL:

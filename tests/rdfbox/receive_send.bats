@@ -169,6 +169,172 @@ load ../psql_tests.bash
 
 
 ####
+# xsd:byte
+#
+
+@test "rs: '\"+3\"^^<http://www.w3.org/2001/XMLSchema#byte>'::sparql.rdfbox" {
+  expect_output '"+3"^^<http://www.w3.org/2001/XMLSchema#byte>'
+}
+
+@test "rs: '\"122\"^^<http://www.w3.org/2001/XMLSchema#byte>'::sparql.rdfbox" {
+  expect_output '"122"^^<http://www.w3.org/2001/XMLSchema#byte>'
+}
+
+@test "rs: '\"0\"^^<http://www.w3.org/2001/XMLSchema#byte>'::sparql.rdfbox" {
+  expect_output '"0"^^<http://www.w3.org/2001/XMLSchema#byte>'
+}
+
+@test "rs: '\"-128\"^^<http://www.w3.org/2001/XMLSchema#byte>'::sparql.rdfbox" {
+  expect_output '"-128"^^<http://www.w3.org/2001/XMLSchema#byte>'
+}
+
+@test "rs: '\"128\"^^<http://www.w3.org/2001/XMLSchema#byte>'::sparql.rdfbox" {
+  expect_output '"128"^^<http://www.w3.org/2001/XMLSchema#byte>'
+}
+
+@test "rs: '\"3.0\"^^<http://www.w3.org/2001/XMLSchema#byte>'::sparql.rdfbox" {
+  expect_output '"3.0"^^<http://www.w3.org/2001/XMLSchema#byte>'
+}
+
+
+
+####
+# xsd:unsignedByte
+#
+
+@test "rs: '\"+3\"^^<http://www.w3.org/2001/XMLSchema#unsignedByte>'::sparql.rdfbox" {
+  expect_output '"+3"^^<http://www.w3.org/2001/XMLSchema#unsignedByte>'
+}
+
+@test "rs: '\"255\"^^<http://www.w3.org/2001/XMLSchema#unsignedByte>'::sparql.rdfbox" {
+  expect_output '"255"^^<http://www.w3.org/2001/XMLSchema#unsignedByte>'
+}
+
+@test "rs: '\"0\"^^<http://www.w3.org/2001/XMLSchema#unsignedByte>'::sparql.rdfbox" {
+  expect_output '"0"^^<http://www.w3.org/2001/XMLSchema#unsignedByte>'
+}
+
+@test "rs: '\"-0\"^^<http://www.w3.org/2001/XMLSchema#unsignedByte>'::sparql.rdfbox" {
+  expect_output '"-0"^^<http://www.w3.org/2001/XMLSchema#unsignedByte>'
+}
+
+@test "rs: '\"-1\"^^<http://www.w3.org/2001/XMLSchema#unsignedByte>'::sparql.rdfbox" {
+  expect_output '"-1"^^<http://www.w3.org/2001/XMLSchema#unsignedByte>'
+}
+
+@test "rs: '\"256\"^^<http://www.w3.org/2001/XMLSchema#unsignedByte>'::sparql.rdfbox" {
+  expect_output '"256"^^<http://www.w3.org/2001/XMLSchema#unsignedByte>'
+}
+
+@test "rs: '\"3.0\"^^<http://www.w3.org/2001/XMLSchema#unsignedByte>'::sparql.rdfbox" {
+  expect_output '"3.0"^^<http://www.w3.org/2001/XMLSchema#unsignedByte>'
+}
+
+
+
+####
+# xsd:unsignedShort
+#
+
+@test "rs: '\"+3\"^^<http://www.w3.org/2001/XMLSchema#unsignedShort>'::sparql.rdfbox" {
+  expect_output '"+3"^^<http://www.w3.org/2001/XMLSchema#unsignedShort>'
+}
+
+@test "rs: '\"65535\"^^<http://www.w3.org/2001/XMLSchema#unsignedShort>'::sparql.rdfbox" {
+  expect_output '"65535"^^<http://www.w3.org/2001/XMLSchema#unsignedShort>'
+}
+
+@test "rs: '\"0\"^^<http://www.w3.org/2001/XMLSchema#unsignedShort>'::sparql.rdfbox" {
+  expect_output '"0"^^<http://www.w3.org/2001/XMLSchema#unsignedShort>'
+}
+
+@test "rs: '\"-0\"^^<http://www.w3.org/2001/XMLSchema#unsignedShort>'::sparql.rdfbox" {
+  expect_output '"-0"^^<http://www.w3.org/2001/XMLSchema#unsignedShort>'
+}
+
+@test "rs: '\"-1\"^^<http://www.w3.org/2001/XMLSchema#unsignedShort>'::sparql.rdfbox" {
+  expect_output '"-1"^^<http://www.w3.org/2001/XMLSchema#unsignedShort>'
+}
+
+@test "rs: '\"65536\"^^<http://www.w3.org/2001/XMLSchema#unsignedShort>'::sparql.rdfbox" {
+  expect_output '"65536"^^<http://www.w3.org/2001/XMLSchema#unsignedShort>'
+}
+
+@test "rs: '\"3.0\"^^<http://www.w3.org/2001/XMLSchema#unsignedShort>'::sparql.rdfbox" {
+  expect_output '"3.0"^^<http://www.w3.org/2001/XMLSchema#unsignedShort>'
+}
+
+
+
+####
+# xsd:unsignedInt
+#
+
+@test "rs: '\"+3\"^^<http://www.w3.org/2001/XMLSchema#unsignedInt>'::sparql.rdfbox" {
+  expect_output '"+3"^^<http://www.w3.org/2001/XMLSchema#unsignedInt>'
+}
+
+@test "rs: '\"4294967295\"^^<http://www.w3.org/2001/XMLSchema#unsignedInt>'::sparql.rdfbox" {
+  expect_output '"4294967295"^^<http://www.w3.org/2001/XMLSchema#unsignedInt>'
+}
+
+@test "rs: '\"0\"^^<http://www.w3.org/2001/XMLSchema#unsignedInt>'::sparql.rdfbox" {
+  expect_output '"0"^^<http://www.w3.org/2001/XMLSchema#unsignedInt>'
+}
+
+@test "rs: '\"-0\"^^<http://www.w3.org/2001/XMLSchema#unsignedInt>'::sparql.rdfbox" {
+  expect_output '"-0"^^<http://www.w3.org/2001/XMLSchema#unsignedInt>'
+}
+
+@test "rs: '\"-1\"^^<http://www.w3.org/2001/XMLSchema#unsignedInt>'::sparql.rdfbox" {
+  expect_output '"-1"^^<http://www.w3.org/2001/XMLSchema#unsignedInt>'
+}
+
+@test "rs: '\"4294967296\"^^<http://www.w3.org/2001/XMLSchema#unsignedInt>'::sparql.rdfbox" {
+  expect_output '"4294967296"^^<http://www.w3.org/2001/XMLSchema#unsignedInt>'
+}
+
+@test "rs: '\"3.0\"^^<http://www.w3.org/2001/XMLSchema#unsignedInt>'::sparql.rdfbox" {
+  expect_output '"3.0"^^<http://www.w3.org/2001/XMLSchema#unsignedInt>'
+}
+
+
+
+####
+# xsd:unsignedLong
+#
+
+@test "rs: '\"+3\"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'::sparql.rdfbox" {
+  expect_output '"+3"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'
+}
+
+@test "rs: '\"18446744073709551615\"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'::sparql.rdfbox" {
+  expect_output '"18446744073709551615"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'
+}
+
+@test "rs: '\"0\"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'::sparql.rdfbox" {
+  expect_output '"0"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'
+}
+
+@test "rs: '\"-0\"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'::sparql.rdfbox" {
+  expect_output '"-0"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'
+}
+
+@test "rs: '\"-1\"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'::sparql.rdfbox" {
+  expect_output '"-1"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'
+}
+
+@test "rs: '\"18446744073709551616\"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'::sparql.rdfbox" {
+  expect_output '"18446744073709551616"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'
+}
+
+@test "rs: '\"3.0\"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'::sparql.rdfbox" {
+  expect_output '"3.0"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'
+}
+
+
+
+####
 # xsd:integer
 #
 
@@ -198,6 +364,142 @@ load ../psql_tests.bash
 
 @test "rs: '\"3.0\"^^<http://www.w3.org/2001/XMLSchema#integer>'::sparql.rdfbox" {
   expect_output '"3.0"^^<http://www.w3.org/2001/XMLSchema#integer>'
+}
+
+
+
+####
+# xsd:nonPositiveInteger
+#
+
+@test "rs: '\"0\"^^<http://www.w3.org/2001/XMLSchema#nonPositiveInteger>'::sparql.rdfbox" {
+  expect_output '"0"^^<http://www.w3.org/2001/XMLSchema#nonPositiveInteger>'
+}
+
+@test "rs: '\"-0\"^^<http://www.w3.org/2001/XMLSchema#nonPositiveInteger>'::sparql.rdfbox" {
+  expect_output '"-0"^^<http://www.w3.org/2001/XMLSchema#nonPositiveInteger>'
+}
+
+@test "rs: '\"+0\"^^<http://www.w3.org/2001/XMLSchema#nonPositiveInteger>'::sparql.rdfbox" {
+  expect_output '"+0"^^<http://www.w3.org/2001/XMLSchema#nonPositiveInteger>'
+}
+
+@test "rs: '\"-18446744073709551616\"^^<http://www.w3.org/2001/XMLSchema#nonPositiveInteger>'::sparql.rdfbox" {
+  expect_output '"-18446744073709551616"^^<http://www.w3.org/2001/XMLSchema#nonPositiveInteger>'
+}
+
+@test "rs: '\"-003\"^^<http://www.w3.org/2001/XMLSchema#nonPositiveInteger>'::sparql.rdfbox" {
+  expect_output '"-003"^^<http://www.w3.org/2001/XMLSchema#nonPositiveInteger>'
+}
+
+@test "rs: '\"1\"^^<http://www.w3.org/2001/XMLSchema#nonPositiveInteger>'::sparql.rdfbox" {
+  expect_output '"1"^^<http://www.w3.org/2001/XMLSchema#nonPositiveInteger>'
+}
+
+@test "rs: '\"3.0\"^^<http://www.w3.org/2001/XMLSchema#nonPositiveInteger>'::sparql.rdfbox" {
+  expect_output '"3.0"^^<http://www.w3.org/2001/XMLSchema#nonPositiveInteger>'
+}
+
+
+
+####
+# xsd:negativeInteger
+#
+
+@test "rs: '\"-1\"^^<http://www.w3.org/2001/XMLSchema#negativeInteger>'::sparql.rdfbox" {
+  expect_output '"-1"^^<http://www.w3.org/2001/XMLSchema#negativeInteger>'
+}
+
+@test "rs: '\"-18446744073709551616\"^^<http://www.w3.org/2001/XMLSchema#negativeInteger>'::sparql.rdfbox" {
+  expect_output '"-18446744073709551616"^^<http://www.w3.org/2001/XMLSchema#negativeInteger>'
+}
+
+@test "rs: '\"-003\"^^<http://www.w3.org/2001/XMLSchema#negativeInteger>'::sparql.rdfbox" {
+  expect_output '"-003"^^<http://www.w3.org/2001/XMLSchema#negativeInteger>'
+}
+
+@test "rs: '\"0\"^^<http://www.w3.org/2001/XMLSchema#negativeInteger>'::sparql.rdfbox" {
+  expect_output '"0"^^<http://www.w3.org/2001/XMLSchema#negativeInteger>'
+}
+
+@test "rs: '\"-0\"^^<http://www.w3.org/2001/XMLSchema#negativeInteger>'::sparql.rdfbox" {
+  expect_output '"-0"^^<http://www.w3.org/2001/XMLSchema#negativeInteger>'
+}
+
+@test "rs: '\"1\"^^<http://www.w3.org/2001/XMLSchema#negativeInteger>'::sparql.rdfbox" {
+  expect_output '"1"^^<http://www.w3.org/2001/XMLSchema#negativeInteger>'
+}
+
+@test "rs: '\"3.0\"^^<http://www.w3.org/2001/XMLSchema#negativeInteger>'::sparql.rdfbox" {
+  expect_output '"3.0"^^<http://www.w3.org/2001/XMLSchema#negativeInteger>'
+}
+
+
+
+####
+# xsd:nonNegativeInteger
+#
+
+@test "rs: '\"0\"^^<http://www.w3.org/2001/XMLSchema#nonNegativeInteger>'::sparql.rdfbox" {
+  expect_output '"0"^^<http://www.w3.org/2001/XMLSchema#nonNegativeInteger>'
+}
+
+@test "rs: '\"-0\"^^<http://www.w3.org/2001/XMLSchema#nonNegativeInteger>'::sparql.rdfbox" {
+  expect_output '"-0"^^<http://www.w3.org/2001/XMLSchema#nonNegativeInteger>'
+}
+
+@test "rs: '\"+3\"^^<http://www.w3.org/2001/XMLSchema#nonNegativeInteger>'::sparql.rdfbox" {
+  expect_output '"+3"^^<http://www.w3.org/2001/XMLSchema#nonNegativeInteger>'
+}
+
+@test "rs: '\"18446744073709551616\"^^<http://www.w3.org/2001/XMLSchema#nonNegativeInteger>'::sparql.rdfbox" {
+  expect_output '"18446744073709551616"^^<http://www.w3.org/2001/XMLSchema#nonNegativeInteger>'
+}
+
+@test "rs: '\"003\"^^<http://www.w3.org/2001/XMLSchema#nonNegativeInteger>'::sparql.rdfbox" {
+  expect_output '"003"^^<http://www.w3.org/2001/XMLSchema#nonNegativeInteger>'
+}
+
+@test "rs: '\"-1\"^^<http://www.w3.org/2001/XMLSchema#nonNegativeInteger>'::sparql.rdfbox" {
+  expect_output '"-1"^^<http://www.w3.org/2001/XMLSchema#nonNegativeInteger>'
+}
+
+@test "rs: '\"3.0\"^^<http://www.w3.org/2001/XMLSchema#nonNegativeInteger>'::sparql.rdfbox" {
+  expect_output '"3.0"^^<http://www.w3.org/2001/XMLSchema#nonNegativeInteger>'
+}
+
+
+
+####
+# xsd:positiveInteger
+#
+
+@test "rs: '\"1\"^^<http://www.w3.org/2001/XMLSchema#positiveInteger>'::sparql.rdfbox" {
+  expect_output '"1"^^<http://www.w3.org/2001/XMLSchema#positiveInteger>'
+}
+
+@test "rs: '\"+3\"^^<http://www.w3.org/2001/XMLSchema#positiveInteger>'::sparql.rdfbox" {
+  expect_output '"+3"^^<http://www.w3.org/2001/XMLSchema#positiveInteger>'
+}
+
+@test "rs: '\"18446744073709551616\"^^<http://www.w3.org/2001/XMLSchema#positiveInteger>'::sparql.rdfbox" {
+  expect_output '"18446744073709551616"^^<http://www.w3.org/2001/XMLSchema#positiveInteger>'
+}
+
+@test "rs: '\"003\"^^<http://www.w3.org/2001/XMLSchema#positiveInteger>'::sparql.rdfbox" {
+  expect_output '"003"^^<http://www.w3.org/2001/XMLSchema#positiveInteger>'
+}
+
+@test "rs: '\"0\"^^<http://www.w3.org/2001/XMLSchema#positiveInteger>'::sparql.rdfbox" {
+  expect_output '"0"^^<http://www.w3.org/2001/XMLSchema#positiveInteger>'
+}
+
+@test "rs: '\"-1\"^^<http://www.w3.org/2001/XMLSchema#positiveInteger>'::sparql.rdfbox" {
+  expect_output '"-1"^^<http://www.w3.org/2001/XMLSchema#positiveInteger>'
+}
+
+@test "rs: '\"3.0\"^^<http://www.w3.org/2001/XMLSchema#positiveInteger>'::sparql.rdfbox" {
+  expect_output '"3.0"^^<http://www.w3.org/2001/XMLSchema#positiveInteger>'
 }
 
 

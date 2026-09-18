@@ -46,6 +46,35 @@ Numeric decimal_parse(char *data, int size)
 }
 
 
+Numeric get_numeric_power(int base, int exponent)
+{
+    Numeric result = numeric_from_int64(1);
+    Numeric power = numeric_from_int64(base);
+
+    while(exponent > 0)
+    {
+        if(exponent & 1)
+        {
+            Numeric product = numeric_multiply(result, power);
+            pfree(result);
+            result = product;
+        }
+
+        exponent >>= 1;
+
+        if(exponent > 0)
+        {
+            Numeric square = numeric_multiply(power, power);
+            pfree(power);
+            power = square;
+        }
+    }
+
+    pfree(power);
+    return result;
+}
+
+
 static inline NullableDatum decimal_result(NullableDatum result)
 {
     if(!result.isnull)

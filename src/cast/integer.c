@@ -8,7 +8,10 @@
 #include <utils/numeric.h>
 #include "call.h"
 #include "try-catch.h"
+#include "types/float.h"
+#include "types/double.h"
 #include "types/integer.h"
+#include "types/unsignedlong.h"
 #include "rdfbox/rdfbox.h"
 
 
@@ -48,6 +51,15 @@ Datum cast_as_integer_from_long(PG_FUNCTION_ARGS)
 }
 
 
+/* xsd:unsignedLong and the types bounded by zero are represented by a decimal holding an integer, which is kept as it is */
+PG_FUNCTION_INFO_V1(cast_as_integer_from_unsignedlong);
+Datum cast_as_integer_from_unsignedlong(PG_FUNCTION_ARGS)
+{
+    Numeric result = PG_GETARG_NUMERIC(0);
+    PG_RETURN_NUMERIC(result);
+}
+
+
 PG_FUNCTION_INFO_V1(cast_as_integer_from_decimal);
 Datum cast_as_integer_from_decimal(PG_FUNCTION_ARGS)
 {
@@ -65,8 +77,7 @@ Datum cast_as_integer_from_float(PG_FUNCTION_ARGS)
     if(!isfinite(value))
         PG_RETURN_NULL();
 
-    Datum result = DirectFunctionCall1(float4_numeric, Float4GetDatum(truncf(value)));
-    PG_RETURN_DATUM(result);
+    PG_RETURN_NUMERIC(float_as_numeric(truncf(value)));
 }
 
 
@@ -78,8 +89,7 @@ Datum cast_as_integer_from_double(PG_FUNCTION_ARGS)
     if(!isfinite(value))
         PG_RETURN_NULL();
 
-    Datum result = DirectFunctionCall1(float8_numeric, Float8GetDatum(trunc(value)));
-    PG_RETURN_DATUM(result);
+    PG_RETURN_NUMERIC(double_as_numeric(trunc(value)));
 }
 
 
@@ -116,16 +126,29 @@ Datum cast_as_integer_from_rdfbox(PG_FUNCTION_ARGS)
         case XSD_BOOLEAN:
             PG_RETURN(NullableFunctionCall1(cast_as_integer_from_boolean, BoolGetDatum(RdfBoxGetBool(box))));
 
+        case XSD_BYTE:
+        case XSD_UNSIGNEDBYTE:
         case XSD_SHORT:
             PG_RETURN(NullableFunctionCall1(cast_as_integer_from_short, Int16GetDatum(RdfBoxGetInt16(box))));
 
+        case XSD_UNSIGNEDSHORT:
         case XSD_INT:
             PG_RETURN(NullableFunctionCall1(cast_as_integer_from_int, Int32GetDatum(RdfBoxGetInt32(box))));
+
+        case XSD_UNSIGNEDINT:
+            PG_RETURN(NullableFunctionCall1(cast_as_integer_from_long, Int64GetDatum(RdfBoxGetUInt32(box))));
 
         case XSD_LONG:
             PG_RETURN(NullableFunctionCall1(cast_as_integer_from_long, Int64GetDatum(RdfBoxGetInt64(box))));
 
+        case XSD_UNSIGNEDLONG:
+            PG_RETURN_NUMERIC(unsignedlong_as_numeric(RdfBoxGetUInt64(box)));
+
         case XSD_INTEGER:
+        case XSD_NONPOSITIVEINTEGER:
+        case XSD_NEGATIVEINTEGER:
+        case XSD_NONNEGATIVEINTEGER:
+        case XSD_POSITIVEINTEGER:
             PG_RETURN_NUMERIC(RdfBoxGetNumeric(box));
 
         case XSD_DECIMAL:

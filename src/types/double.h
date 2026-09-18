@@ -5,6 +5,7 @@
 #if PG_VERSION_NUM >= 160000
 #include <varatt.h>
 #endif
+#include <utils/numeric.h>
 
 
 #define DOUBLE_MAXLEN 25
@@ -12,6 +13,7 @@
 
 float8 double_parse(char *data, int size);
 int double_print(float8 value, char *buffer);
+Numeric double_as_numeric(float8 value);
 
 
 static inline VarChar *double_as_varchar(float8 value)
@@ -22,4 +24,4 @@ static inline VarChar *double_as_varchar(float8 value)
     return result;
 }
 
-#endif /* TYPES_DOUBLE_H__ */
+#endif /* TYPES_DOUBLE_H_ */

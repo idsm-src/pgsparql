@@ -10,12 +10,36 @@ load ../psql_tests.bash
   expect_output '1'
 }
 
+@test "fn: sparql.cast_as_integer_from_byte('-128'::int2)" {
+  expect_output '-128'
+}
+
+@test "fn: sparql.cast_as_integer_from_byte('127'::int2)" {
+  expect_output '127'
+}
+
+@test "fn: sparql.cast_as_integer_from_unsignedbyte('0'::int2)" {
+  expect_output '0'
+}
+
+@test "fn: sparql.cast_as_integer_from_unsignedbyte('255'::int2)" {
+  expect_output '255'
+}
+
 @test "fn: sparql.cast_as_integer_from_short('-32768'::int2)" {
   expect_output '-32768'
 }
 
 @test "fn: sparql.cast_as_integer_from_short('32767'::int2)" {
   expect_output '32767'
+}
+
+@test "fn: sparql.cast_as_integer_from_unsignedshort('0'::int4)" {
+  expect_output '0'
+}
+
+@test "fn: sparql.cast_as_integer_from_unsignedshort('65535'::int4)" {
+  expect_output '65535'
 }
 
 @test "fn: sparql.cast_as_integer_from_int('-2147483648'::int4)" {
@@ -26,12 +50,60 @@ load ../psql_tests.bash
   expect_output '2147483647'
 }
 
+@test "fn: sparql.cast_as_integer_from_unsignedint('0'::int8)" {
+  expect_output '0'
+}
+
+@test "fn: sparql.cast_as_integer_from_unsignedint('4294967295'::int8)" {
+  expect_output '4294967295'
+}
+
 @test "fn: sparql.cast_as_integer_from_long('-9223372036854775808'::int8)" {
   expect_output '-9223372036854775808'
 }
 
 @test "fn: sparql.cast_as_integer_from_long('9223372036854775807'::int8)" {
   expect_output '9223372036854775807'
+}
+
+@test "fn: sparql.cast_as_integer_from_unsignedlong('0'::decimal)" {
+  expect_output '0'
+}
+
+@test "fn: sparql.cast_as_integer_from_unsignedlong('18446744073709551615'::decimal)" {
+  expect_output '18446744073709551615'
+}
+
+@test "fn: sparql.cast_as_integer_from_nonpositiveinteger('-18446744073709551616'::decimal)" {
+  expect_output '-18446744073709551616'
+}
+
+@test "fn: sparql.cast_as_integer_from_nonpositiveinteger('0'::decimal)" {
+  expect_output '0'
+}
+
+@test "fn: sparql.cast_as_integer_from_negativeinteger('-18446744073709551616'::decimal)" {
+  expect_output '-18446744073709551616'
+}
+
+@test "fn: sparql.cast_as_integer_from_negativeinteger('-1'::decimal)" {
+  expect_output '-1'
+}
+
+@test "fn: sparql.cast_as_integer_from_nonnegativeinteger('0'::decimal)" {
+  expect_output '0'
+}
+
+@test "fn: sparql.cast_as_integer_from_nonnegativeinteger('18446744073709551616'::decimal)" {
+  expect_output '18446744073709551616'
+}
+
+@test "fn: sparql.cast_as_integer_from_positiveinteger('1'::decimal)" {
+  expect_output '1'
+}
+
+@test "fn: sparql.cast_as_integer_from_positiveinteger('18446744073709551616'::decimal)" {
+  expect_output '18446744073709551616'
 }
 
 @test "fn: sparql.cast_as_integer_from_decimal('-1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'::decimal)" {
@@ -71,7 +143,7 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.cast_as_integer_from_float('-3.402823466e38'::float4)" {
-  expect_output '-340282000000000000000000000000000000000'
+  expect_output '-340282346638528859811704183484516925440'
 }
 
 @test "fn: sparql.cast_as_integer_from_float('-1.175494351e-38'::float4)" {
@@ -83,7 +155,7 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.cast_as_integer_from_float('3.402823466e38'::float4)" {
-  expect_output '340282000000000000000000000000000000000'
+  expect_output '340282346638528859811704183484516925440'
 }
 
 @test "fn: sparql.cast_as_integer_from_float('inf'::float4)" {
@@ -99,7 +171,7 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.cast_as_integer_from_double('-1.7976931348623158e308'::float8)" {
-  expect_output '-179769313486232000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+  expect_output '-179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368'
 }
 
 @test "fn: sparql.cast_as_integer_from_double('-2.2250738585072014e-308'::float8)" {
@@ -111,7 +183,7 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.cast_as_integer_from_double('1.7976931348623158e308'::float8)" {
-  expect_output '179769313486232000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+  expect_output '179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368'
 }
 
 @test "fn: sparql.cast_as_integer_from_double('inf'::float8)" {
@@ -287,7 +359,7 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.cast_as_integer_from_rdfbox(sparql.rdfbox_create_from_float('-3.402823466e38'::float4))" {
-  expect_output '-340282000000000000000000000000000000000'
+  expect_output '-340282346638528859811704183484516925440'
 }
 
 @test "fn: sparql.cast_as_integer_from_rdfbox(sparql.rdfbox_create_from_float('-1.175494351e-38'::float4))" {
@@ -299,7 +371,7 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.cast_as_integer_from_rdfbox(sparql.rdfbox_create_from_float('3.402823466e38'::float4))" {
-  expect_output '340282000000000000000000000000000000000'
+  expect_output '340282346638528859811704183484516925440'
 }
 
 @test "fn: sparql.cast_as_integer_from_rdfbox(sparql.rdfbox_create_from_float('inf'::float4))" {
@@ -315,7 +387,7 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.cast_as_integer_from_rdfbox(sparql.rdfbox_create_from_double('-1.7976931348623158e308'::float8))" {
-  expect_output '-179769313486232000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+  expect_output '-179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368'
 }
 
 @test "fn: sparql.cast_as_integer_from_rdfbox(sparql.rdfbox_create_from_double('-2.2250738585072014e-308'::float8))" {
@@ -327,7 +399,7 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.cast_as_integer_from_rdfbox(sparql.rdfbox_create_from_double('1.7976931348623158e308'::float8))" {
-  expect_output '179769313486232000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+  expect_output '179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368'
 }
 
 @test "fn: sparql.cast_as_integer_from_rdfbox(sparql.rdfbox_create_from_double('inf'::float8))" {
@@ -444,4 +516,40 @@ load ../psql_tests.bash
 
 @test "fn: sparql.cast_as_integer_from_rdfbox(sparql.rdfbox_create_from_iri('http://123.org'::varchar))" {
   expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_integer_from_rdfbox(sparql.rdfbox_create_from_byte('-128'::int2))" {
+  expect_output '-128'
+}
+
+@test "fn: sparql.cast_as_integer_from_rdfbox(sparql.rdfbox_create_from_unsignedbyte('255'::int2))" {
+  expect_output '255'
+}
+
+@test "fn: sparql.cast_as_integer_from_rdfbox(sparql.rdfbox_create_from_unsignedshort('65535'::int4))" {
+  expect_output '65535'
+}
+
+@test "fn: sparql.cast_as_integer_from_rdfbox(sparql.rdfbox_create_from_unsignedint('4294967295'::int8))" {
+  expect_output '4294967295'
+}
+
+@test "fn: sparql.cast_as_integer_from_rdfbox(sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal))" {
+  expect_output '18446744073709551615'
+}
+
+@test "fn: sparql.cast_as_integer_from_rdfbox(sparql.rdfbox_create_from_nonpositiveinteger('0'::decimal))" {
+  expect_output '0'
+}
+
+@test "fn: sparql.cast_as_integer_from_rdfbox(sparql.rdfbox_create_from_negativeinteger('-18446744073709551616'::decimal))" {
+  expect_output '-18446744073709551616'
+}
+
+@test "fn: sparql.cast_as_integer_from_rdfbox(sparql.rdfbox_create_from_nonnegativeinteger('18446744073709551616'::decimal))" {
+  expect_output '18446744073709551616'
+}
+
+@test "fn: sparql.cast_as_integer_from_rdfbox(sparql.rdfbox_create_from_positiveinteger('1'::decimal))" {
+  expect_output '1'
 }

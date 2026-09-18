@@ -55,6 +55,8 @@ Datum abs_rdfbox(PG_FUNCTION_ARGS)
 
     switch(box->type)
     {
+        case XSD_BYTE:
+        case XSD_UNSIGNEDBYTE:
         case XSD_SHORT:
         {
             int32 value = RdfBoxGetInt16(box);
@@ -62,10 +64,19 @@ Datum abs_rdfbox(PG_FUNCTION_ARGS)
             PG_RETURN_RDFBOX_P(GetIntegerRdfBox(res));
         }
 
+        case XSD_UNSIGNEDSHORT:
         case XSD_INT:
         {
             int64 value = RdfBoxGetInt32(box);
             Numeric res = DatumGetNumeric(DirectFunctionCall1(int8_numeric, Int64GetDatum(labs(value))));
+            PG_RETURN_RDFBOX_P(GetIntegerRdfBox(res));
+        }
+
+        case XSD_UNSIGNEDINT:
+        case XSD_UNSIGNEDLONG:
+        {
+            /* the value is never negative */
+            Numeric res = rdfbox_get_numeric_as_decimal(box);
             PG_RETURN_RDFBOX_P(GetIntegerRdfBox(res));
         }
 
@@ -88,6 +99,10 @@ Datum abs_rdfbox(PG_FUNCTION_ARGS)
         }
 
         case XSD_INTEGER:
+        case XSD_NONPOSITIVEINTEGER:
+        case XSD_NEGATIVEINTEGER:
+        case XSD_NONNEGATIVEINTEGER:
+        case XSD_POSITIVEINTEGER:
         {
             Numeric value = RdfBoxGetNumeric(box);
             Numeric res = DatumGetNumeric(DirectFunctionCall1(numeric_abs, NumericGetDatum(value)));
@@ -120,10 +135,19 @@ Datum round_rdfbox(PG_FUNCTION_ARGS)
 
     switch(box->type)
     {
+        case XSD_BYTE:
+        case XSD_UNSIGNEDBYTE:
         case XSD_SHORT:
+        case XSD_UNSIGNEDSHORT:
         case XSD_INT:
+        case XSD_UNSIGNEDINT:
         case XSD_LONG:
+        case XSD_UNSIGNEDLONG:
         case XSD_INTEGER:
+        case XSD_NONPOSITIVEINTEGER:
+        case XSD_NEGATIVEINTEGER:
+        case XSD_NONNEGATIVEINTEGER:
+        case XSD_POSITIVEINTEGER:
         {
             Numeric res = rdfbox_get_numeric_as_decimal(box);
             PG_RETURN_RDFBOX_P(GetIntegerRdfBox(res));
@@ -156,10 +180,19 @@ Datum ceil_rdfbox(PG_FUNCTION_ARGS)
 
     switch(box->type)
     {
+        case XSD_BYTE:
+        case XSD_UNSIGNEDBYTE:
         case XSD_SHORT:
+        case XSD_UNSIGNEDSHORT:
         case XSD_INT:
+        case XSD_UNSIGNEDINT:
         case XSD_LONG:
+        case XSD_UNSIGNEDLONG:
         case XSD_INTEGER:
+        case XSD_NONPOSITIVEINTEGER:
+        case XSD_NEGATIVEINTEGER:
+        case XSD_NONNEGATIVEINTEGER:
+        case XSD_POSITIVEINTEGER:
         {
             Numeric res = rdfbox_get_numeric_as_decimal(box);
             PG_RETURN_RDFBOX_P(GetIntegerRdfBox(res));
@@ -191,10 +224,19 @@ Datum floor_rdfbox(PG_FUNCTION_ARGS)
 
     switch(box->type)
     {
+        case XSD_BYTE:
+        case XSD_UNSIGNEDBYTE:
         case XSD_SHORT:
+        case XSD_UNSIGNEDSHORT:
         case XSD_INT:
+        case XSD_UNSIGNEDINT:
         case XSD_LONG:
+        case XSD_UNSIGNEDLONG:
         case XSD_INTEGER:
+        case XSD_NONPOSITIVEINTEGER:
+        case XSD_NEGATIVEINTEGER:
+        case XSD_NONNEGATIVEINTEGER:
+        case XSD_POSITIVEINTEGER:
         {
             Numeric res = rdfbox_get_numeric_as_decimal(box);
             PG_RETURN_RDFBOX_P(GetIntegerRdfBox(res));

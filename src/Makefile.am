@@ -11,6 +11,7 @@ libpgsparql_la_SOURCES = \
     pgsparql.h \
     try-catch.h \
     cast/boolean.c \
+    cast/byte.c \
     cast/cast.h \
     cast/date.c \
     cast/datetime.c \
@@ -21,8 +22,16 @@ libpgsparql_la_SOURCES = \
     cast/int.c \
     cast/integer.c \
     cast/long.c \
+    cast/negativeinteger.c \
+    cast/nonnegativeinteger.c \
+    cast/nonpositiveinteger.c \
+    cast/positiveinteger.c \
     cast/short.c \
     cast/string.c \
+    cast/unsignedbyte.c \
+    cast/unsignedint.c \
+    cast/unsignedlong.c \
+    cast/unsignedshort.c \
     functions/aggregate.c \
     functions/datetime.c \
     functions/numeric.c \
@@ -55,6 +64,8 @@ libpgsparql_la_SOURCES = \
     ryu/ryu.h \
     types/boolean.c \
     types/boolean.h \
+    types/byte.c \
+    types/byte.h \
     types/date.c \
     types/date.h \
     types/datetime.c \
@@ -82,7 +93,15 @@ libpgsparql_la_SOURCES = \
     types/short.h \
     types/timezone.h \
     types/ubox.c \
-    types/ubox.h
+    types/ubox.h \
+    types/unsignedbyte.c \
+    types/unsignedbyte.h \
+    types/unsignedint.c \
+    types/unsignedint.h \
+    types/unsignedlong.c \
+    types/unsignedlong.h \
+    types/unsignedshort.c \
+    types/unsignedshort.h
 
 
 EXTRA_DIST = \

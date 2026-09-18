@@ -121,6 +121,43 @@ setup_file() {
 }
 
 
+@test "fn: sparql.rdfbox_hash(sparql.rdfbox_create_from_byte('1'::int2)) = sparql.rdfbox_hash(sparql.rdfbox_create_from_byte('1'::int2))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash(sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal)) = sparql.rdfbox_hash('\"18446744073709551615\"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'::sparql.rdfbox)" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash(sparql.rdfbox_create_from_positiveinteger('1'::decimal)) = sparql.rdfbox_hash(sparql.rdfbox_create_from_positiveinteger('1'::decimal))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash(sparql.rdfbox_create_from_nonnegativeinteger('0'::decimal)) = sparql.rdfbox_hash(sparql.rdfbox_create_from_nonnegativeinteger('-0'::decimal))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash(sparql.rdfbox_create_from_byte('1'::int2)) <> sparql.rdfbox_hash(sparql.rdfbox_create_from_unsignedbyte('1'::int2))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash(sparql.rdfbox_create_from_byte('1'::int2)) <> sparql.rdfbox_hash(sparql.rdfbox_create_from_short('1'::int2))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash(sparql.rdfbox_create_from_unsignedlong('1'::decimal)) <> sparql.rdfbox_hash(sparql.rdfbox_create_from_integer('1'::decimal))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash(sparql.rdfbox_create_from_positiveinteger('1'::decimal)) <> sparql.rdfbox_hash(sparql.rdfbox_create_from_nonnegativeinteger('1'::decimal))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash(sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal)) <> sparql.rdfbox_hash('\"018446744073709551615\"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'::sparql.rdfbox)" {
+  expect_output 't'
+}
+
+
 ####
 # extended hash
 #
