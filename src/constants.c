@@ -10,6 +10,7 @@
  */
 static Numeric zero = NULL;
 static Numeric half = NULL;
+static Numeric unsignedlong_max = NULL;
 static VarChar *empty = NULL;
 
 
@@ -36,6 +37,19 @@ Numeric get_half()
     }
 
     return half;
+}
+
+
+Numeric get_unsignedlong_max()
+{
+    if(unsignedlong_max == NULL)
+    {
+        MemoryContext old = MemoryContextSwitchTo(TopMemoryContext);
+        unsignedlong_max = DatumGetNumeric(DirectFunctionCall3(numeric_in, CStringGetDatum("18446744073709551615"), ObjectIdGetDatum(InvalidOid), Int32GetDatum(-1)));
+        MemoryContextSwitchTo(old);
+    }
+
+    return unsignedlong_max;
 }
 
 

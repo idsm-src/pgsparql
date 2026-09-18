@@ -47,13 +47,13 @@ Datum rdfbox_is_equal_to(PG_FUNCTION_ARGS)
             float4 r = rdfbox_get_numeric_as_float(right);
             PG_RETURN_BOOL(l == r);
         }
-        else if(left->type == XSD_INTEGER || left->type == XSD_DECIMAL || right->type == XSD_INTEGER || right->type == XSD_DECIMAL)
+        else if(!rdfbox_fits_in_long(left) || !rdfbox_fits_in_long(right))
         {
             Numeric l = rdfbox_get_numeric_as_decimal(left);
             Numeric r = rdfbox_get_numeric_as_decimal(right);
             PG_RETURN_DATUM(DirectFunctionCall2(numeric_eq, NumericGetDatum(l), NumericGetDatum(r)));
         }
-        else if(left->type == XSD_LONG || right->type == XSD_LONG)
+        else if(!rdfbox_fits_in_int(left) || !rdfbox_fits_in_int(right))
         {
             int64 l = rdfbox_get_numeric_as_long(left);
             int64 r = rdfbox_get_numeric_as_long(right);
@@ -160,13 +160,13 @@ Datum rdfbox_is_not_equal_to(PG_FUNCTION_ARGS)
             float4 r = rdfbox_get_numeric_as_float(right);
             PG_RETURN_BOOL(l != r);
         }
-        else if(left->type == XSD_INTEGER || left->type == XSD_DECIMAL || right->type == XSD_INTEGER || right->type == XSD_DECIMAL)
+        else if(!rdfbox_fits_in_long(left) || !rdfbox_fits_in_long(right))
         {
             Numeric l = rdfbox_get_numeric_as_decimal(left);
             Numeric r = rdfbox_get_numeric_as_decimal(right);
             PG_RETURN_DATUM(DirectFunctionCall2(numeric_ne, NumericGetDatum(l), NumericGetDatum(r)));
         }
-        else if(left->type == XSD_LONG || right->type == XSD_LONG)
+        else if(!rdfbox_fits_in_int(left) || !rdfbox_fits_in_int(right))
         {
             int64 l = rdfbox_get_numeric_as_long(left);
             int64 r = rdfbox_get_numeric_as_long(right);
@@ -273,13 +273,13 @@ Datum rdfbox_is_less_than(PG_FUNCTION_ARGS)
             float4 r = rdfbox_get_numeric_as_float(right);
             PG_RETURN_BOOL(l < r);
         }
-        else if(left->type == XSD_INTEGER || left->type == XSD_DECIMAL || right->type == XSD_INTEGER || right->type == XSD_DECIMAL)
+        else if(!rdfbox_fits_in_long(left) || !rdfbox_fits_in_long(right))
         {
             Numeric l = rdfbox_get_numeric_as_decimal(left);
             Numeric r = rdfbox_get_numeric_as_decimal(right);
             PG_RETURN_DATUM(DirectFunctionCall2(numeric_lt, NumericGetDatum(l), NumericGetDatum(r)));
         }
-        else if(left->type == XSD_LONG || right->type == XSD_LONG)
+        else if(!rdfbox_fits_in_int(left) || !rdfbox_fits_in_int(right))
         {
             int64 l = rdfbox_get_numeric_as_long(left);
             int64 r = rdfbox_get_numeric_as_long(right);
@@ -359,13 +359,13 @@ Datum rdfbox_is_not_greater_than(PG_FUNCTION_ARGS)
             float4 r = rdfbox_get_numeric_as_float(right);
             PG_RETURN_BOOL(l <= r);
         }
-        else if(left->type == XSD_INTEGER || left->type == XSD_DECIMAL || right->type == XSD_INTEGER || right->type == XSD_DECIMAL)
+        else if(!rdfbox_fits_in_long(left) || !rdfbox_fits_in_long(right))
         {
             Numeric l = rdfbox_get_numeric_as_decimal(left);
             Numeric r = rdfbox_get_numeric_as_decimal(right);
             PG_RETURN_DATUM(DirectFunctionCall2(numeric_le, NumericGetDatum(l), NumericGetDatum(r)));
         }
-        else if(left->type == XSD_LONG || right->type == XSD_LONG)
+        else if(!rdfbox_fits_in_int(left) || !rdfbox_fits_in_int(right))
         {
             int64 l = rdfbox_get_numeric_as_long(left);
             int64 r = rdfbox_get_numeric_as_long(right);
@@ -445,13 +445,13 @@ Datum rdfbox_is_not_less_than(PG_FUNCTION_ARGS)
             float4 r = rdfbox_get_numeric_as_float(right);
             PG_RETURN_BOOL(l >= r);
         }
-        else if(left->type == XSD_INTEGER || left->type == XSD_DECIMAL || right->type == XSD_INTEGER || right->type == XSD_DECIMAL)
+        else if(!rdfbox_fits_in_long(left) || !rdfbox_fits_in_long(right))
         {
             Numeric l = rdfbox_get_numeric_as_decimal(left);
             Numeric r = rdfbox_get_numeric_as_decimal(right);
             PG_RETURN_DATUM(DirectFunctionCall2(numeric_ge, NumericGetDatum(l), NumericGetDatum(r)));
         }
-        else if(left->type == XSD_LONG || right->type == XSD_LONG)
+        else if(!rdfbox_fits_in_int(left) || !rdfbox_fits_in_int(right))
         {
             int64 l = rdfbox_get_numeric_as_long(left);
             int64 r = rdfbox_get_numeric_as_long(right);
@@ -531,13 +531,13 @@ Datum rdfbox_is_greater_than(PG_FUNCTION_ARGS)
             float4 r = rdfbox_get_numeric_as_float(right);
             PG_RETURN_BOOL(l > r);
         }
-        else if(left->type == XSD_INTEGER || left->type == XSD_DECIMAL || right->type == XSD_INTEGER || right->type == XSD_DECIMAL)
+        else if(!rdfbox_fits_in_long(left) || !rdfbox_fits_in_long(right))
         {
             Numeric l = rdfbox_get_numeric_as_decimal(left);
             Numeric r = rdfbox_get_numeric_as_decimal(right);
             PG_RETURN_DATUM(DirectFunctionCall2(numeric_gt, NumericGetDatum(l), NumericGetDatum(r)));
         }
-        else if(left->type == XSD_LONG || right->type == XSD_LONG)
+        else if(!rdfbox_fits_in_int(left) || !rdfbox_fits_in_int(right))
         {
             int64 l = rdfbox_get_numeric_as_long(left);
             int64 r = rdfbox_get_numeric_as_long(right);

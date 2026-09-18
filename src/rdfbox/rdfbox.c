@@ -9,9 +9,14 @@
 #include "rdfbox/syntax.h"
 #include "rdfbox/promotion.h"
 #include "types/boolean.h"
+#include "types/byte.h"
+#include "types/unsignedbyte.h"
 #include "types/short.h"
+#include "types/unsignedshort.h"
 #include "types/int.h"
+#include "types/unsignedint.h"
 #include "types/long.h"
+#include "types/unsignedlong.h"
 #include "types/integer.h"
 #include "types/decimal.h"
 #include "types/float.h"
@@ -329,6 +334,26 @@ Datum rdfbox_input(PG_FUNCTION_ARGS)
                     else
                         box = GetBooleanRdfBoxWithLexical(val, data, size);
                 }
+                else if(strcmp(str + i + 2, IRI_BEGIN XSD_BYTE_IRI IRI_END) == 0)
+                {
+                    int8 val = byte_parse(data, size);
+                    char buffer[BYTE_MAXLEN];
+
+                    if(byte_print(val, buffer) == size && !memcmp(data, buffer, size))
+                        box = GetByteRdfBox(val);
+                    else
+                        box = GetByteRdfBoxWithLexical(val, data, size);
+                }
+                else if(strcmp(str + i + 2, IRI_BEGIN XSD_UNSIGNEDBYTE_IRI IRI_END) == 0)
+                {
+                    uint8 val = unsignedbyte_parse(data, size);
+                    char buffer[UNSIGNEDBYTE_MAXLEN];
+
+                    if(unsignedbyte_print(val, buffer) == size && !memcmp(data, buffer, size))
+                        box = GetUnsignedByteRdfBox(val);
+                    else
+                        box = GetUnsignedByteRdfBoxWithLexical(val, data, size);
+                }
                 else if(strcmp(str + i + 2, IRI_BEGIN XSD_SHORT_IRI IRI_END) == 0)
                 {
                     int16 val = short_parse(data, size);
@@ -338,6 +363,16 @@ Datum rdfbox_input(PG_FUNCTION_ARGS)
                         box = GetShortRdfBox(val);
                     else
                         box = GetShortRdfBoxWithLexical(val, data, size);
+                }
+                else if(strcmp(str + i + 2, IRI_BEGIN XSD_UNSIGNEDSHORT_IRI IRI_END) == 0)
+                {
+                    uint16 val = unsignedshort_parse(data, size);
+                    char buffer[UNSIGNEDSHORT_MAXLEN];
+
+                    if(unsignedshort_print(val, buffer) == size && !memcmp(data, buffer, size))
+                        box = GetUnsignedShortRdfBox(val);
+                    else
+                        box = GetUnsignedShortRdfBoxWithLexical(val, data, size);
                 }
                 else if(strcmp(str + i + 2, IRI_BEGIN XSD_INT_IRI IRI_END) == 0)
                 {
@@ -349,6 +384,16 @@ Datum rdfbox_input(PG_FUNCTION_ARGS)
                     else
                         box = GetIntRdfBoxWithLexical(val, data, size);
                 }
+                else if(strcmp(str + i + 2, IRI_BEGIN XSD_UNSIGNEDINT_IRI IRI_END) == 0)
+                {
+                    uint32 val = unsignedint_parse(data, size);
+                    char buffer[UNSIGNEDINT_MAXLEN];
+
+                    if(unsignedint_print(val, buffer) == size && !memcmp(data, buffer, size))
+                        box = GetUnsignedIntRdfBox(val);
+                    else
+                        box = GetUnsignedIntRdfBoxWithLexical(val, data, size);
+                }
                 else if(strcmp(str + i + 2, IRI_BEGIN XSD_LONG_IRI IRI_END) == 0)
                 {
                     int64 val = long_parse(data, size);
@@ -358,6 +403,76 @@ Datum rdfbox_input(PG_FUNCTION_ARGS)
                         box = GetLongRdfBox(val);
                     else
                         box = GetLongRdfBoxWithLexical(val, data, size);
+                }
+                else if(strcmp(str + i + 2, IRI_BEGIN XSD_UNSIGNEDLONG_IRI IRI_END) == 0)
+                {
+                    uint64 val = unsignedlong_parse(data, size);
+                    char buffer[UNSIGNEDLONG_MAXLEN];
+
+                    if(unsignedlong_print(val, buffer) == size && !memcmp(data, buffer, size))
+                        box = GetUnsignedLongRdfBox(val);
+                    else
+                        box = GetUnsignedLongRdfBoxWithLexical(val, data, size);
+                }
+                else if(strcmp(str + i + 2, IRI_BEGIN XSD_INTEGER_IRI IRI_END) == 0)
+                {
+                    Numeric val = integer_parse(data, size);
+                    VarChar *std = integer_as_varchar(val);
+
+                    if(VARSIZE(std) - VARHDRSZ == size && !memcmp(data, VARDATA(std), size))
+                        box = GetIntegerRdfBox(val);
+                    else
+                        box = GetIntegerRdfBoxWithLexical(val, data, size);
+                }
+                else if(strcmp(str + i + 2, IRI_BEGIN XSD_NONPOSITIVEINTEGER_IRI IRI_END) == 0)
+                {
+                    Numeric val = nonpositiveinteger_parse(data, size);
+                    VarChar *std = integer_as_varchar(val);
+
+                    if(VARSIZE(std) - VARHDRSZ == size && !memcmp(data, VARDATA(std), size))
+                        box = GetNonPositiveIntegerRdfBox(val);
+                    else
+                        box = GetNonPositiveIntegerRdfBoxWithLexical(val, data, size);
+                }
+                else if(strcmp(str + i + 2, IRI_BEGIN XSD_NEGATIVEINTEGER_IRI IRI_END) == 0)
+                {
+                    Numeric val = negativeinteger_parse(data, size);
+                    VarChar *std = integer_as_varchar(val);
+
+                    if(VARSIZE(std) - VARHDRSZ == size && !memcmp(data, VARDATA(std), size))
+                        box = GetNegativeIntegerRdfBox(val);
+                    else
+                        box = GetNegativeIntegerRdfBoxWithLexical(val, data, size);
+                }
+                else if(strcmp(str + i + 2, IRI_BEGIN XSD_NONNEGATIVEINTEGER_IRI IRI_END) == 0)
+                {
+                    Numeric val = nonnegativeinteger_parse(data, size);
+                    VarChar *std = integer_as_varchar(val);
+
+                    if(VARSIZE(std) - VARHDRSZ == size && !memcmp(data, VARDATA(std), size))
+                        box = GetNonNegativeIntegerRdfBox(val);
+                    else
+                        box = GetNonNegativeIntegerRdfBoxWithLexical(val, data, size);
+                }
+                else if(strcmp(str + i + 2, IRI_BEGIN XSD_POSITIVEINTEGER_IRI IRI_END) == 0)
+                {
+                    Numeric val = positiveinteger_parse(data, size);
+                    VarChar *std = integer_as_varchar(val);
+
+                    if(VARSIZE(std) - VARHDRSZ == size && !memcmp(data, VARDATA(std), size))
+                        box = GetPositiveIntegerRdfBox(val);
+                    else
+                        box = GetPositiveIntegerRdfBoxWithLexical(val, data, size);
+                }
+                else if(strcmp(str + i + 2, IRI_BEGIN XSD_DECIMAL_IRI IRI_END) == 0)
+                {
+                    Numeric val = decimal_parse(data, size);
+                    VarChar *std = decimal_as_varchar(val);
+
+                    if(VARSIZE(std) - VARHDRSZ == size && !memcmp(data, VARDATA(std), size))
+                        box = GetDecimalRdfBox(val);
+                    else
+                        box = GetDecimalRdfBoxWithLexical(val, data, size);
                 }
                 else if(strcmp(str + i + 2, IRI_BEGIN XSD_FLOAT_IRI IRI_END) == 0)
                 {
@@ -378,26 +493,6 @@ Datum rdfbox_input(PG_FUNCTION_ARGS)
                         box = GetDoubleRdfBox(val);
                     else
                         box = GetDoubleRdfBoxWithLexical(val, data, size);
-                }
-                else if(strcmp(str + i + 2, IRI_BEGIN XSD_INTEGER_IRI IRI_END) == 0)
-                {
-                    Numeric val = integer_parse(data, size);
-                    VarChar *std = integer_as_varchar(val);
-
-                    if(VARSIZE(std) - VARHDRSZ == size && !memcmp(data, VARDATA(std), size))
-                        box = GetIntegerRdfBox(val);
-                    else
-                        box = GetIntegerRdfBoxWithLexical(val, data, size);
-                }
-                else if(strcmp(str + i + 2, IRI_BEGIN XSD_DECIMAL_IRI IRI_END) == 0)
-                {
-                    Numeric val = decimal_parse(data, size);
-                    VarChar *std = decimal_as_varchar(val);
-
-                    if(VARSIZE(std) - VARHDRSZ == size && !memcmp(data, VARDATA(std), size))
-                        box = GetDecimalRdfBox(val);
-                    else
-                        box = GetDecimalRdfBoxWithLexical(val, data, size);
                 }
                 else if(strcmp(str + i + 2, IRI_BEGIN XSD_DATETIME_IRI IRI_END) == 0)
                 {
@@ -631,10 +726,31 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
             break;
         }
 
+        case XSD_BYTE:
+        {
+            VarChar *value = box->lexical ? RdfBoxGetInt16Lexical(box) : byte_as_varchar(RdfBoxGetInt8(box));
+            result = print_literal(VALUE_QUOTE, VARDATA(value), VARSIZE(value) - VARHDRSZ, XSD_BYTE_IRI, STRLEN(XSD_BYTE_IRI));
+            break;
+        }
+
+        case XSD_UNSIGNEDBYTE:
+        {
+            VarChar *value = box->lexical ? RdfBoxGetInt16Lexical(box) : unsignedbyte_as_varchar(RdfBoxGetUInt8(box));
+            result = print_literal(VALUE_QUOTE, VARDATA(value), VARSIZE(value) - VARHDRSZ, XSD_UNSIGNEDBYTE_IRI, STRLEN(XSD_UNSIGNEDBYTE_IRI));
+            break;
+        }
+
         case XSD_SHORT:
         {
             VarChar *value = box->lexical ? RdfBoxGetInt16Lexical(box) : short_as_varchar(RdfBoxGetInt16(box));
             result = print_literal(VALUE_QUOTE, VARDATA(value), VARSIZE(value) - VARHDRSZ, XSD_SHORT_IRI, STRLEN(XSD_SHORT_IRI));
+            break;
+        }
+
+        case XSD_UNSIGNEDSHORT:
+        {
+            VarChar *value = box->lexical ? RdfBoxGetInt32Lexical(box) : unsignedshort_as_varchar(RdfBoxGetUInt16(box));
+            result = print_literal(VALUE_QUOTE, VARDATA(value), VARSIZE(value) - VARHDRSZ, XSD_UNSIGNEDSHORT_IRI, STRLEN(XSD_UNSIGNEDSHORT_IRI));
             break;
         }
 
@@ -645,6 +761,13 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
             break;
         }
 
+        case XSD_UNSIGNEDINT:
+        {
+            VarChar *value = box->lexical ? RdfBoxGetUInt32Lexical(box) : unsignedint_as_varchar(RdfBoxGetUInt32(box));
+            result = print_literal(VALUE_QUOTE, VARDATA(value), VARSIZE(value) - VARHDRSZ, XSD_UNSIGNEDINT_IRI, STRLEN(XSD_UNSIGNEDINT_IRI));
+            break;
+        }
+
         case XSD_LONG:
         {
             VarChar *value = box->lexical ? RdfBoxGetInt64Lexical(box) : long_as_varchar(RdfBoxGetInt64(box));
@@ -652,10 +775,45 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
             break;
         }
 
+        case XSD_UNSIGNEDLONG:
+        {
+            VarChar *value = box->lexical ? RdfBoxGetUInt64Lexical(box) : unsignedlong_as_varchar(RdfBoxGetUInt64(box));
+            result = print_literal(VALUE_QUOTE, VARDATA(value), VARSIZE(value) - VARHDRSZ, XSD_UNSIGNEDLONG_IRI, STRLEN(XSD_UNSIGNEDLONG_IRI));
+            break;
+        }
+
         case XSD_INTEGER:
         {
             VarChar *value = box->lexical ? RdfBoxGetAttachment(box) : integer_as_varchar(RdfBoxGetNumeric(box));
             result = print_literal(VALUE_QUOTE, VARDATA(value), VARSIZE(value) - VARHDRSZ, XSD_INTEGER_IRI, STRLEN(XSD_INTEGER_IRI));
+            break;
+        }
+
+        case XSD_NONPOSITIVEINTEGER:
+        {
+            VarChar *value = box->lexical ? RdfBoxGetAttachment(box) : integer_as_varchar(RdfBoxGetNumeric(box));
+            result = print_literal(VALUE_QUOTE, VARDATA(value), VARSIZE(value) - VARHDRSZ, XSD_NONPOSITIVEINTEGER_IRI, STRLEN(XSD_NONPOSITIVEINTEGER_IRI));
+            break;
+        }
+
+        case XSD_NEGATIVEINTEGER:
+        {
+            VarChar *value = box->lexical ? RdfBoxGetAttachment(box) : integer_as_varchar(RdfBoxGetNumeric(box));
+            result = print_literal(VALUE_QUOTE, VARDATA(value), VARSIZE(value) - VARHDRSZ, XSD_NEGATIVEINTEGER_IRI, STRLEN(XSD_NEGATIVEINTEGER_IRI));
+            break;
+        }
+
+        case XSD_NONNEGATIVEINTEGER:
+        {
+            VarChar *value = box->lexical ? RdfBoxGetAttachment(box) : integer_as_varchar(RdfBoxGetNumeric(box));
+            result = print_literal(VALUE_QUOTE, VARDATA(value), VARSIZE(value) - VARHDRSZ, XSD_NONNEGATIVEINTEGER_IRI, STRLEN(XSD_NONNEGATIVEINTEGER_IRI));
+            break;
+        }
+
+        case XSD_POSITIVEINTEGER:
+        {
+            VarChar *value = box->lexical ? RdfBoxGetAttachment(box) : integer_as_varchar(RdfBoxGetNumeric(box));
+            result = print_literal(VALUE_QUOTE, VARDATA(value), VARSIZE(value) - VARHDRSZ, XSD_POSITIVEINTEGER_IRI, STRLEN(XSD_POSITIVEINTEGER_IRI));
             break;
         }
 
@@ -853,6 +1011,42 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
             break;
         }
 
+        case XSD_BYTE:
+        {
+            int8 value = pq_getmsgbyte(buf);
+
+            if(lexical)
+            {
+                int32 size = pq_getmsgint(buf, sizeof(int32));
+                const char *data = getmsgtext(buf, size);
+                box = GetByteRdfBoxWithLexical(value, data, size);
+            }
+            else
+            {
+                box = GetByteRdfBox(value);
+            }
+
+            break;
+        }
+
+        case XSD_UNSIGNEDBYTE:
+        {
+            uint8 value = pq_getmsgbyte(buf);
+
+            if(lexical)
+            {
+                int32 size = pq_getmsgint(buf, sizeof(int32));
+                const char *data = getmsgtext(buf, size);
+                box = GetUnsignedByteRdfBoxWithLexical(value, data, size);
+            }
+            else
+            {
+                box = GetUnsignedByteRdfBox(value);
+            }
+
+            break;
+        }
+
         case XSD_SHORT:
         {
             int16 value = pq_getmsgint(buf, sizeof(int16));
@@ -866,6 +1060,24 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
             else
             {
                 box = GetShortRdfBox(value);
+            }
+
+            break;
+        }
+
+        case XSD_UNSIGNEDSHORT:
+        {
+            uint16 value = pq_getmsgint(buf, sizeof(uint16));
+
+            if(lexical)
+            {
+                int32 size = pq_getmsgint(buf, sizeof(int32));
+                const char *data = getmsgtext(buf, size);
+                box = GetUnsignedShortRdfBoxWithLexical(value, data, size);
+            }
+            else
+            {
+                box = GetUnsignedShortRdfBox(value);
             }
 
             break;
@@ -889,6 +1101,24 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
             break;
         }
 
+        case XSD_UNSIGNEDINT:
+        {
+            uint32 value = pq_getmsgint(buf, sizeof(uint32));
+
+            if(lexical)
+            {
+                int32 size = pq_getmsgint(buf, sizeof(int32));
+                const char *data = getmsgtext(buf, size);
+                box = GetUnsignedIntRdfBoxWithLexical(value, data, size);
+            }
+            else
+            {
+                box = GetUnsignedIntRdfBox(value);
+            }
+
+            break;
+        }
+
         case XSD_LONG:
         {
             int64 value = pq_getmsgint64(buf);
@@ -907,6 +1137,24 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
             break;
         }
 
+        case XSD_UNSIGNEDLONG:
+        {
+            uint64 value = pq_getmsgint64(buf);
+
+            if(lexical)
+            {
+                int32 size = pq_getmsgint(buf, sizeof(int32));
+                const char *data = getmsgtext(buf, size);
+                box = GetUnsignedLongRdfBoxWithLexical(value, data, size);
+            }
+            else
+            {
+                box = GetUnsignedLongRdfBox(value);
+            }
+
+            break;
+        }
+
         case XSD_INTEGER:
         {
             Numeric value = DatumGetNumeric(DirectFunctionCall3(numeric_recv, PointerGetDatum(buf), ObjectIdGetDatum(InvalidOid), Int32GetDatum(-1)));
@@ -920,6 +1168,78 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
             else
             {
                 box = GetIntegerRdfBox(value);
+            }
+
+            break;
+        }
+
+        case XSD_NONPOSITIVEINTEGER:
+        {
+            Numeric value = checked_nonpositiveinteger(DatumGetNumeric(DirectFunctionCall3(numeric_recv, PointerGetDatum(buf), ObjectIdGetDatum(InvalidOid), Int32GetDatum(-1))));
+
+            if(lexical)
+            {
+                int32 size = pq_getmsgint(buf, sizeof(int32));
+                const char *data = getmsgtext(buf, size);
+                box = GetNonPositiveIntegerRdfBoxWithLexical(value, data, size);
+            }
+            else
+            {
+                box = GetNonPositiveIntegerRdfBox(value);
+            }
+
+            break;
+        }
+
+        case XSD_NEGATIVEINTEGER:
+        {
+            Numeric value = checked_negativeinteger(DatumGetNumeric(DirectFunctionCall3(numeric_recv, PointerGetDatum(buf), ObjectIdGetDatum(InvalidOid), Int32GetDatum(-1))));
+
+            if(lexical)
+            {
+                int32 size = pq_getmsgint(buf, sizeof(int32));
+                const char *data = getmsgtext(buf, size);
+                box = GetNegativeIntegerRdfBoxWithLexical(value, data, size);
+            }
+            else
+            {
+                box = GetNegativeIntegerRdfBox(value);
+            }
+
+            break;
+        }
+
+        case XSD_NONNEGATIVEINTEGER:
+        {
+            Numeric value = checked_nonnegativeinteger(DatumGetNumeric(DirectFunctionCall3(numeric_recv, PointerGetDatum(buf), ObjectIdGetDatum(InvalidOid), Int32GetDatum(-1))));
+
+            if(lexical)
+            {
+                int32 size = pq_getmsgint(buf, sizeof(int32));
+                const char *data = getmsgtext(buf, size);
+                box = GetNonNegativeIntegerRdfBoxWithLexical(value, data, size);
+            }
+            else
+            {
+                box = GetNonNegativeIntegerRdfBox(value);
+            }
+
+            break;
+        }
+
+        case XSD_POSITIVEINTEGER:
+        {
+            Numeric value = checked_positiveinteger(DatumGetNumeric(DirectFunctionCall3(numeric_recv, PointerGetDatum(buf), ObjectIdGetDatum(InvalidOid), Int32GetDatum(-1))));
+
+            if(lexical)
+            {
+                int32 size = pq_getmsgint(buf, sizeof(int32));
+                const char *data = getmsgtext(buf, size);
+                box = GetPositiveIntegerRdfBoxWithLexical(value, data, size);
+            }
+            else
+            {
+                box = GetPositiveIntegerRdfBox(value);
             }
 
             break;
@@ -1176,6 +1496,36 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
             break;
         }
 
+        case XSD_BYTE:
+        {
+            pq_sendbyte(&buf, (uint8) RdfBoxGetInt8(box));
+
+            if(box->lexical)
+            {
+                VarChar *value = RdfBoxGetInt16Lexical(box);
+                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                break;
+            }
+
+            break;
+        }
+
+        case XSD_UNSIGNEDBYTE:
+        {
+            pq_sendbyte(&buf, RdfBoxGetUInt8(box));
+
+            if(box->lexical)
+            {
+                VarChar *value = RdfBoxGetInt16Lexical(box);
+                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                break;
+            }
+
+            break;
+        }
+
         case XSD_SHORT:
         {
             pq_sendint16(&buf, RdfBoxGetInt16(box));
@@ -1183,6 +1533,21 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
             if(box->lexical)
             {
                 VarChar *value = RdfBoxGetInt16Lexical(box);
+                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                break;
+            }
+
+            break;
+        }
+
+        case XSD_UNSIGNEDSHORT:
+        {
+            pq_sendint16(&buf, RdfBoxGetUInt16(box));
+
+            if(box->lexical)
+            {
+                VarChar *value = RdfBoxGetInt32Lexical(box);
                 pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
                 appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
                 break;
@@ -1206,6 +1571,21 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
             break;
         }
 
+        case XSD_UNSIGNEDINT:
+        {
+            pq_sendint32(&buf, RdfBoxGetUInt32(box));
+
+            if(box->lexical)
+            {
+                VarChar *value = RdfBoxGetUInt32Lexical(box);
+                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                break;
+            }
+
+            break;
+        }
+
         case XSD_LONG:
         {
             pq_sendint64(&buf, RdfBoxGetInt64(box));
@@ -1221,7 +1601,26 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
             break;
         }
 
+        case XSD_UNSIGNEDLONG:
+        {
+            pq_sendint64(&buf, RdfBoxGetUInt64(box));
+
+            if(box->lexical)
+            {
+                VarChar *value = RdfBoxGetUInt64Lexical(box);
+                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                break;
+            }
+
+            break;
+        }
+
         case XSD_INTEGER:
+        case XSD_NONPOSITIVEINTEGER:
+        case XSD_NEGATIVEINTEGER:
+        case XSD_NONNEGATIVEINTEGER:
+        case XSD_POSITIVEINTEGER:
         case XSD_DECIMAL:
         {
             Numeric num = RdfBoxGetNumeric(box);

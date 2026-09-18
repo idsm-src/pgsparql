@@ -23,12 +23,19 @@ static uint64 hash_term(RdfBox *box, uint64 seed)
             value = hash_bytes_uint32_extended(RdfBoxGetBool(box), seed);
             break;
 
+        case XSD_BYTE:
+        case XSD_UNSIGNEDBYTE:
         case XSD_SHORT:
             value = hash_bytes_uint32_extended((uint32) (int32) RdfBoxGetInt16(box), seed);
             break;
 
+        case XSD_UNSIGNEDSHORT:
         case XSD_INT:
             value = hash_bytes_uint32_extended((uint32) RdfBoxGetInt32(box), seed);
+            break;
+
+        case XSD_UNSIGNEDINT:
+            value = hash_bytes_uint32_extended(RdfBoxGetUInt32(box), seed);
             break;
 
         case XSD_LONG:
@@ -40,7 +47,18 @@ static uint64 hash_term(RdfBox *box, uint64 seed)
             break;
         }
 
+        case XSD_UNSIGNEDLONG:
+        {
+            uint64 integer = RdfBoxGetUInt64(box);
+            value = hash_bytes_extended((const unsigned char *) &integer, sizeof(integer), seed);
+            break;
+        }
+
         case XSD_INTEGER:
+        case XSD_NONPOSITIVEINTEGER:
+        case XSD_NEGATIVEINTEGER:
+        case XSD_NONNEGATIVEINTEGER:
+        case XSD_POSITIVEINTEGER:
         case XSD_DECIMAL:
         {
             Numeric numeric = RdfBoxGetNumeric(box);

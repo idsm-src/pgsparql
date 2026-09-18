@@ -1,8 +1,10 @@
 #include <postgres.h>
 #include <fmgr.h>
 #include <utils/float.h>
+#include <math.h>
 #include "ryu/ryu.h"
 #include "types/parser.h"
+#include "types/decimal.h"
 #include "types/double.h"
 
 
@@ -130,4 +132,59 @@ PG_FUNCTION_INFO_V1(double_div);
 Datum double_div(PG_FUNCTION_ARGS)
 {
     PG_RETURN_FLOAT8(PG_GETARG_FLOAT8(0) / PG_GETARG_FLOAT8(1));
+}
+
+
+/*
+ * The exact value of a finite double, which is what XPath asks of a cast to xsd:decimal or, after the truncation
+ * towards zero, to xsd:integer.  PostgreSQL's float8_numeric() is of no use here: it goes through a text form of
+ * DBL_DIG significant digits and so turns 2^53 into 9007199254740990.  A double is mantissa * 2^exponent with an
+ * integer mantissa, so the value is either an integer, or mantissa * 5^-exponent / 10^-exponent, and both are
+ * computed exactly by the numeric arithmetic.  The largest doubles take 309 digits and the smallest subnormal
+ * 1074 decimal places, which a numeric still holds.
+ */
+Numeric double_as_numeric(float8 value)
+{
+    int exponent;
+    int64 mantissa = (int64) ldexp(frexp(value, &exponent), 53);
+    exponent -= 53;
+
+    while(mantissa != 0 && mantissa % 2 == 0)
+    {
+        mantissa /= 2;
+        exponent++;
+    }
+
+    Numeric result = numeric_from_int64(mantissa);
+
+    if(mantissa == 0 || exponent == 0)
+        return result;
+
+    if(exponent > 0)
+    {
+        Numeric power = get_numeric_power(2, exponent);
+        Numeric product = numeric_multiply(result, power);
+
+        pfree(result);
+        pfree(power);
+
+        return product;
+    }
+    else
+    {
+        Numeric power = get_numeric_power(5, -exponent);
+        Numeric scaled = numeric_multiply(result, power);
+
+        char *scale_string = psprintf("1e%d", exponent);
+        Numeric scale = numeric_from_string(scale_string);
+        Numeric product = numeric_multiply(scaled, scale);
+
+        pfree(result);
+        pfree(power);
+        pfree(scaled);
+        pfree(scale_string);
+        pfree(scale);
+
+        return product;
+    }
 }

@@ -94,16 +94,29 @@ Datum cast_as_double_from_rdfbox(PG_FUNCTION_ARGS)
         case XSD_BOOLEAN:
             PG_RETURN(NullableFunctionCall1(cast_as_double_from_boolean, BoolGetDatum(RdfBoxGetBool(box))));
 
+        case XSD_BYTE:
+        case XSD_UNSIGNEDBYTE:
         case XSD_SHORT:
             PG_RETURN(NullableFunctionCall1(cast_as_double_from_short, Int16GetDatum(RdfBoxGetInt16(box))));
 
+        case XSD_UNSIGNEDSHORT:
         case XSD_INT:
             PG_RETURN(NullableFunctionCall1(cast_as_double_from_int, Int32GetDatum(RdfBoxGetInt32(box))));
+
+        case XSD_UNSIGNEDINT:
+            PG_RETURN(NullableFunctionCall1(cast_as_double_from_long, Int64GetDatum(RdfBoxGetUInt32(box))));
 
         case XSD_LONG:
             PG_RETURN(NullableFunctionCall1(cast_as_double_from_long, Int64GetDatum(RdfBoxGetInt64(box))));
 
+        case XSD_UNSIGNEDLONG:
+            PG_RETURN_FLOAT8((float8) RdfBoxGetUInt64(box));
+
         case XSD_INTEGER:
+        case XSD_NONPOSITIVEINTEGER:
+        case XSD_NEGATIVEINTEGER:
+        case XSD_NONNEGATIVEINTEGER:
+        case XSD_POSITIVEINTEGER:
         case XSD_DECIMAL:
             PG_RETURN(NullableFunctionCall1(cast_as_double_from_decimal, NumericGetDatum(RdfBoxGetNumeric(box))));
 

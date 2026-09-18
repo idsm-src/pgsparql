@@ -6,10 +6,19 @@
 
 
 Datum cast_as_boolean_from_string(PG_FUNCTION_ARGS);
+Datum cast_as_byte_from_string(PG_FUNCTION_ARGS);
+Datum cast_as_unsignedbyte_from_string(PG_FUNCTION_ARGS);
 Datum cast_as_short_from_string(PG_FUNCTION_ARGS);
+Datum cast_as_unsignedshort_from_string(PG_FUNCTION_ARGS);
 Datum cast_as_int_from_string(PG_FUNCTION_ARGS);
+Datum cast_as_unsignedint_from_string(PG_FUNCTION_ARGS);
 Datum cast_as_long_from_string(PG_FUNCTION_ARGS);
+Datum cast_as_unsignedlong_from_string(PG_FUNCTION_ARGS);
 Datum cast_as_integer_from_string(PG_FUNCTION_ARGS);
+Datum cast_as_nonpositiveinteger_from_string(PG_FUNCTION_ARGS);
+Datum cast_as_negativeinteger_from_string(PG_FUNCTION_ARGS);
+Datum cast_as_nonnegativeinteger_from_string(PG_FUNCTION_ARGS);
+Datum cast_as_positiveinteger_from_string(PG_FUNCTION_ARGS);
 Datum cast_as_decimal_from_string(PG_FUNCTION_ARGS);
 Datum cast_as_float_from_string(PG_FUNCTION_ARGS);
 Datum cast_as_double_from_string(PG_FUNCTION_ARGS);

@@ -78,6 +78,78 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_byte('127'::int2), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_byte('127'::int2), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_byte('127'::int2), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_byte_with_lexical('127'::int2, ''::varchar), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_byte_with_lexical('127'::int2, ''::varchar), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_byte_with_lexical('127'::int2, ''::varchar), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_byte_with_lexical('127'::int2, ' 127 '::varchar), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_byte_with_lexical('127'::int2, ' 127 '::varchar), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_byte_with_lexical('127'::int2, ' 127 '::varchar), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedbyte('255'::int2), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedbyte('255'::int2), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedbyte('255'::int2), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedbyte_with_lexical('255'::int2, ''::varchar), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedbyte_with_lexical('255'::int2, ''::varchar), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedbyte_with_lexical('255'::int2, ''::varchar), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedbyte_with_lexical('255'::int2, ' 255 '::varchar), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedbyte_with_lexical('255'::int2, ' 255 '::varchar), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedbyte_with_lexical('255'::int2, ' 255 '::varchar), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_short('32767'::int2), 'http://example.org'::varchar, null::varchar)" {
   expect_output '(null)'
 }
@@ -111,6 +183,42 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_short_with_lexical('32767'::int2, ' 32767 '::varchar), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedshort('65535'::int4), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedshort('65535'::int4), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedshort('65535'::int4), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedshort_with_lexical('65535'::int4, ''::varchar), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedshort_with_lexical('65535'::int4, ''::varchar), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedshort_with_lexical('65535'::int4, ''::varchar), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedshort_with_lexical('65535'::int4, ' 65535 '::varchar), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedshort_with_lexical('65535'::int4, ' 65535 '::varchar), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedshort_with_lexical('65535'::int4, ' 65535 '::varchar), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
   expect_output '(null)'
 }
 
@@ -150,6 +258,42 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedint('4294967295'::int8), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedint('4294967295'::int8), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedint('4294967295'::int8), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedint_with_lexical('4294967295'::int8, ''::varchar), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedint_with_lexical('4294967295'::int8, ''::varchar), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedint_with_lexical('4294967295'::int8, ''::varchar), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedint_with_lexical('4294967295'::int8, ' 4294967295 '::varchar), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedint_with_lexical('4294967295'::int8, ' 4294967295 '::varchar), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedint_with_lexical('4294967295'::int8, ' 4294967295 '::varchar), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_long('9223372036854775807'::int8), 'http://example.org'::varchar, null::varchar)" {
   expect_output '(null)'
 }
@@ -186,6 +330,42 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedlong_with_lexical('18446744073709551615'::decimal, ''::varchar), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedlong_with_lexical('18446744073709551615'::decimal, ''::varchar), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedlong_with_lexical('18446744073709551615'::decimal, ''::varchar), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedlong_with_lexical('18446744073709551615'::decimal, ' 18446744073709551615 '::varchar), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedlong_with_lexical('18446744073709551615'::decimal, ' 18446744073709551615 '::varchar), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_unsignedlong_with_lexical('18446744073709551615'::decimal, ' 18446744073709551615 '::varchar), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_integer('9223372036854775808'::decimal), 'http://example.org'::varchar, null::varchar)" {
   expect_output '(null)'
 }
@@ -219,6 +399,150 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_integer_with_lexical('9223372036854775808'::decimal, ' 9223372036854775808 '::varchar), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_nonpositiveinteger('-18446744073709551616'::decimal), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_nonpositiveinteger('-18446744073709551616'::decimal), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_nonpositiveinteger('-18446744073709551616'::decimal), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_nonpositiveinteger_with_lexical('-18446744073709551616'::decimal, ''::varchar), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_nonpositiveinteger_with_lexical('-18446744073709551616'::decimal, ''::varchar), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_nonpositiveinteger_with_lexical('-18446744073709551616'::decimal, ''::varchar), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_nonpositiveinteger_with_lexical('-18446744073709551616'::decimal, ' -18446744073709551616 '::varchar), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_nonpositiveinteger_with_lexical('-18446744073709551616'::decimal, ' -18446744073709551616 '::varchar), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_nonpositiveinteger_with_lexical('-18446744073709551616'::decimal, ' -18446744073709551616 '::varchar), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_negativeinteger('-18446744073709551616'::decimal), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_negativeinteger('-18446744073709551616'::decimal), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_negativeinteger('-18446744073709551616'::decimal), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_negativeinteger_with_lexical('-18446744073709551616'::decimal, ''::varchar), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_negativeinteger_with_lexical('-18446744073709551616'::decimal, ''::varchar), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_negativeinteger_with_lexical('-18446744073709551616'::decimal, ''::varchar), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_negativeinteger_with_lexical('-18446744073709551616'::decimal, ' -18446744073709551616 '::varchar), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_negativeinteger_with_lexical('-18446744073709551616'::decimal, ' -18446744073709551616 '::varchar), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_negativeinteger_with_lexical('-18446744073709551616'::decimal, ' -18446744073709551616 '::varchar), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_nonnegativeinteger('18446744073709551616'::decimal), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_nonnegativeinteger('18446744073709551616'::decimal), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_nonnegativeinteger('18446744073709551616'::decimal), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_nonnegativeinteger_with_lexical('18446744073709551616'::decimal, ''::varchar), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_nonnegativeinteger_with_lexical('18446744073709551616'::decimal, ''::varchar), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_nonnegativeinteger_with_lexical('18446744073709551616'::decimal, ''::varchar), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_nonnegativeinteger_with_lexical('18446744073709551616'::decimal, ' 18446744073709551616 '::varchar), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_nonnegativeinteger_with_lexical('18446744073709551616'::decimal, ' 18446744073709551616 '::varchar), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_nonnegativeinteger_with_lexical('18446744073709551616'::decimal, ' 18446744073709551616 '::varchar), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_positiveinteger('18446744073709551616'::decimal), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_positiveinteger('18446744073709551616'::decimal), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_positiveinteger('18446744073709551616'::decimal), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_positiveinteger_with_lexical('18446744073709551616'::decimal, ''::varchar), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_positiveinteger_with_lexical('18446744073709551616'::decimal, ''::varchar), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_positiveinteger_with_lexical('18446744073709551616'::decimal, ''::varchar), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_positiveinteger_with_lexical('18446744073709551616'::decimal, ' 18446744073709551616 '::varchar), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_positiveinteger_with_lexical('18446744073709551616'::decimal, ' 18446744073709551616 '::varchar), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_positiveinteger_with_lexical('18446744073709551616'::decimal, ' 18446744073709551616 '::varchar), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
   expect_output '(null)'
 }
 

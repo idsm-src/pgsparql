@@ -1125,3 +1125,399 @@ load ../psql_tests.bash
 @test "fn: sparql.strlang_string('value'::varchar, ''::varchar)" {
   expect_output '(null)'
 }
+
+
+
+####
+# the integer types derived from xsd:integer
+#
+
+@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_byte('-128'::int2))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_unsignedbyte('255'::int2))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_unsignedshort('65535'::int4))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_unsignedint('4294967295'::int8))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_nonpositiveinteger('-18446744073709551616'::decimal))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_negativeinteger('-1'::decimal))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_nonnegativeinteger('0'::decimal))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_positiveinteger('18446744073709551616'::decimal))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_byte('-128'::int2))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_unsignedbyte('255'::int2))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_unsignedshort('65535'::int4))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_unsignedint('4294967295'::int8))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_nonpositiveinteger('-18446744073709551616'::decimal))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_negativeinteger('-1'::decimal))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_nonnegativeinteger('0'::decimal))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_positiveinteger('18446744073709551616'::decimal))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.str_rdfbox(sparql.rdfbox_create_from_byte('-128'::int2))" {
+  expect_output '-128'
+}
+
+@test "fn: sparql.str_rdfbox(sparql.rdfbox_create_from_unsignedbyte('255'::int2))" {
+  expect_output '255'
+}
+
+@test "fn: sparql.str_rdfbox(sparql.rdfbox_create_from_unsignedshort('65535'::int4))" {
+  expect_output '65535'
+}
+
+@test "fn: sparql.str_rdfbox(sparql.rdfbox_create_from_unsignedint('4294967295'::int8))" {
+  expect_output '4294967295'
+}
+
+@test "fn: sparql.str_rdfbox(sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal))" {
+  expect_output '18446744073709551615'
+}
+
+@test "fn: sparql.str_rdfbox(sparql.rdfbox_create_from_nonpositiveinteger('-18446744073709551616'::decimal))" {
+  expect_output '-18446744073709551616'
+}
+
+@test "fn: sparql.str_rdfbox(sparql.rdfbox_create_from_negativeinteger('-1'::decimal))" {
+  expect_output '-1'
+}
+
+@test "fn: sparql.str_rdfbox(sparql.rdfbox_create_from_nonnegativeinteger('0'::decimal))" {
+  expect_output '0'
+}
+
+@test "fn: sparql.str_rdfbox(sparql.rdfbox_create_from_positiveinteger('18446744073709551616'::decimal))" {
+  expect_output '18446744073709551616'
+}
+
+@test "fn: sparql.str_rdfbox('\"+5\"^^<http://www.w3.org/2001/XMLSchema#unsignedByte>'::sparql.rdfbox)" {
+  expect_output '+5'
+}
+
+@test "fn: sparql.str_rdfbox('\"-0\"^^<http://www.w3.org/2001/XMLSchema#nonNegativeInteger>'::sparql.rdfbox)" {
+  expect_output '-0'
+}
+
+@test "fn: sparql.lang_rdfbox(sparql.rdfbox_create_from_byte('-128'::int2))" {
+  expect_output ''
+}
+
+@test "fn: sparql.lang_rdfbox(sparql.rdfbox_create_from_unsignedbyte('255'::int2))" {
+  expect_output ''
+}
+
+@test "fn: sparql.lang_rdfbox(sparql.rdfbox_create_from_unsignedshort('65535'::int4))" {
+  expect_output ''
+}
+
+@test "fn: sparql.lang_rdfbox(sparql.rdfbox_create_from_unsignedint('4294967295'::int8))" {
+  expect_output ''
+}
+
+@test "fn: sparql.lang_rdfbox(sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal))" {
+  expect_output ''
+}
+
+@test "fn: sparql.lang_rdfbox(sparql.rdfbox_create_from_nonpositiveinteger('-18446744073709551616'::decimal))" {
+  expect_output ''
+}
+
+@test "fn: sparql.lang_rdfbox(sparql.rdfbox_create_from_negativeinteger('-1'::decimal))" {
+  expect_output ''
+}
+
+@test "fn: sparql.lang_rdfbox(sparql.rdfbox_create_from_nonnegativeinteger('0'::decimal))" {
+  expect_output ''
+}
+
+@test "fn: sparql.lang_rdfbox(sparql.rdfbox_create_from_positiveinteger('18446744073709551616'::decimal))" {
+  expect_output ''
+}
+
+@test "fn: sparql.datatype_rdfbox(sparql.rdfbox_create_from_byte('-128'::int2))" {
+  expect_output 'http://www.w3.org/2001/XMLSchema#byte'
+}
+
+@test "fn: sparql.datatype_rdfbox(sparql.rdfbox_create_from_unsignedbyte('255'::int2))" {
+  expect_output 'http://www.w3.org/2001/XMLSchema#unsignedByte'
+}
+
+@test "fn: sparql.datatype_rdfbox(sparql.rdfbox_create_from_unsignedshort('65535'::int4))" {
+  expect_output 'http://www.w3.org/2001/XMLSchema#unsignedShort'
+}
+
+@test "fn: sparql.datatype_rdfbox(sparql.rdfbox_create_from_unsignedint('4294967295'::int8))" {
+  expect_output 'http://www.w3.org/2001/XMLSchema#unsignedInt'
+}
+
+@test "fn: sparql.datatype_rdfbox(sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal))" {
+  expect_output 'http://www.w3.org/2001/XMLSchema#unsignedLong'
+}
+
+@test "fn: sparql.datatype_rdfbox(sparql.rdfbox_create_from_nonpositiveinteger('-18446744073709551616'::decimal))" {
+  expect_output 'http://www.w3.org/2001/XMLSchema#nonPositiveInteger'
+}
+
+@test "fn: sparql.datatype_rdfbox(sparql.rdfbox_create_from_negativeinteger('-1'::decimal))" {
+  expect_output 'http://www.w3.org/2001/XMLSchema#negativeInteger'
+}
+
+@test "fn: sparql.datatype_rdfbox(sparql.rdfbox_create_from_nonnegativeinteger('0'::decimal))" {
+  expect_output 'http://www.w3.org/2001/XMLSchema#nonNegativeInteger'
+}
+
+@test "fn: sparql.datatype_rdfbox(sparql.rdfbox_create_from_positiveinteger('18446744073709551616'::decimal))" {
+  expect_output 'http://www.w3.org/2001/XMLSchema#positiveInteger'
+}
+
+@test "fn: sparql.is_numeric_rdfbox('\"128\"^^<http://www.w3.org/2001/XMLSchema#byte>'::sparql.rdfbox)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.is_numeric_rdfbox('\"256\"^^<http://www.w3.org/2001/XMLSchema#unsignedByte>'::sparql.rdfbox)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.is_numeric_rdfbox('\"-1\"^^<http://www.w3.org/2001/XMLSchema#unsignedByte>'::sparql.rdfbox)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.is_numeric_rdfbox('\"65536\"^^<http://www.w3.org/2001/XMLSchema#unsignedShort>'::sparql.rdfbox)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.is_numeric_rdfbox('\"4294967296\"^^<http://www.w3.org/2001/XMLSchema#unsignedInt>'::sparql.rdfbox)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.is_numeric_rdfbox('\"18446744073709551616\"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'::sparql.rdfbox)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.is_numeric_rdfbox('\"-1\"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'::sparql.rdfbox)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.is_numeric_rdfbox('\"1\"^^<http://www.w3.org/2001/XMLSchema#nonPositiveInteger>'::sparql.rdfbox)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.is_numeric_rdfbox('\"0\"^^<http://www.w3.org/2001/XMLSchema#negativeInteger>'::sparql.rdfbox)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.is_numeric_rdfbox('\"-1\"^^<http://www.w3.org/2001/XMLSchema#nonNegativeInteger>'::sparql.rdfbox)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.is_numeric_rdfbox('\"0\"^^<http://www.w3.org/2001/XMLSchema#positiveInteger>'::sparql.rdfbox)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#byte'::varchar)" {
+  expect_output '" 1 "^^<http://www.w3.org/2001/XMLSchema#byte>'
+}
+
+@test "fn: sparql.is_numeric_rdfbox(sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#byte'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#unsignedByte'::varchar)" {
+  expect_output '" 1 "^^<http://www.w3.org/2001/XMLSchema#unsignedByte>'
+}
+
+@test "fn: sparql.is_numeric_rdfbox(sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#unsignedByte'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#unsignedShort'::varchar)" {
+  expect_output '" 1 "^^<http://www.w3.org/2001/XMLSchema#unsignedShort>'
+}
+
+@test "fn: sparql.is_numeric_rdfbox(sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#unsignedShort'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#unsignedInt'::varchar)" {
+  expect_output '" 1 "^^<http://www.w3.org/2001/XMLSchema#unsignedInt>'
+}
+
+@test "fn: sparql.is_numeric_rdfbox(sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#unsignedInt'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#unsignedLong'::varchar)" {
+  expect_output '" 1 "^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'
+}
+
+@test "fn: sparql.is_numeric_rdfbox(sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#unsignedLong'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.strdt_string(' 0 '::varchar, 'http://www.w3.org/2001/XMLSchema#nonPositiveInteger'::varchar)" {
+  expect_output '" 0 "^^<http://www.w3.org/2001/XMLSchema#nonPositiveInteger>'
+}
+
+@test "fn: sparql.is_numeric_rdfbox(sparql.strdt_string(' 0 '::varchar, 'http://www.w3.org/2001/XMLSchema#nonPositiveInteger'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.strdt_string(' -1 '::varchar, 'http://www.w3.org/2001/XMLSchema#negativeInteger'::varchar)" {
+  expect_output '" -1 "^^<http://www.w3.org/2001/XMLSchema#negativeInteger>'
+}
+
+@test "fn: sparql.is_numeric_rdfbox(sparql.strdt_string(' -1 '::varchar, 'http://www.w3.org/2001/XMLSchema#negativeInteger'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#nonNegativeInteger'::varchar)" {
+  expect_output '" 1 "^^<http://www.w3.org/2001/XMLSchema#nonNegativeInteger>'
+}
+
+@test "fn: sparql.is_numeric_rdfbox(sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#nonNegativeInteger'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#positiveInteger'::varchar)" {
+  expect_output '" 1 "^^<http://www.w3.org/2001/XMLSchema#positiveInteger>'
+}
+
+@test "fn: sparql.is_numeric_rdfbox(sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#positiveInteger'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.is_numeric_rdfbox(sparql.strdt_string('-1'::varchar, 'http://www.w3.org/2001/XMLSchema#unsignedByte'::varchar))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.is_numeric_rdfbox(sparql.strdt_string('0'::varchar, 'http://www.w3.org/2001/XMLSchema#positiveInteger'::varchar))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.is_numeric_rdfbox(sparql.strdt_string('18446744073709551616'::varchar, 'http://www.w3.org/2001/XMLSchema#unsignedLong'::varchar))" {
+  expect_output 'f'
+}
+
+
+
+####
+# str_<type>()
+#
+
+@test "fn: sparql.str_byte('-128'::int2)" {
+  expect_output '-128'
+}
+
+@test "fn: sparql.str_byte('127'::int2)" {
+  expect_output '127'
+}
+
+@test "fn: sparql.str_unsignedbyte('0'::int2)" {
+  expect_output '0'
+}
+
+@test "fn: sparql.str_unsignedbyte('255'::int2)" {
+  expect_output '255'
+}
+
+@test "fn: sparql.str_unsignedshort('65535'::int4)" {
+  expect_output '65535'
+}
+
+@test "fn: sparql.str_unsignedint('4294967295'::int8)" {
+  expect_output '4294967295'
+}
+
+@test "fn: sparql.str_unsignedlong('0'::decimal)" {
+  expect_output '0'
+}
+
+@test "fn: sparql.str_unsignedlong('18446744073709551615'::decimal)" {
+  expect_output '18446744073709551615'
+}
+
+@test "fn: sparql.str_nonpositiveinteger('-18446744073709551616'::decimal)" {
+  expect_output '-18446744073709551616'
+}
+
+@test "fn: sparql.str_nonpositiveinteger('0'::decimal)" {
+  expect_output '0'
+}
+
+@test "fn: sparql.str_negativeinteger('-1'::decimal)" {
+  expect_output '-1'
+}
+
+@test "fn: sparql.str_nonnegativeinteger('0'::decimal)" {
+  expect_output '0'
+}
+
+@test "fn: sparql.str_positiveinteger('18446744073709551616'::decimal)" {
+  expect_output '18446744073709551616'
+}
+
+@test "fn: sparql.str_integer('5'::decimal)" {
+  expect_output '5'
+}
+
+@test "fn: sparql.str_integer('-5'::decimal)" {
+  expect_output '-5'
+}
+
+@test "fn: sparql.str_decimal('5'::decimal)" {
+  expect_output '5.0'
+}
+
+@test "fn: sparql.str_decimal('5.10'::decimal)" {
+  expect_output '5.1'
+}

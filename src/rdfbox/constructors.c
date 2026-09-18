@@ -2,6 +2,12 @@
 #include <utils/numeric.h>
 #include "call.h"
 #include "rdfbox/syntax.h"
+#include "types/byte.h"
+#include "types/unsignedbyte.h"
+#include "types/unsignedshort.h"
+#include "types/unsignedint.h"
+#include "types/unsignedlong.h"
+#include "types/integer.h"
 #include "types/sblanknode.h"
 #include "types/timezone.h"
 #include "rdfbox/rdfbox.h"
@@ -66,6 +72,46 @@ Datum rdfbox_create_from_boolean_with_lexical(PG_FUNCTION_ARGS)
 }
 
 
+PG_FUNCTION_INFO_V1(rdfbox_create_from_byte);
+Datum rdfbox_create_from_byte(PG_FUNCTION_ARGS)
+{
+    PG_RETURN_RDFBOX_P(GetByteRdfBox(checked_byte(PG_GETARG_INT16(0))));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_create_from_byte_with_lexical);
+Datum rdfbox_create_from_byte_with_lexical(PG_FUNCTION_ARGS)
+{
+    int8 value = checked_byte(PG_GETARG_INT16(0));
+    VarChar *lexical = PG_GETARG_VARCHAR_PP(1);
+
+    if(VARSIZE_ANY_EXHDR(lexical) == 0)
+        PG_RETURN_RDFBOX_P(GetByteRdfBox(value));
+
+    PG_RETURN_RDFBOX_P(GetByteRdfBoxWithLexical(value, VARDATA_ANY(lexical), VARSIZE_ANY_EXHDR(lexical)));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_create_from_unsignedbyte);
+Datum rdfbox_create_from_unsignedbyte(PG_FUNCTION_ARGS)
+{
+    PG_RETURN_RDFBOX_P(GetUnsignedByteRdfBox(checked_unsignedbyte(PG_GETARG_INT16(0))));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_create_from_unsignedbyte_with_lexical);
+Datum rdfbox_create_from_unsignedbyte_with_lexical(PG_FUNCTION_ARGS)
+{
+    uint8 value = checked_unsignedbyte(PG_GETARG_INT16(0));
+    VarChar *lexical = PG_GETARG_VARCHAR_PP(1);
+
+    if(VARSIZE_ANY_EXHDR(lexical) == 0)
+        PG_RETURN_RDFBOX_P(GetUnsignedByteRdfBox(value));
+
+    PG_RETURN_RDFBOX_P(GetUnsignedByteRdfBoxWithLexical(value, VARDATA_ANY(lexical), VARSIZE_ANY_EXHDR(lexical)));
+}
+
+
 PG_FUNCTION_INFO_V1(rdfbox_create_from_short);
 Datum rdfbox_create_from_short(PG_FUNCTION_ARGS)
 {
@@ -83,6 +129,26 @@ Datum rdfbox_create_from_short_with_lexical(PG_FUNCTION_ARGS)
         PG_RETURN_RDFBOX_P(GetShortRdfBox(value));
 
     PG_RETURN_RDFBOX_P(GetShortRdfBoxWithLexical(value, VARDATA_ANY(lexical), VARSIZE_ANY_EXHDR(lexical)));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_create_from_unsignedshort);
+Datum rdfbox_create_from_unsignedshort(PG_FUNCTION_ARGS)
+{
+    PG_RETURN_RDFBOX_P(GetUnsignedShortRdfBox(checked_unsignedshort(PG_GETARG_INT32(0))));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_create_from_unsignedshort_with_lexical);
+Datum rdfbox_create_from_unsignedshort_with_lexical(PG_FUNCTION_ARGS)
+{
+    uint16 value = checked_unsignedshort(PG_GETARG_INT32(0));
+    VarChar *lexical = PG_GETARG_VARCHAR_PP(1);
+
+    if(VARSIZE_ANY_EXHDR(lexical) == 0)
+        PG_RETURN_RDFBOX_P(GetUnsignedShortRdfBox(value));
+
+    PG_RETURN_RDFBOX_P(GetUnsignedShortRdfBoxWithLexical(value, VARDATA_ANY(lexical), VARSIZE_ANY_EXHDR(lexical)));
 }
 
 
@@ -106,6 +172,26 @@ Datum rdfbox_create_from_int_with_lexical(PG_FUNCTION_ARGS)
 }
 
 
+PG_FUNCTION_INFO_V1(rdfbox_create_from_unsignedint);
+Datum rdfbox_create_from_unsignedint(PG_FUNCTION_ARGS)
+{
+    PG_RETURN_RDFBOX_P(GetUnsignedIntRdfBox(checked_unsignedint(PG_GETARG_INT64(0))));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_create_from_unsignedint_with_lexical);
+Datum rdfbox_create_from_unsignedint_with_lexical(PG_FUNCTION_ARGS)
+{
+    uint32 value = checked_unsignedint(PG_GETARG_INT64(0));
+    VarChar *lexical = PG_GETARG_VARCHAR_PP(1);
+
+    if(VARSIZE_ANY_EXHDR(lexical) == 0)
+        PG_RETURN_RDFBOX_P(GetUnsignedIntRdfBox(value));
+
+    PG_RETURN_RDFBOX_P(GetUnsignedIntRdfBoxWithLexical(value, VARDATA_ANY(lexical), VARSIZE_ANY_EXHDR(lexical)));
+}
+
+
 PG_FUNCTION_INFO_V1(rdfbox_create_from_long);
 Datum rdfbox_create_from_long(PG_FUNCTION_ARGS)
 {
@@ -123,6 +209,146 @@ Datum rdfbox_create_from_long_with_lexical(PG_FUNCTION_ARGS)
         PG_RETURN_RDFBOX_P(GetLongRdfBox(value));
 
     PG_RETURN_RDFBOX_P(GetLongRdfBoxWithLexical(value, VARDATA_ANY(lexical), VARSIZE_ANY_EXHDR(lexical)));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_create_from_unsignedlong);
+Datum rdfbox_create_from_unsignedlong(PG_FUNCTION_ARGS)
+{
+    PG_RETURN_RDFBOX_P(GetUnsignedLongRdfBox(unsignedlong_from_numeric(PG_GETARG_NUMERIC(0))));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_create_from_unsignedlong_with_lexical);
+Datum rdfbox_create_from_unsignedlong_with_lexical(PG_FUNCTION_ARGS)
+{
+    uint64 value = unsignedlong_from_numeric(PG_GETARG_NUMERIC(0));
+    VarChar *lexical = PG_GETARG_VARCHAR_PP(1);
+
+    if(VARSIZE_ANY_EXHDR(lexical) == 0)
+        PG_RETURN_RDFBOX_P(GetUnsignedLongRdfBox(value));
+
+    PG_RETURN_RDFBOX_P(GetUnsignedLongRdfBoxWithLexical(value, VARDATA_ANY(lexical), VARSIZE_ANY_EXHDR(lexical)));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_create_from_integer);
+Datum rdfbox_create_from_integer(PG_FUNCTION_ARGS)
+{
+    PG_RETURN_RDFBOX_P(GetIntegerRdfBox(PG_GETARG_NUMERIC(0)));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_create_from_integer_with_lexical);
+Datum rdfbox_create_from_integer_with_lexical(PG_FUNCTION_ARGS)
+{
+    Numeric value = PG_GETARG_NUMERIC(0);
+    VarChar *lexical = PG_GETARG_VARCHAR_PP(1);
+
+    if(VARSIZE_ANY_EXHDR(lexical) == 0)
+        PG_RETURN_RDFBOX_P(GetIntegerRdfBox(value));
+
+    PG_RETURN_RDFBOX_P(GetIntegerRdfBoxWithLexical(value, VARDATA_ANY(lexical), VARSIZE_ANY_EXHDR(lexical)));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_create_from_nonpositiveinteger);
+Datum rdfbox_create_from_nonpositiveinteger(PG_FUNCTION_ARGS)
+{
+    PG_RETURN_RDFBOX_P(GetNonPositiveIntegerRdfBox(checked_nonpositiveinteger(PG_GETARG_NUMERIC(0))));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_create_from_nonpositiveinteger_with_lexical);
+Datum rdfbox_create_from_nonpositiveinteger_with_lexical(PG_FUNCTION_ARGS)
+{
+    Numeric value = checked_nonpositiveinteger(PG_GETARG_NUMERIC(0));
+    VarChar *lexical = PG_GETARG_VARCHAR_PP(1);
+
+    if(VARSIZE_ANY_EXHDR(lexical) == 0)
+        PG_RETURN_RDFBOX_P(GetNonPositiveIntegerRdfBox(value));
+
+    PG_RETURN_RDFBOX_P(GetNonPositiveIntegerRdfBoxWithLexical(value, VARDATA_ANY(lexical), VARSIZE_ANY_EXHDR(lexical)));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_create_from_negativeinteger);
+Datum rdfbox_create_from_negativeinteger(PG_FUNCTION_ARGS)
+{
+    PG_RETURN_RDFBOX_P(GetNegativeIntegerRdfBox(checked_negativeinteger(PG_GETARG_NUMERIC(0))));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_create_from_negativeinteger_with_lexical);
+Datum rdfbox_create_from_negativeinteger_with_lexical(PG_FUNCTION_ARGS)
+{
+    Numeric value = checked_negativeinteger(PG_GETARG_NUMERIC(0));
+    VarChar *lexical = PG_GETARG_VARCHAR_PP(1);
+
+    if(VARSIZE_ANY_EXHDR(lexical) == 0)
+        PG_RETURN_RDFBOX_P(GetNegativeIntegerRdfBox(value));
+
+    PG_RETURN_RDFBOX_P(GetNegativeIntegerRdfBoxWithLexical(value, VARDATA_ANY(lexical), VARSIZE_ANY_EXHDR(lexical)));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_create_from_nonnegativeinteger);
+Datum rdfbox_create_from_nonnegativeinteger(PG_FUNCTION_ARGS)
+{
+    PG_RETURN_RDFBOX_P(GetNonNegativeIntegerRdfBox(checked_nonnegativeinteger(PG_GETARG_NUMERIC(0))));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_create_from_nonnegativeinteger_with_lexical);
+Datum rdfbox_create_from_nonnegativeinteger_with_lexical(PG_FUNCTION_ARGS)
+{
+    Numeric value = checked_nonnegativeinteger(PG_GETARG_NUMERIC(0));
+    VarChar *lexical = PG_GETARG_VARCHAR_PP(1);
+
+    if(VARSIZE_ANY_EXHDR(lexical) == 0)
+        PG_RETURN_RDFBOX_P(GetNonNegativeIntegerRdfBox(value));
+
+    PG_RETURN_RDFBOX_P(GetNonNegativeIntegerRdfBoxWithLexical(value, VARDATA_ANY(lexical), VARSIZE_ANY_EXHDR(lexical)));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_create_from_positiveinteger);
+Datum rdfbox_create_from_positiveinteger(PG_FUNCTION_ARGS)
+{
+    PG_RETURN_RDFBOX_P(GetPositiveIntegerRdfBox(checked_positiveinteger(PG_GETARG_NUMERIC(0))));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_create_from_positiveinteger_with_lexical);
+Datum rdfbox_create_from_positiveinteger_with_lexical(PG_FUNCTION_ARGS)
+{
+    Numeric value = checked_positiveinteger(PG_GETARG_NUMERIC(0));
+    VarChar *lexical = PG_GETARG_VARCHAR_PP(1);
+
+    if(VARSIZE_ANY_EXHDR(lexical) == 0)
+        PG_RETURN_RDFBOX_P(GetPositiveIntegerRdfBox(value));
+
+    PG_RETURN_RDFBOX_P(GetPositiveIntegerRdfBoxWithLexical(value, VARDATA_ANY(lexical), VARSIZE_ANY_EXHDR(lexical)));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_create_from_decimal);
+Datum rdfbox_create_from_decimal(PG_FUNCTION_ARGS)
+{
+    PG_RETURN_RDFBOX_P(GetDecimalRdfBox(PG_GETARG_NUMERIC(0)));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_create_from_decimal_with_lexical);
+Datum rdfbox_create_from_decimal_with_lexical(PG_FUNCTION_ARGS)
+{
+    Numeric value = PG_GETARG_NUMERIC(0);
+    VarChar *lexical = PG_GETARG_VARCHAR_PP(1);
+
+    if(VARSIZE_ANY_EXHDR(lexical) == 0)
+        PG_RETURN_RDFBOX_P(GetDecimalRdfBox(value));
+
+    PG_RETURN_RDFBOX_P(GetDecimalRdfBoxWithLexical(value, VARDATA_ANY(lexical), VARSIZE_ANY_EXHDR(lexical)));
 }
 
 
@@ -163,46 +389,6 @@ Datum rdfbox_create_from_double_with_lexical(PG_FUNCTION_ARGS)
         PG_RETURN_RDFBOX_P(GetDoubleRdfBox(value));
 
     PG_RETURN_RDFBOX_P(GetDoubleRdfBoxWithLexical(value, VARDATA_ANY(lexical), VARSIZE_ANY_EXHDR(lexical)));
-}
-
-
-PG_FUNCTION_INFO_V1(rdfbox_create_from_integer);
-Datum rdfbox_create_from_integer(PG_FUNCTION_ARGS)
-{
-    PG_RETURN_RDFBOX_P(GetIntegerRdfBox(PG_GETARG_NUMERIC(0)));
-}
-
-
-PG_FUNCTION_INFO_V1(rdfbox_create_from_integer_with_lexical);
-Datum rdfbox_create_from_integer_with_lexical(PG_FUNCTION_ARGS)
-{
-    Numeric value = PG_GETARG_NUMERIC(0);
-    VarChar *lexical = PG_GETARG_VARCHAR_PP(1);
-
-    if(VARSIZE_ANY_EXHDR(lexical) == 0)
-        PG_RETURN_RDFBOX_P(GetIntegerRdfBox(value));
-
-    PG_RETURN_RDFBOX_P(GetIntegerRdfBoxWithLexical(value, VARDATA_ANY(lexical), VARSIZE_ANY_EXHDR(lexical)));
-}
-
-
-PG_FUNCTION_INFO_V1(rdfbox_create_from_decimal);
-Datum rdfbox_create_from_decimal(PG_FUNCTION_ARGS)
-{
-    PG_RETURN_RDFBOX_P(GetDecimalRdfBox(PG_GETARG_NUMERIC(0)));
-}
-
-
-PG_FUNCTION_INFO_V1(rdfbox_create_from_decimal_with_lexical);
-Datum rdfbox_create_from_decimal_with_lexical(PG_FUNCTION_ARGS)
-{
-    Numeric value = PG_GETARG_NUMERIC(0);
-    VarChar *lexical = PG_GETARG_VARCHAR_PP(1);
-
-    if(VARSIZE_ANY_EXHDR(lexical) == 0)
-        PG_RETURN_RDFBOX_P(GetDecimalRdfBox(value));
-
-    PG_RETURN_RDFBOX_P(GetDecimalRdfBoxWithLexical(value, VARDATA_ANY(lexical), VARSIZE_ANY_EXHDR(lexical)));
 }
 
 
@@ -280,14 +466,6 @@ Datum rdfbox_create_from_string(PG_FUNCTION_ARGS)
 }
 
 
-PG_FUNCTION_INFO_V1(rdfbox_create_from_iri);
-Datum rdfbox_create_from_iri(PG_FUNCTION_ARGS)
-{
-    VarChar *value = checked_iri(PG_GETARG_VARCHAR_PP(0));
-    PG_RETURN_RDFBOX_P(GetIriRdfBox(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value)));
-}
-
-
 PG_FUNCTION_INFO_V1(rdfbox_create_from_langstring);
 Datum rdfbox_create_from_langstring(PG_FUNCTION_ARGS)
 {
@@ -361,6 +539,14 @@ Datum rdfbox_create_from_typedliteral(PG_FUNCTION_ARGS)
     VarChar *value = PG_GETARG_VARCHAR_PP(0);
     VarChar *type = checked_iri(PG_GETARG_VARCHAR_PP(1));
     PG_RETURN_RDFBOX_P(GetTypedLiteralRdfBox(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value), VARDATA_ANY(type), VARSIZE_ANY_EXHDR(type)));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_create_from_iri);
+Datum rdfbox_create_from_iri(PG_FUNCTION_ARGS)
+{
+    VarChar *value = checked_iri(PG_GETARG_VARCHAR_PP(0));
+    PG_RETURN_RDFBOX_P(GetIriRdfBox(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value)));
 }
 
 

@@ -105,3 +105,85 @@ load ../psql_tests.bash
 @test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
   expect_output '(null)'
 }
+
+
+
+####
+# the integer types derived from xsd:integer
+#
+
+@test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_byte('1'::int2))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_byte('0'::int2))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_unsignedbyte('255'::int2))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_unsignedbyte('0'::int2))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_unsignedshort('1'::int4))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_unsignedshort('0'::int4))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_unsignedint('1'::int8))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_unsignedint('0'::int8))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_unsignedlong('0'::decimal))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_nonpositiveinteger('-1'::decimal))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_nonpositiveinteger('0'::decimal))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_negativeinteger('-1'::decimal))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_nonnegativeinteger('1'::decimal))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_nonnegativeinteger('0'::decimal))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_positiveinteger('1'::decimal))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.ebv_rdfbox('\"abc\"^^<http://www.w3.org/2001/XMLSchema#unsignedByte>'::sparql.rdfbox)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.ebv_rdfbox('\"256\"^^<http://www.w3.org/2001/XMLSchema#unsignedByte>'::sparql.rdfbox)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.ebv_rdfbox('\"0\"^^<http://www.w3.org/2001/XMLSchema#positiveInteger>'::sparql.rdfbox)" {
+  expect_output 'f'
+}

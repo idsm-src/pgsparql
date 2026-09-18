@@ -1383,3 +1383,209 @@ load ../psql_tests.bash
 @test "op: sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar) operator(sparql.>=) sparql.rdfbox_create_from_iri('http://example.org'::varchar)" {
   expect_output '(null)'
 }
+
+
+
+####
+# the integer types derived from xsd:integer
+#
+
+@test "op: sparql.rdfbox_create_from_byte('0'::int2) operator(sparql.===) sparql.rdfbox_create_from_byte('0'::int2)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_byte('0'::int2) operator(sparql.===) sparql.rdfbox_create_from_unsignedbyte('0'::int2)" {
+  expect_output 'f'
+}
+
+@test "op: sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal) operator(sparql.===) sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_positiveinteger('1'::decimal) operator(sparql.===) sparql.rdfbox_create_from_integer('1'::decimal)" {
+  expect_output 'f'
+}
+
+@test "op: sparql.rdfbox_create_from_nonnegativeinteger('0'::decimal) operator(sparql.===) sparql.rdfbox_create_from_nonpositiveinteger('0'::decimal)" {
+  expect_output 'f'
+}
+
+@test "op: sparql.rdfbox_create_from_byte('2'::int2) operator(sparql.=) sparql.rdfbox_create_from_short('2'::int2)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_byte('-1'::int2) operator(sparql.=) sparql.rdfbox_create_from_unsignedbyte('255'::int2)" {
+  expect_output 'f'
+}
+
+@test "op: sparql.rdfbox_create_from_short('-1'::int2) operator(sparql.=) sparql.rdfbox_create_from_unsignedshort('65535'::int4)" {
+  expect_output 'f'
+}
+
+@test "op: sparql.rdfbox_create_from_int('-1'::int4) operator(sparql.=) sparql.rdfbox_create_from_unsignedint('4294967295'::int8)" {
+  expect_output 'f'
+}
+
+@test "op: sparql.rdfbox_create_from_unsignedint('4294967295'::int8) operator(sparql.=) sparql.rdfbox_create_from_long('4294967295'::int8)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_long('-1'::int8) operator(sparql.=) sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal)" {
+  expect_output 'f'
+}
+
+@test "op: sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal) operator(sparql.=) sparql.rdfbox_create_from_integer('18446744073709551615'::decimal)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_unsignedlong('9223372036854775808'::decimal) operator(sparql.=) sparql.rdfbox_create_from_double('9223372036854775808'::float8)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal) operator(sparql.=) sparql.rdfbox_create_from_float('1.8446744e19'::float4)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_positiveinteger('5'::decimal) operator(sparql.=) sparql.rdfbox_create_from_unsignedbyte('5'::int2)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_nonpositiveinteger('0'::decimal) operator(sparql.=) sparql.rdfbox_create_from_nonnegativeinteger('0'::decimal)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_negativeinteger('-1'::decimal) operator(sparql.=) sparql.rdfbox_create_from_byte('-1'::int2)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_unsignedlong('1'::decimal) operator(sparql.=) sparql.rdfbox_create_from_decimal('1.0'::decimal)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_byte('1'::int2) operator(sparql.=) sparql.rdfbox_create_from_string('1'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_byte('-1'::int2) operator(sparql.!=) sparql.rdfbox_create_from_unsignedbyte('255'::int2)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal) operator(sparql.!=) sparql.rdfbox_create_from_long('-1'::int8)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_positiveinteger('5'::decimal) operator(sparql.!=) sparql.rdfbox_create_from_unsignedbyte('5'::int2)" {
+  expect_output 'f'
+}
+
+@test "op: sparql.rdfbox_create_from_nonpositiveinteger('0'::decimal) operator(sparql.!=) sparql.rdfbox_create_from_unsignedlong('0'::decimal)" {
+  expect_output 'f'
+}
+
+@test "op: sparql.rdfbox_create_from_byte('1'::int2) operator(sparql.!=) sparql.rdfbox_create_from_string('1'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_byte('-1'::int2) operator(sparql.<) sparql.rdfbox_create_from_unsignedbyte('0'::int2)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_unsignedbyte('255'::int2) operator(sparql.<) sparql.rdfbox_create_from_short('256'::int2)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_short('-1'::int2) operator(sparql.<) sparql.rdfbox_create_from_unsignedshort('0'::int4)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_int('-1'::int4) operator(sparql.<) sparql.rdfbox_create_from_unsignedint('0'::int8)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_unsignedint('4294967295'::int8) operator(sparql.<) sparql.rdfbox_create_from_long('4294967296'::int8)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_long('9223372036854775807'::int8) operator(sparql.<) sparql.rdfbox_create_from_unsignedlong('9223372036854775808'::decimal)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal) operator(sparql.<) sparql.rdfbox_create_from_integer('18446744073709551616'::decimal)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal) operator(sparql.<) sparql.rdfbox_create_from_double('2e19'::float8)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal) operator(sparql.<) sparql.rdfbox_create_from_double('1.8446744073709552e19'::float8)" {
+  expect_output 'f'
+}
+
+@test "op: sparql.rdfbox_create_from_negativeinteger('-1'::decimal) operator(sparql.<) sparql.rdfbox_create_from_nonnegativeinteger('0'::decimal)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_nonpositiveinteger('0'::decimal) operator(sparql.<) sparql.rdfbox_create_from_positiveinteger('1'::decimal)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_byte('1'::int2) operator(sparql.<) sparql.rdfbox_create_from_string('2'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_unsignedbyte('0'::int2) operator(sparql.>) sparql.rdfbox_create_from_byte('-1'::int2)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_unsignedlong('9223372036854775808'::decimal) operator(sparql.>) sparql.rdfbox_create_from_long('9223372036854775807'::int8)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_integer('18446744073709551616'::decimal) operator(sparql.>) sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_positiveinteger('1'::decimal) operator(sparql.>) sparql.rdfbox_create_from_nonpositiveinteger('0'::decimal)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_unsignedlong('0'::decimal) operator(sparql.>) sparql.rdfbox_create_from_byte('0'::int2)" {
+  expect_output 'f'
+}
+
+@test "op: sparql.rdfbox_create_from_unsignedshort('65535'::int4) operator(sparql.>) sparql.rdfbox_create_from_float('65534.5'::float4)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal) operator(sparql.<=) sparql.rdfbox_create_from_integer('18446744073709551615'::decimal)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_byte('-128'::int2) operator(sparql.<=) sparql.rdfbox_create_from_negativeinteger('-128'::decimal)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_unsignedbyte('255'::int2) operator(sparql.<=) sparql.rdfbox_create_from_byte('127'::int2)" {
+  expect_output 'f'
+}
+
+@test "op: sparql.rdfbox_create_from_unsignedint('4294967295'::int8) operator(sparql.<=) sparql.rdfbox_create_from_decimal('4294967295.0'::decimal)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal) operator(sparql.>=) sparql.rdfbox_create_from_double('1.8446744073709552e19'::float8)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_unsignedshort('65535'::int4) operator(sparql.>=) sparql.rdfbox_create_from_short('32767'::int2)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_byte('-1'::int2) operator(sparql.>=) sparql.rdfbox_create_from_unsignedbyte('0'::int2)" {
+  expect_output 'f'
+}
+
+@test "op: sparql.rdfbox_create_from_nonnegativeinteger('0'::decimal) operator(sparql.>=) sparql.rdfbox_create_from_nonpositiveinteger('0'::decimal)" {
+  expect_output 't'
+}

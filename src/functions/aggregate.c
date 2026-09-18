@@ -10,6 +10,7 @@
 #include "try-catch.h"
 #include "rdfbox/order.h"
 #include "rdfbox/rdfbox.h"
+#include "rdfbox/promotion.h"
 
 
 typedef struct
@@ -672,24 +673,21 @@ Datum agg_rdfbox_accum(PG_FUNCTION_ARGS)
 
         switch(box->type)
         {
+            case XSD_BYTE:
+            case XSD_UNSIGNEDBYTE:
             case XSD_SHORT:
-                state->integer_count++;
-                DirectFunctionCall2(numeric_avg_accum, state->numeric_state, DirectFunctionCall1(int2_numeric, Int16GetDatum(RdfBoxGetInt16(box))));
-                break;
-
+            case XSD_UNSIGNEDSHORT:
             case XSD_INT:
-                state->integer_count++;
-                DirectFunctionCall2(numeric_avg_accum, state->numeric_state, DirectFunctionCall1(int4_numeric, Int32GetDatum(RdfBoxGetInt32(box))));
-                break;
-
+            case XSD_UNSIGNEDINT:
             case XSD_LONG:
-                state->integer_count++;
-                DirectFunctionCall2(numeric_avg_accum, state->numeric_state, DirectFunctionCall1(int8_numeric, Int64GetDatum(RdfBoxGetInt64(box))));
-                break;
-
+            case XSD_UNSIGNEDLONG:
             case XSD_INTEGER:
+            case XSD_NONPOSITIVEINTEGER:
+            case XSD_NEGATIVEINTEGER:
+            case XSD_NONNEGATIVEINTEGER:
+            case XSD_POSITIVEINTEGER:
                 state->integer_count++;
-                DirectFunctionCall2(numeric_avg_accum, state->numeric_state, NumericGetDatum(RdfBoxGetNumeric(box)));
+                DirectFunctionCall2(numeric_avg_accum, state->numeric_state, NumericGetDatum(rdfbox_get_numeric_as_decimal(box)));
                 break;
 
             case XSD_DECIMAL:

@@ -10,6 +10,38 @@ load ../psql_tests.bash
   expect_output '1'
 }
 
+@test "fn: sparql.cast_as_short_from_byte('-128'::int2)" {
+  expect_output '-128'
+}
+
+@test "fn: sparql.cast_as_short_from_byte('127'::int2)" {
+  expect_output '127'
+}
+
+@test "fn: sparql.cast_as_short_from_unsignedbyte('0'::int2)" {
+  expect_output '0'
+}
+
+@test "fn: sparql.cast_as_short_from_unsignedbyte('255'::int2)" {
+  expect_output '255'
+}
+
+@test "fn: sparql.cast_as_short_from_unsignedshort('0'::int4)" {
+  expect_output '0'
+}
+
+@test "fn: sparql.cast_as_short_from_unsignedshort('32767'::int4)" {
+  expect_output '32767'
+}
+
+@test "fn: sparql.cast_as_short_from_unsignedshort('32768'::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_short_from_unsignedshort('65535'::int4)" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.cast_as_short_from_int('-32769'::int4)" {
   expect_output '(null)'
 }
@@ -26,6 +58,22 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.cast_as_short_from_unsignedint('0'::int8)" {
+  expect_output '0'
+}
+
+@test "fn: sparql.cast_as_short_from_unsignedint('32767'::int8)" {
+  expect_output '32767'
+}
+
+@test "fn: sparql.cast_as_short_from_unsignedint('32768'::int8)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_short_from_unsignedint('4294967295'::int8)" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.cast_as_short_from_long('-32769'::int8)" {
   expect_output '(null)'
 }
@@ -39,6 +87,22 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.cast_as_short_from_long('32768'::int8)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_short_from_unsignedlong('0'::decimal)" {
+  expect_output '0'
+}
+
+@test "fn: sparql.cast_as_short_from_unsignedlong('32767'::decimal)" {
+  expect_output '32767'
+}
+
+@test "fn: sparql.cast_as_short_from_unsignedlong('32768'::decimal)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_short_from_unsignedlong('18446744073709551615'::decimal)" {
   expect_output '(null)'
 }
 
@@ -67,6 +131,70 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.cast_as_short_from_integer('nan'::decimal)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_short_from_nonpositiveinteger('-18446744073709551616'::decimal)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_short_from_nonpositiveinteger('-32769'::decimal)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_short_from_nonpositiveinteger('-32768'::decimal)" {
+  expect_output '-32768'
+}
+
+@test "fn: sparql.cast_as_short_from_nonpositiveinteger('0'::decimal)" {
+  expect_output '0'
+}
+
+@test "fn: sparql.cast_as_short_from_negativeinteger('-18446744073709551616'::decimal)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_short_from_negativeinteger('-32769'::decimal)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_short_from_negativeinteger('-32768'::decimal)" {
+  expect_output '-32768'
+}
+
+@test "fn: sparql.cast_as_short_from_negativeinteger('-1'::decimal)" {
+  expect_output '-1'
+}
+
+@test "fn: sparql.cast_as_short_from_nonnegativeinteger('0'::decimal)" {
+  expect_output '0'
+}
+
+@test "fn: sparql.cast_as_short_from_nonnegativeinteger('32767'::decimal)" {
+  expect_output '32767'
+}
+
+@test "fn: sparql.cast_as_short_from_nonnegativeinteger('32768'::decimal)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_short_from_nonnegativeinteger('18446744073709551616'::decimal)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_short_from_positiveinteger('1'::decimal)" {
+  expect_output '1'
+}
+
+@test "fn: sparql.cast_as_short_from_positiveinteger('32767'::decimal)" {
+  expect_output '32767'
+}
+
+@test "fn: sparql.cast_as_short_from_positiveinteger('32768'::decimal)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_short_from_positiveinteger('18446744073709551616'::decimal)" {
   expect_output '(null)'
 }
 
@@ -422,5 +550,69 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.cast_as_short_from_float('NaN'::float4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_byte('-128'::int2))" {
+  expect_output '-128'
+}
+
+@test "fn: sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_byte('127'::int2))" {
+  expect_output '127'
+}
+
+@test "fn: sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_unsignedbyte('255'::int2))" {
+  expect_output '255'
+}
+
+@test "fn: sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_unsignedshort('32767'::int4))" {
+  expect_output '32767'
+}
+
+@test "fn: sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_unsignedshort('32768'::int4))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_unsignedint('1'::int8))" {
+  expect_output '1'
+}
+
+@test "fn: sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_unsignedint('4294967295'::int8))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_unsignedlong('32767'::decimal))" {
+  expect_output '32767'
+}
+
+@test "fn: sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_unsignedlong('32768'::decimal))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_nonpositiveinteger('0'::decimal))" {
+  expect_output '0'
+}
+
+@test "fn: sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_negativeinteger('-32768'::decimal))" {
+  expect_output '-32768'
+}
+
+@test "fn: sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_negativeinteger('-32769'::decimal))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_nonnegativeinteger('0'::decimal))" {
+  expect_output '0'
+}
+
+@test "fn: sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_positiveinteger('1'::decimal))" {
+  expect_output '1'
+}
+
+@test "fn: sparql.cast_as_short_from_rdfbox(sparql.rdfbox_create_from_positiveinteger('18446744073709551616'::decimal))" {
   expect_output '(null)'
 }

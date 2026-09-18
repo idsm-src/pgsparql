@@ -11,26 +11,55 @@
 #include "types/ubox.h"
 
 
+/*
+ * The order of the types is semantic:
+ *
+ *   - XSD_BOOLEAN .. TYPED_LITERAL are the literals (rdfbox_is_literal) and XSD_BYTE .. XSD_DOUBLE the numbers
+ *     among them (rdfbox_is_numeric),
+ *
+ *   - the numeric types are listed so that for each promotion target (xsd:short, xsd:int, xsd:long, xsd:integer,
+ *     xsd:decimal, xsd:float and xsd:double) the types from XSD_BYTE up to the target are exactly those whose values
+ *     the SQL type of the target represents; rdfbox/derivate.c and rdfbox/promotion.h rely on it,
+ *
+ *   - the values of XSD_BYTE .. XSD_LONG are held in an integer of at most 64 bits, the value of XSD_UNSIGNEDLONG in
+ *     a uint64 and the values of XSD_INTEGER .. XSD_DECIMAL in a numeric; rdfbox/order.c relies on it,
+ *
+ *   - rdfbox/order.c orders numbers of the same value by their types and blank nodes, IRIs and literals by the
+ *     reversed order of their types,
+ *
+ *   - functions/rdfterm.c indexes the table of datatype IRIs by the type,
+ *
+ *   - the type is a part of the stored representation and of the binary format read by rdfbox_recv().
+ */
 typedef enum
 {
     XSD_BOOLEAN = 0,
-    XSD_SHORT = 1,
-    XSD_INT = 2,
-    XSD_LONG = 3,
-    XSD_INTEGER = 4,
-    XSD_DECIMAL = 5,
-    XSD_FLOAT = 6,
-    XSD_DOUBLE = 7,
-    XSD_DATETIME = 8,
-    XSD_DATE = 9,
-    XSD_DAYTIMEDURATION = 10,
-    XSD_STRING = 11,
-    RDF_LANGSTRING = 12,
-    USER_LITERAL = 13,
-    TYPED_LITERAL = 14,
-    IRI = 15,
-    IBLANKNODE = 16,
-    SBLANKNODE = 17
+    XSD_BYTE = 1,
+    XSD_UNSIGNEDBYTE = 2,
+    XSD_SHORT = 3,
+    XSD_UNSIGNEDSHORT = 4,
+    XSD_INT = 5,
+    XSD_UNSIGNEDINT = 6,
+    XSD_LONG = 7,
+    XSD_UNSIGNEDLONG = 8,
+    XSD_INTEGER = 9,
+    XSD_NONPOSITIVEINTEGER = 10,
+    XSD_NEGATIVEINTEGER = 11,
+    XSD_NONNEGATIVEINTEGER = 12,
+    XSD_POSITIVEINTEGER = 13,
+    XSD_DECIMAL = 14,
+    XSD_FLOAT = 15,
+    XSD_DOUBLE = 16,
+    XSD_DATETIME = 17,
+    XSD_DATE = 18,
+    XSD_DAYTIMEDURATION = 19,
+    XSD_STRING = 20,
+    RDF_LANGSTRING = 21,
+    USER_LITERAL = 22,
+    TYPED_LITERAL = 23,
+    IRI = 24,
+    IBLANKNODE = 25,
+    SBLANKNODE = 26
 }
 RdfType;
 
@@ -71,9 +100,25 @@ RdfBoxInt32;
 typedef struct
 {
     RdfBox header;
+    uint32 value;
+}
+RdfBoxUInt32;
+
+
+typedef struct
+{
+    RdfBox header;
     int64 value;
 }
 RdfBoxInt64;
+
+
+typedef struct
+{
+    RdfBox header;
+    uint64 value;
+}
+RdfBoxUInt64;
 
 
 typedef struct
@@ -142,10 +187,26 @@ RdfBoxInt32WithLexical;
 
 typedef struct
 {
+    RdfBoxUInt32 box;
+    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);
+}
+RdfBoxUInt32WithLexical;
+
+
+typedef struct
+{
     RdfBoxInt64 box;
     char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);
 }
 RdfBoxInt64WithLexical;
+
+
+typedef struct
+{
+    RdfBoxUInt64 box;
+    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);
+}
+RdfBoxUInt64WithLexical;
 
 
 typedef struct
@@ -219,9 +280,27 @@ static inline bool RdfBoxGetBool(RdfBox *box)
 }
 
 
+static inline int8 RdfBoxGetInt8(RdfBox *box)
+{
+    return (int8) ((RdfBoxInt16 *) box)->value;
+}
+
+
+static inline uint8 RdfBoxGetUInt8(RdfBox *box)
+{
+    return (uint8) ((RdfBoxInt16 *) box)->value;
+}
+
+
 static inline int16 RdfBoxGetInt16(RdfBox *box)
 {
     return ((RdfBoxInt16 *) box)->value;
+}
+
+
+static inline uint16 RdfBoxGetUInt16(RdfBox *box)
+{
+    return (uint16) ((RdfBoxInt32 *) box)->value;
 }
 
 
@@ -231,9 +310,21 @@ static inline int32 RdfBoxGetInt32(RdfBox *box)
 }
 
 
+static inline uint32 RdfBoxGetUInt32(RdfBox *box)
+{
+    return ((RdfBoxUInt32 *) box)->value;
+}
+
+
 static inline int64 RdfBoxGetInt64(RdfBox *box)
 {
     return ((RdfBoxInt64 *) box)->value;
+}
+
+
+static inline uint64 RdfBoxGetUInt64(RdfBox *box)
+{
+    return ((RdfBoxUInt64 *) box)->value;
 }
 
 
@@ -304,9 +395,21 @@ static inline VarChar *RdfBoxGetInt32Lexical(RdfBox *box)
 }
 
 
+static inline VarChar *RdfBoxGetUInt32Lexical(RdfBox *box)
+{
+    return (VarChar *) ((RdfBoxUInt32WithLexical *) box)->lexical;
+}
+
+
 static inline VarChar *RdfBoxGetInt64Lexical(RdfBox *box)
 {
     return (VarChar *) ((RdfBoxInt64WithLexical *) box)->lexical;
+}
+
+
+static inline VarChar *RdfBoxGetUInt64Lexical(RdfBox *box)
+{
+    return (VarChar *) ((RdfBoxUInt64WithLexical *) box)->lexical;
 }
 
 
@@ -350,17 +453,30 @@ static inline VarChar *RdfBoxGetLexical(RdfBox *box)
         case XSD_BOOLEAN:
             return RdfBoxGetBoolLexical(box);
 
+        case XSD_BYTE:
+        case XSD_UNSIGNEDBYTE:
         case XSD_SHORT:
             return RdfBoxGetInt16Lexical(box);
 
+        case XSD_UNSIGNEDSHORT:
         case XSD_INT:
             return RdfBoxGetInt32Lexical(box);
+
+        case XSD_UNSIGNEDINT:
+            return RdfBoxGetUInt32Lexical(box);
 
         case XSD_LONG:
         case XSD_DAYTIMEDURATION:
             return RdfBoxGetInt64Lexical(box);
 
+        case XSD_UNSIGNEDLONG:
+            return RdfBoxGetUInt64Lexical(box);
+
         case XSD_INTEGER:
+        case XSD_NONPOSITIVEINTEGER:
+        case XSD_NEGATIVEINTEGER:
+        case XSD_NONNEGATIVEINTEGER:
+        case XSD_POSITIVEINTEGER:
         case XSD_DECIMAL:
             return RdfBoxGetAttachment(box);
 
@@ -395,11 +511,41 @@ static inline RdfBox *GetBooleanRdfBox(bool value)
 }
 
 
+static inline RdfBox *GetByteRdfBox(int8 value)
+{
+    RdfBoxInt16 *result = (RdfBoxInt16 *) palloc0(sizeof(RdfBoxInt16));
+    SET_VARSIZE(result, sizeof(RdfBoxInt16));
+    result->header.type = XSD_BYTE;
+    result->value = value;
+    return (RdfBox *) result;
+}
+
+
+static inline RdfBox *GetUnsignedByteRdfBox(uint8 value)
+{
+    RdfBoxInt16 *result = (RdfBoxInt16 *) palloc0(sizeof(RdfBoxInt16));
+    SET_VARSIZE(result, sizeof(RdfBoxInt16));
+    result->header.type = XSD_UNSIGNEDBYTE;
+    result->value = value;
+    return (RdfBox *) result;
+}
+
+
 static inline RdfBox *GetShortRdfBox(int16 value)
 {
     RdfBoxInt16 *result = (RdfBoxInt16 *) palloc0(sizeof(RdfBoxInt16));
     SET_VARSIZE(result, sizeof(RdfBoxInt16));
     result->header.type = XSD_SHORT;
+    result->value = value;
+    return (RdfBox *) result;
+}
+
+
+static inline RdfBox *GetUnsignedShortRdfBox(uint16 value)
+{
+    RdfBoxInt32 *result = (RdfBoxInt32 *) palloc0(sizeof(RdfBoxInt32));
+    SET_VARSIZE(result, sizeof(RdfBoxInt32));
+    result->header.type = XSD_UNSIGNEDSHORT;
     result->value = value;
     return (RdfBox *) result;
 }
@@ -415,11 +561,31 @@ static inline RdfBox *GetIntRdfBox(int32 value)
 }
 
 
+static inline RdfBox *GetUnsignedIntRdfBox(uint32 value)
+{
+    RdfBoxUInt32 *result = (RdfBoxUInt32 *) palloc0(sizeof(RdfBoxUInt32));
+    SET_VARSIZE(result, sizeof(RdfBoxUInt32));
+    result->header.type = XSD_UNSIGNEDINT;
+    result->value = value;
+    return (RdfBox *) result;
+}
+
+
 static inline RdfBox *GetLongRdfBox(int64 value)
 {
     RdfBoxInt64 *result = (RdfBoxInt64 *) palloc0(sizeof(RdfBoxInt64));
     SET_VARSIZE(result, sizeof(RdfBoxInt64));
     result->header.type = XSD_LONG;
+    result->value = value;
+    return (RdfBox *) result;
+}
+
+
+static inline RdfBox *GetUnsignedLongRdfBox(uint64 value)
+{
+    RdfBoxUInt64 *result = (RdfBoxUInt64 *) palloc0(sizeof(RdfBoxUInt64));
+    SET_VARSIZE(result, sizeof(RdfBoxUInt64));
+    result->header.type = XSD_UNSIGNEDLONG;
     result->value = value;
     return (RdfBox *) result;
 }
@@ -431,6 +597,50 @@ static inline RdfBox *GetIntegerRdfBox(Numeric value)
     RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + size);
     SET_VARSIZE(result, sizeof(RdfBoxVarlena) + size);
     result->header.type = XSD_INTEGER;
+    memcpy(result->value, value, size);
+    return (RdfBox *) result;
+}
+
+
+static inline RdfBox *GetNonPositiveIntegerRdfBox(Numeric value)
+{
+    int size = VARSIZE(value);
+    RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + size);
+    SET_VARSIZE(result, sizeof(RdfBoxVarlena) + size);
+    result->header.type = XSD_NONPOSITIVEINTEGER;
+    memcpy(result->value, value, size);
+    return (RdfBox *) result;
+}
+
+
+static inline RdfBox *GetNegativeIntegerRdfBox(Numeric value)
+{
+    int size = VARSIZE(value);
+    RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + size);
+    SET_VARSIZE(result, sizeof(RdfBoxVarlena) + size);
+    result->header.type = XSD_NEGATIVEINTEGER;
+    memcpy(result->value, value, size);
+    return (RdfBox *) result;
+}
+
+
+static inline RdfBox *GetNonNegativeIntegerRdfBox(Numeric value)
+{
+    int size = VARSIZE(value);
+    RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + size);
+    SET_VARSIZE(result, sizeof(RdfBoxVarlena) + size);
+    result->header.type = XSD_NONNEGATIVEINTEGER;
+    memcpy(result->value, value, size);
+    return (RdfBox *) result;
+}
+
+
+static inline RdfBox *GetPositiveIntegerRdfBox(Numeric value)
+{
+    int size = VARSIZE(value);
+    RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + size);
+    SET_VARSIZE(result, sizeof(RdfBoxVarlena) + size);
+    result->header.type = XSD_POSITIVEINTEGER;
     memcpy(result->value, value, size);
     return (RdfBox *) result;
 }
@@ -560,11 +770,50 @@ static inline RdfBox *GetBooleanRdfBoxWithLexical(bool value, const char *data, 
 }
 
 
+static inline RdfBox *GetByteRdfBoxWithLexical(int8 value, const char *data, int size)
+{
+    RdfBoxInt16WithLexical *result = (RdfBoxInt16WithLexical *) palloc0(sizeof(RdfBoxInt16WithLexical) + VARHDRSZ + size);
+    SET_VARSIZE(result, sizeof(RdfBoxInt16WithLexical) + VARHDRSZ + size);
+    result->box.header.type = XSD_BYTE;
+    result->box.header.lexical = true;
+    result->box.value = value;
+    SET_VARSIZE(result->lexical, size + VARHDRSZ);
+    memcpy(VARDATA(result->lexical), data, size);
+    return (RdfBox *) result;
+}
+
+
+static inline RdfBox *GetUnsignedByteRdfBoxWithLexical(uint8 value, const char *data, int size)
+{
+    RdfBoxInt16WithLexical *result = (RdfBoxInt16WithLexical *) palloc0(sizeof(RdfBoxInt16WithLexical) + VARHDRSZ + size);
+    SET_VARSIZE(result, sizeof(RdfBoxInt16WithLexical) + VARHDRSZ + size);
+    result->box.header.type = XSD_UNSIGNEDBYTE;
+    result->box.header.lexical = true;
+    result->box.value = value;
+    SET_VARSIZE(result->lexical, size + VARHDRSZ);
+    memcpy(VARDATA(result->lexical), data, size);
+    return (RdfBox *) result;
+}
+
+
 static inline RdfBox *GetShortRdfBoxWithLexical(int16 value, const char *data, int size)
 {
     RdfBoxInt16WithLexical *result = (RdfBoxInt16WithLexical *) palloc0(sizeof(RdfBoxInt16WithLexical) + VARHDRSZ + size);
     SET_VARSIZE(result, sizeof(RdfBoxInt16WithLexical) + VARHDRSZ + size);
     result->box.header.type = XSD_SHORT;
+    result->box.header.lexical = true;
+    result->box.value = value;
+    SET_VARSIZE(result->lexical, size + VARHDRSZ);
+    memcpy(VARDATA(result->lexical), data, size);
+    return (RdfBox *) result;
+}
+
+
+static inline RdfBox *GetUnsignedShortRdfBoxWithLexical(uint16 value, const char *data, int size)
+{
+    RdfBoxInt32WithLexical *result = (RdfBoxInt32WithLexical *) palloc0(sizeof(RdfBoxInt32WithLexical) + VARHDRSZ + size);
+    SET_VARSIZE(result, sizeof(RdfBoxInt32WithLexical) + VARHDRSZ + size);
+    result->box.header.type = XSD_UNSIGNEDSHORT;
     result->box.header.lexical = true;
     result->box.value = value;
     SET_VARSIZE(result->lexical, size + VARHDRSZ);
@@ -586,11 +835,37 @@ static inline RdfBox *GetIntRdfBoxWithLexical(int32 value, const char *data, int
 }
 
 
+static inline RdfBox *GetUnsignedIntRdfBoxWithLexical(uint32 value, const char *data, int size)
+{
+    RdfBoxUInt32WithLexical *result = (RdfBoxUInt32WithLexical *) palloc0(sizeof(RdfBoxUInt32WithLexical) + VARHDRSZ + size);
+    SET_VARSIZE(result, sizeof(RdfBoxUInt32WithLexical) + VARHDRSZ + size);
+    result->box.header.type = XSD_UNSIGNEDINT;
+    result->box.header.lexical = true;
+    result->box.value = value;
+    SET_VARSIZE(result->lexical, size + VARHDRSZ);
+    memcpy(VARDATA(result->lexical), data, size);
+    return (RdfBox *) result;
+}
+
+
 static inline RdfBox *GetLongRdfBoxWithLexical(int64 value, const char *data, int size)
 {
     RdfBoxInt64WithLexical *result = (RdfBoxInt64WithLexical *) palloc0(sizeof(RdfBoxInt64WithLexical) + VARHDRSZ + size);
     SET_VARSIZE(result, sizeof(RdfBoxInt64WithLexical) + VARHDRSZ + size);
     result->box.header.type = XSD_LONG;
+    result->box.header.lexical = true;
+    result->box.value = value;
+    SET_VARSIZE(result->lexical, size + VARHDRSZ);
+    memcpy(VARDATA(result->lexical), data, size);
+    return (RdfBox *) result;
+}
+
+
+static inline RdfBox *GetUnsignedLongRdfBoxWithLexical(uint64 value, const char *data, int size)
+{
+    RdfBoxUInt64WithLexical *result = (RdfBoxUInt64WithLexical *) palloc0(sizeof(RdfBoxUInt64WithLexical) + VARHDRSZ + size);
+    SET_VARSIZE(result, sizeof(RdfBoxUInt64WithLexical) + VARHDRSZ + size);
+    result->box.header.type = XSD_UNSIGNEDLONG;
     result->box.header.lexical = true;
     result->box.value = value;
     SET_VARSIZE(result->lexical, size + VARHDRSZ);
@@ -605,6 +880,62 @@ static inline RdfBox *GetIntegerRdfBoxWithLexical(Numeric value, const char *dat
     RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + align_size(nsize) + VARHDRSZ + size);
     SET_VARSIZE(result, sizeof(RdfBoxVarlena) + align_size(nsize) + VARHDRSZ + size);
     result->header.type = XSD_INTEGER;
+    result->header.lexical = true;
+    memcpy(result->value, value, nsize);
+    SET_VARSIZE(result->value + align_size(nsize), size + VARHDRSZ);
+    memcpy(VARDATA(result->value + align_size(nsize)), data, size);
+    return (RdfBox *) result;
+}
+
+
+static inline RdfBox *GetNonPositiveIntegerRdfBoxWithLexical(Numeric value, const char *data, int size)
+{
+    int nsize = VARSIZE(value);
+    RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + align_size(nsize) + VARHDRSZ + size);
+    SET_VARSIZE(result, sizeof(RdfBoxVarlena) + align_size(nsize) + VARHDRSZ + size);
+    result->header.type = XSD_NONPOSITIVEINTEGER;
+    result->header.lexical = true;
+    memcpy(result->value, value, nsize);
+    SET_VARSIZE(result->value + align_size(nsize), size + VARHDRSZ);
+    memcpy(VARDATA(result->value + align_size(nsize)), data, size);
+    return (RdfBox *) result;
+}
+
+
+static inline RdfBox *GetNegativeIntegerRdfBoxWithLexical(Numeric value, const char *data, int size)
+{
+    int nsize = VARSIZE(value);
+    RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + align_size(nsize) + VARHDRSZ + size);
+    SET_VARSIZE(result, sizeof(RdfBoxVarlena) + align_size(nsize) + VARHDRSZ + size);
+    result->header.type = XSD_NEGATIVEINTEGER;
+    result->header.lexical = true;
+    memcpy(result->value, value, nsize);
+    SET_VARSIZE(result->value + align_size(nsize), size + VARHDRSZ);
+    memcpy(VARDATA(result->value + align_size(nsize)), data, size);
+    return (RdfBox *) result;
+}
+
+
+static inline RdfBox *GetNonNegativeIntegerRdfBoxWithLexical(Numeric value, const char *data, int size)
+{
+    int nsize = VARSIZE(value);
+    RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + align_size(nsize) + VARHDRSZ + size);
+    SET_VARSIZE(result, sizeof(RdfBoxVarlena) + align_size(nsize) + VARHDRSZ + size);
+    result->header.type = XSD_NONNEGATIVEINTEGER;
+    result->header.lexical = true;
+    memcpy(result->value, value, nsize);
+    SET_VARSIZE(result->value + align_size(nsize), size + VARHDRSZ);
+    memcpy(VARDATA(result->value + align_size(nsize)), data, size);
+    return (RdfBox *) result;
+}
+
+
+static inline RdfBox *GetPositiveIntegerRdfBoxWithLexical(Numeric value, const char *data, int size)
+{
+    int nsize = VARSIZE(value);
+    RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + align_size(nsize) + VARHDRSZ + size);
+    SET_VARSIZE(result, sizeof(RdfBoxVarlena) + align_size(nsize) + VARHDRSZ + size);
+    result->header.type = XSD_POSITIVEINTEGER;
     result->header.lexical = true;
     memcpy(result->value, value, nsize);
     SET_VARSIZE(result->value + align_size(nsize), size + VARHDRSZ);
@@ -743,7 +1074,7 @@ static inline RdfBox *GetSBlankNodeRdfBox(const char *data, int size)
 
 static inline bool rdfbox_is_numeric(RdfBox *box)
 {
-    return box->type >= XSD_SHORT && box->type <=  XSD_DOUBLE;
+    return box->type >= XSD_BYTE && box->type <= XSD_DOUBLE;
 }
 
 
