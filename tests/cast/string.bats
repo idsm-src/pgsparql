@@ -526,6 +526,10 @@ load ../psql_tests.bash
   expect_output 'http://false.org'
 }
 
+@test "fn: sparql.cast_as_string_from_rdfbox(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar)))" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.cast_as_string_from_rdfbox(sparql.rdfbox_create_from_byte('-128'::int2))" {
   expect_output '-128'
 }

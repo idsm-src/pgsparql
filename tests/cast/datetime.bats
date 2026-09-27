@@ -322,6 +322,10 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.cast_as_datetime_from_rdfbox(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar)))" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.cast_as_plain_datetime_from_date('0001-02-18 BC'::date, 0::int4)" {
   expect_output '0001-02-18 00:00:00+00 BC'
 }
@@ -391,5 +395,9 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.cast_as_plain_datetime_from_rdfbox(sparql.rdfbox_create_from_iri('http://false.org'::varchar))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_plain_datetime_from_rdfbox(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar)))" {
   expect_output '(null)'
 }

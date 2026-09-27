@@ -966,6 +966,18 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar)), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar)), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar)), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_userliteral('123'::int4, 'http://example.org'::varchar), 'http://example.org'::varchar, null::int8)" {
   expect_error
 }

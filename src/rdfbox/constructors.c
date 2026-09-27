@@ -52,6 +52,19 @@ static inline VarChar *checked_sblanknode(VarChar *value)
 #endif
 
 
+#ifdef PGSPARQL_EXTRA_CHECKS
+static inline RdfBox *checked_subject(RdfBox *subject)
+{
+    if(subject->type != IRI && !rdfbox_is_blanknode(subject))
+        ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE), errmsg("invalid subject of triple term")));
+
+    return subject;
+}
+#else
+#define checked_subject(x)    (x)
+#endif
+
+
 PG_FUNCTION_INFO_V1(rdfbox_create_from_boolean);
 Datum rdfbox_create_from_boolean(PG_FUNCTION_ARGS)
 {
@@ -598,4 +611,14 @@ Datum rdfbox_create_from_sblanknode(PG_FUNCTION_ARGS)
 
         PG_RETURN_RDFBOX_P(GetSBlankNodeRdfBox(buffer, 8 + size));
     }
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_create_from_tripleterm);
+Datum rdfbox_create_from_tripleterm(PG_FUNCTION_ARGS)
+{
+    RdfBox *subject = checked_subject(PG_GETARG_RDFBOX_P(0));
+    VarChar *predicate = checked_iri(PG_GETARG_VARCHAR_PP(1));
+    RdfBox *object = PG_GETARG_RDFBOX_P(2);
+    PG_RETURN_RDFBOX_P(GetTripleTermRdfBox(subject, VARDATA_ANY(predicate), VARSIZE_ANY_EXHDR(predicate), object));
 }

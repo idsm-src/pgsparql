@@ -301,3 +301,7 @@ load ../psql_tests.bash
 @test "fn: sparql.rdfbox_get_langstring_value_of_lang(sparql.rdfbox_create_from_sblanknode('7fffffffid'::varchar), 'cy'::varchar)" {
   expect_output '(null)'
 }
+
+@test "fn: sparql.rdfbox_get_langstring_value_of_lang(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar)), 'cy'::varchar)" {
+  expect_output '(null)'
+}

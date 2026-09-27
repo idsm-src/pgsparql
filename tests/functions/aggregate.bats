@@ -950,6 +950,14 @@ load ../psql_tests.bash
   expect_output '<http://example.org>'
 }
 
+@test "fn: sparql.min(x) from (values (sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar))), (sparql.rdfbox_create_from_string('0'::varchar))) as tab(x)" {
+  expect_output '"0"^^<http://www.w3.org/2001/XMLSchema#string>'
+}
+
+@test "fn: sparql.min(x) from (values (sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar))), (sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iblanknode('9223372034707292160'::int8), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_int('1'::int4)))) as tab(x)" {
+  expect_output '<<( _:i7fffffff80000000 <http://example.org/p> "1"^^<http://www.w3.org/2001/XMLSchema#int> )>>'
+}
+
 @test "fn: sparql.min(x) from (values (sparql.rdfbox_create_from_string('0'::varchar)), (sparql.rdfbox_create_from_iblanknode('0'::int8))) as tab(x)" {
   expect_output '_:i0000000000000000'
 }
@@ -1538,6 +1546,14 @@ load ../psql_tests.bash
 
 @test "fn: sparql.max_rdfbox(x) from (values (sparql.rdfbox_create_from_iri('http://example.org'::varchar)), (sparql.rdfbox_create_from_string('0'::varchar))) as tab(x)" {
   expect_output '"0"^^<http://www.w3.org/2001/XMLSchema#string>'
+}
+
+@test "fn: sparql.max_rdfbox(x) from (values (sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar))), (sparql.rdfbox_create_from_string('0'::varchar))) as tab(x)" {
+  expect_output '<<( <http://example.org/s> <http://example.org/p> "o"^^<http://www.w3.org/2001/XMLSchema#string> )>>'
+}
+
+@test "fn: sparql.max_rdfbox(x) from (values (sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar))), (sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iblanknode('9223372034707292160'::int8), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_int('1'::int4)))) as tab(x)" {
+  expect_output '<<( <http://example.org/s> <http://example.org/p> "o"^^<http://www.w3.org/2001/XMLSchema#string> )>>'
 }
 
 @test "fn: sparql.max_rdfbox(x) from (values (sparql.rdfbox_create_from_string('0'::varchar)), (sparql.rdfbox_create_from_iblanknode('0'::int8))) as tab(x)" {

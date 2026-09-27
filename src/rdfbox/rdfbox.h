@@ -18,7 +18,7 @@
  *     them (rdfbox_is_numeric) and XSD_STRING .. RDF_RTL_LANGSTRING the string literals among them
  *     (rdfbox_is_string_literal), of which RDF_LANGSTRING .. RDF_RTL_LANGSTRING are language-tagged
  *     (rdfbox_is_langstring) and RDF_LTR_LANGSTRING .. RDF_RTL_LANGSTRING have a base direction
- *     (rdfbox_is_dirlangstring),
+ *     (rdfbox_is_dirlangstring); IBLANKNODE .. SBLANKNODE are the blank nodes (rdfbox_is_blanknode),
  *
  *   - the numeric types are listed so that for each promotion target (xsd:short, xsd:int, xsd:long, xsd:integer,
  *     xsd:decimal, xsd:float and xsd:double) the types from XSD_BYTE up to the target are exactly those whose values
@@ -27,8 +27,8 @@
  *   - the values of XSD_BYTE .. XSD_LONG are held in an integer of at most 64 bits, the value of XSD_UNSIGNEDLONG in
  *     a uint64 and the values of XSD_INTEGER .. XSD_DECIMAL in a numeric; rdfbox/order.c relies on it,
  *
- *   - rdfbox/order.c orders numbers of the same value by their types and blank nodes, IRIs and literals by the
- *     reversed order of their types,
+ *   - rdfbox/order.c orders numbers of the same value by their types and the other terms by the reversed order of
+ *     their types: blank nodes, then IRIs, then literals, then triple terms, which is why TRIPLE_TERM comes first,
  *
  *   - functions/rdfterm.c indexes the table of datatype IRIs by the type,
  *
@@ -36,35 +36,36 @@
  */
 typedef enum
 {
-    XSD_BOOLEAN = 0,
-    XSD_BYTE = 1,
-    XSD_UNSIGNEDBYTE = 2,
-    XSD_SHORT = 3,
-    XSD_UNSIGNEDSHORT = 4,
-    XSD_INT = 5,
-    XSD_UNSIGNEDINT = 6,
-    XSD_LONG = 7,
-    XSD_UNSIGNEDLONG = 8,
-    XSD_INTEGER = 9,
-    XSD_NONPOSITIVEINTEGER = 10,
-    XSD_NEGATIVEINTEGER = 11,
-    XSD_NONNEGATIVEINTEGER = 12,
-    XSD_POSITIVEINTEGER = 13,
-    XSD_DECIMAL = 14,
-    XSD_FLOAT = 15,
-    XSD_DOUBLE = 16,
-    XSD_DATETIME = 17,
-    XSD_DATE = 18,
-    XSD_DAYTIMEDURATION = 19,
-    XSD_STRING = 20,
-    RDF_LANGSTRING = 21,
-    RDF_LTR_LANGSTRING = 22,
-    RDF_RTL_LANGSTRING = 23,
-    USER_LITERAL = 24,
-    TYPED_LITERAL = 25,
-    IRI = 26,
-    IBLANKNODE = 27,
-    SBLANKNODE = 28
+    TRIPLE_TERM = 0,
+    XSD_BOOLEAN = 1,
+    XSD_BYTE = 2,
+    XSD_UNSIGNEDBYTE = 3,
+    XSD_SHORT = 4,
+    XSD_UNSIGNEDSHORT = 5,
+    XSD_INT = 6,
+    XSD_UNSIGNEDINT = 7,
+    XSD_LONG = 8,
+    XSD_UNSIGNEDLONG = 9,
+    XSD_INTEGER = 10,
+    XSD_NONPOSITIVEINTEGER = 11,
+    XSD_NEGATIVEINTEGER = 12,
+    XSD_NONNEGATIVEINTEGER = 13,
+    XSD_POSITIVEINTEGER = 14,
+    XSD_DECIMAL = 15,
+    XSD_FLOAT = 16,
+    XSD_DOUBLE = 17,
+    XSD_DATETIME = 18,
+    XSD_DATE = 19,
+    XSD_DAYTIMEDURATION = 20,
+    XSD_STRING = 21,
+    RDF_LANGSTRING = 22,
+    RDF_LTR_LANGSTRING = 23,
+    RDF_RTL_LANGSTRING = 24,
+    USER_LITERAL = 25,
+    TYPED_LITERAL = 26,
+    IRI = 27,
+    IBLANKNODE = 28,
+    SBLANKNODE = 29
 }
 RdfType;
 
@@ -384,6 +385,33 @@ static inline VarChar *RdfBoxGetAttachment(RdfBox *box)
 static inline UBox *RdfBoxGetUBox(RdfBox *box)
 {
     return (UBox *) ((RdfBoxVarlena *) box)->value;
+}
+
+
+/*
+ * A triple term holds its subject and its object as whole boxes and its predicate as a varchar, one after another.
+ * The embedded boxes have to be aligned like a box handed out by PG_DETOAST_DATUM(), because their values are read
+ * in place (an int64, a double, a boxed value of a user literal), so each part is padded to a multiple of MAXALIGN:
+ * the value of a box begins at offset 8 and the box itself is MAXALIGNed, see types/ubox.h.
+ */
+static inline RdfBox *RdfBoxGetTripleTermSubject(RdfBox *box)
+{
+    return (RdfBox *) ((RdfBoxVarlena *) box)->value;
+}
+
+
+static inline VarChar *RdfBoxGetTripleTermPredicate(RdfBox *box)
+{
+    char *subject = ((RdfBoxVarlena *) box)->value;
+    return (VarChar *) (subject + MAXALIGN(VARSIZE(subject)));
+}
+
+
+static inline RdfBox *RdfBoxGetTripleTermObject(RdfBox *box)
+{
+    char *subject = ((RdfBoxVarlena *) box)->value;
+    char *predicate = subject + MAXALIGN(VARSIZE(subject));
+    return (RdfBox *) (predicate + MAXALIGN(VARSIZE(predicate)));
 }
 
 
@@ -1144,6 +1172,22 @@ static inline RdfBox *GetSBlankNodeRdfBox(const char *data, int size)
 }
 
 
+static inline RdfBox *GetTripleTermRdfBox(RdfBox *subject, const char *predicate, int predicate_size, RdfBox *object)
+{
+    int ssize = VARSIZE(subject);
+    int psize = predicate_size + VARHDRSZ;
+    int osize = VARSIZE(object);
+    RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + MAXALIGN(ssize) + MAXALIGN(psize) + osize);
+    SET_VARSIZE(result, sizeof(RdfBoxVarlena) + MAXALIGN(ssize) + MAXALIGN(psize) + osize);
+    result->header.type = TRIPLE_TERM;
+    memcpy(result->value, subject, ssize);
+    SET_VARSIZE(result->value + MAXALIGN(ssize), psize);
+    memcpy(VARDATA(result->value + MAXALIGN(ssize)), predicate, predicate_size);
+    memcpy(result->value + MAXALIGN(ssize) + MAXALIGN(psize), object, osize);
+    return (RdfBox *) result;
+}
+
+
 static inline bool rdfbox_is_numeric(RdfBox *box)
 {
     return box->type >= XSD_BYTE && box->type <= XSD_DOUBLE;
@@ -1171,6 +1215,12 @@ static inline bool rdfbox_is_langstring(RdfBox *box)
 static inline bool rdfbox_is_dirlangstring(RdfBox *box)
 {
     return box->type >= RDF_LTR_LANGSTRING && box->type <= RDF_RTL_LANGSTRING;
+}
+
+
+static inline bool rdfbox_is_blanknode(RdfBox *box)
+{
+    return box->type >= IBLANKNODE && box->type <= SBLANKNODE;
 }
 
 #endif /* RDFBOX_RDFBOX_H_ */

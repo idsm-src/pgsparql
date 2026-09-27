@@ -1,11 +1,54 @@
 #include <postgres.h>
 #include <utils/builtins.h>
 #include <utils/numeric.h>
+#include <math.h>
 #include "compare.h"
 #include "call.h"
 #include "rdfbox/rdfbox.h"
 #include "rdfbox/order.h"
 #include "rdfbox/promotion.h"
+
+
+Datum rdfbox_is_equal_to(PG_FUNCTION_ARGS);
+
+
+static inline bool rdfbox_is_nan(RdfBox *box)
+{
+    return (box->type == XSD_FLOAT && isnan(RdfBoxGetFloat4(box))) || (box->type == XSD_DOUBLE && isnan(RdfBoxGetFloat8(box)));
+}
+
+
+/*
+ * The function sameValue() of SPARQL 1.2 (section 17.4.2.2), which defines the operator = on the pairs of RDF terms
+ * that no specific row of the operator mapping covers. On IRIs, blank nodes and literals it agrees with the operator
+ * = of this file except for NaN: two NaN values, of xsd:float or xsd:double in any combination, are the same value,
+ * whereas op:numeric-equal never holds for a NaN. Two triple terms are compared component by component, and an
+ * error (NULL) of any component is an error of the whole. The operator = recurs into sameValue() when it is
+ * applied to two triple terms, rather than into itself.
+ */
+static NullableDatum same_value(RdfBox *left, RdfBox *right)
+{
+    if(rdfbox_same_terms(left, right))
+        return NULLABLE_DATUM(BoolGetDatum(true));
+
+    if(left->type == TRIPLE_TERM && right->type == TRIPLE_TERM)
+    {
+        NullableDatum subject = same_value(RdfBoxGetTripleTermSubject(left), RdfBoxGetTripleTermSubject(right));
+        NullableDatum object = same_value(RdfBoxGetTripleTermObject(left), RdfBoxGetTripleTermObject(right));
+
+        if(subject.isnull || object.isnull)
+            return NULL_DATUM;
+
+        bool predicate = varchar_eq(RdfBoxGetTripleTermPredicate(left), RdfBoxGetTripleTermPredicate(right));
+
+        return NULLABLE_DATUM(BoolGetDatum(DatumGetBool(subject.value) && predicate && DatumGetBool(object.value)));
+    }
+
+    if(rdfbox_is_nan(left) && rdfbox_is_nan(right))
+        return NULLABLE_DATUM(BoolGetDatum(true));
+
+    return NullableFunctionCall2(rdfbox_is_equal_to, RdfBoxGetDatum(left), RdfBoxGetDatum(right));
+}
 
 
 PG_FUNCTION_INFO_V1(rdfbox_is_same_as);
@@ -20,6 +63,21 @@ Datum rdfbox_is_same_as(PG_FUNCTION_ARGS)
     PG_FREE_IF_COPY(right, 1);
 
     PG_RETURN_BOOL(result);
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_is_same_value_as);
+Datum rdfbox_is_same_value_as(PG_FUNCTION_ARGS)
+{
+    RdfBox *left = PG_GETARG_RDFBOX_P(0);
+    RdfBox *right = PG_GETARG_RDFBOX_P(1);
+
+    NullableDatum result = same_value(left, right);
+
+    PG_FREE_IF_COPY(left, 0);
+    PG_FREE_IF_COPY(right, 1);
+
+    PG_RETURN(result);
 }
 
 
@@ -136,6 +194,10 @@ Datum rdfbox_is_equal_to(PG_FUNCTION_ARGS)
     else if(left->type == SBLANKNODE && right->type == SBLANKNODE)
     {
         PG_RETURN_BOOL(memcmp(left, right, Min(VARSIZE(left), VARSIZE(right))) == 0);
+    }
+    else if(left->type == TRIPLE_TERM && right->type == TRIPLE_TERM)
+    {
+        PG_RETURN(same_value(left, right));
     }
     else
     {
@@ -257,6 +319,15 @@ Datum rdfbox_is_not_equal_to(PG_FUNCTION_ARGS)
     else if(left->type == SBLANKNODE && right->type == SBLANKNODE)
     {
         PG_RETURN_BOOL(memcmp(left, right, Min(VARSIZE(left), VARSIZE(right))) != 0);
+    }
+    else if(left->type == TRIPLE_TERM && right->type == TRIPLE_TERM)
+    {
+        NullableDatum result = same_value(left, right);
+
+        if(result.isnull)
+            PG_RETURN_NULL();
+
+        PG_RETURN_BOOL(!DatumGetBool(result.value));
     }
     else
     {

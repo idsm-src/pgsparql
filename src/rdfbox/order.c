@@ -15,7 +15,7 @@
  * terms, which is used by the default B-tree operator class (ORDER BY, DISTINCT, GROUP BY, merge joins, indexes)
  * and by the min/max aggregates. The order has the following properties:
  *
- *   - blank nodes precede IRIs and IRIs precede literals,
+ *   - blank nodes precede IRIs, IRIs precede literals and literals precede triple terms,
  *
  *   - the order extends the operator <: whenever x < y holds, x @< y holds as well,
  *
@@ -40,6 +40,10 @@
  * (the terms in the canonical form come first) and finally by the lexical forms themselves. The values are
  * compared as they are presented by the canonical lexical forms: xsd:decimal values 1.0 and 1.00 are equal,
  * while xsd:double values -0.0 and 0.0 are not.
+ *
+ * Triple terms are compared by their subjects, then by their predicates and then by their objects, each with
+ * this very order. SPARQL leaves the relative order of two triple terms undefined and allows an implementation to
+ * define it, which is what the operator class needs anyway.
  */
 
 
@@ -377,6 +381,21 @@ static int compare_values_of_same_type(RdfBox *left, RdfBox *right)
             return varchar_cmp(RdfBoxGetAttachment(left), RdfBoxGetAttachment(right));
         }
 
+        case TRIPLE_TERM:
+        {
+            int result = rdfbox_compare_terms(RdfBoxGetTripleTermSubject(left), RdfBoxGetTripleTermSubject(right));
+
+            if(result != 0)
+                return result;
+
+            result = varchar_cmp(RdfBoxGetTripleTermPredicate(left), RdfBoxGetTripleTermPredicate(right));
+
+            if(result != 0)
+                return result;
+
+            return rdfbox_compare_terms(RdfBoxGetTripleTermObject(left), RdfBoxGetTripleTermObject(right));
+        }
+
         default:
             elog(ERROR, "unexpected rdfbox type");
     }
@@ -423,7 +442,7 @@ int rdfbox_compare_terms(RdfBox *left, RdfBox *right)
         return compare(left->type, right->type);
     }
 
-    /* blank nodes, then IRIs, then literals */
+    /* blank nodes, then IRIs, then literals, then triple terms */
     return compare(right->type, left->type);
 }
 

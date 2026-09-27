@@ -330,6 +330,58 @@ load ../psql_tests.bash
   expect_output 'f'
 }
 
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.===) '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox" {
+  expect_output 't'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.===) '<<( <http://example.org/s> <http://example.org/p> 1.0 )>>'::sparql.rdfbox" {
+  expect_output 'f'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.===) '<<( <http://example.org/s> <http://example.org/p> 2 )>>'::sparql.rdfbox" {
+  expect_output 'f'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.===) '<<( <http://example.org/s> <http://example.org/q> 1 )>>'::sparql.rdfbox" {
+  expect_output 'f'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.===) '<<( <http://example.org/t> <http://example.org/p> 1 )>>'::sparql.rdfbox" {
+  expect_output 'f'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> \"NaN\"^^<http://www.w3.org/2001/XMLSchema#double> )>>'::sparql.rdfbox operator(sparql.===) '<<( <http://example.org/s> <http://example.org/p> \"NaN\"^^<http://www.w3.org/2001/XMLSchema#float> )>>'::sparql.rdfbox" {
+  expect_output 'f'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> \"x\"^^<http://example.org/t> )>>'::sparql.rdfbox operator(sparql.===) '<<( <http://example.org/s> <http://example.org/p> \"y\"^^<http://example.org/t> )>>'::sparql.rdfbox" {
+  expect_output 'f'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> \"x\"^^<http://example.org/t> )>>'::sparql.rdfbox operator(sparql.===) '<<( <http://example.org/t> <http://example.org/p> \"y\"^^<http://example.org/t> )>>'::sparql.rdfbox" {
+  expect_output 'f'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.===) '<http://example.org/s>'::sparql.rdfbox" {
+  expect_output 'f'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.===) '\"1\"'::sparql.rdfbox" {
+  expect_output 'f'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.===) '_:i0123456789abcdef'::sparql.rdfbox" {
+  expect_output 'f'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> <<( <http://example.org/s> <http://example.org/p> 1 )>> )>>'::sparql.rdfbox operator(sparql.===) '<<( <http://example.org/s> <http://example.org/p> <<( <http://example.org/s> <http://example.org/p> 1 )>> )>>'::sparql.rdfbox" {
+  expect_output 't'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> <<( <http://example.org/s> <http://example.org/p> 1 )>> )>>'::sparql.rdfbox operator(sparql.===) '<<( <http://example.org/s> <http://example.org/p> <<( <http://example.org/s> <http://example.org/p> 1.0 )>> )>>'::sparql.rdfbox" {
+  expect_output 'f'
+}
+
 
 ####
 # operator =
@@ -545,6 +597,58 @@ load ../psql_tests.bash
 
 @test "op: sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar) operator(sparql.=) sparql.rdfbox_create_from_iri('http://example.org'::varchar)" {
   expect_output 'f'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.=) '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox" {
+  expect_output 't'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.=) '<<( <http://example.org/s> <http://example.org/p> 1.0 )>>'::sparql.rdfbox" {
+  expect_output 't'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.=) '<<( <http://example.org/s> <http://example.org/p> 2 )>>'::sparql.rdfbox" {
+  expect_output 'f'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.=) '<<( <http://example.org/s> <http://example.org/q> 1 )>>'::sparql.rdfbox" {
+  expect_output 'f'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.=) '<<( <http://example.org/t> <http://example.org/p> 1 )>>'::sparql.rdfbox" {
+  expect_output 'f'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> \"NaN\"^^<http://www.w3.org/2001/XMLSchema#double> )>>'::sparql.rdfbox operator(sparql.=) '<<( <http://example.org/s> <http://example.org/p> \"NaN\"^^<http://www.w3.org/2001/XMLSchema#float> )>>'::sparql.rdfbox" {
+  expect_output 't'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> \"x\"^^<http://example.org/t> )>>'::sparql.rdfbox operator(sparql.=) '<<( <http://example.org/s> <http://example.org/p> \"y\"^^<http://example.org/t> )>>'::sparql.rdfbox" {
+  expect_output '(null)'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> \"x\"^^<http://example.org/t> )>>'::sparql.rdfbox operator(sparql.=) '<<( <http://example.org/t> <http://example.org/p> \"y\"^^<http://example.org/t> )>>'::sparql.rdfbox" {
+  expect_output '(null)'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.=) '<http://example.org/s>'::sparql.rdfbox" {
+  expect_output 'f'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.=) '\"1\"'::sparql.rdfbox" {
+  expect_output 'f'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.=) '_:i0123456789abcdef'::sparql.rdfbox" {
+  expect_output 'f'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> <<( <http://example.org/s> <http://example.org/p> 1 )>> )>>'::sparql.rdfbox operator(sparql.=) '<<( <http://example.org/s> <http://example.org/p> <<( <http://example.org/s> <http://example.org/p> 1 )>> )>>'::sparql.rdfbox" {
+  expect_output 't'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> <<( <http://example.org/s> <http://example.org/p> 1 )>> )>>'::sparql.rdfbox operator(sparql.=) '<<( <http://example.org/s> <http://example.org/p> <<( <http://example.org/s> <http://example.org/p> 1.0 )>> )>>'::sparql.rdfbox" {
+  expect_output 't'
 }
 
 
@@ -764,6 +868,58 @@ load ../psql_tests.bash
   expect_output 't'
 }
 
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.!=) '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox" {
+  expect_output 'f'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.!=) '<<( <http://example.org/s> <http://example.org/p> 1.0 )>>'::sparql.rdfbox" {
+  expect_output 'f'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.!=) '<<( <http://example.org/s> <http://example.org/p> 2 )>>'::sparql.rdfbox" {
+  expect_output 't'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.!=) '<<( <http://example.org/s> <http://example.org/q> 1 )>>'::sparql.rdfbox" {
+  expect_output 't'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.!=) '<<( <http://example.org/t> <http://example.org/p> 1 )>>'::sparql.rdfbox" {
+  expect_output 't'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> \"NaN\"^^<http://www.w3.org/2001/XMLSchema#double> )>>'::sparql.rdfbox operator(sparql.!=) '<<( <http://example.org/s> <http://example.org/p> \"NaN\"^^<http://www.w3.org/2001/XMLSchema#float> )>>'::sparql.rdfbox" {
+  expect_output 'f'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> \"x\"^^<http://example.org/t> )>>'::sparql.rdfbox operator(sparql.!=) '<<( <http://example.org/s> <http://example.org/p> \"y\"^^<http://example.org/t> )>>'::sparql.rdfbox" {
+  expect_output '(null)'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> \"x\"^^<http://example.org/t> )>>'::sparql.rdfbox operator(sparql.!=) '<<( <http://example.org/t> <http://example.org/p> \"y\"^^<http://example.org/t> )>>'::sparql.rdfbox" {
+  expect_output '(null)'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.!=) '<http://example.org/s>'::sparql.rdfbox" {
+  expect_output 't'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.!=) '\"1\"'::sparql.rdfbox" {
+  expect_output 't'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.!=) '_:i0123456789abcdef'::sparql.rdfbox" {
+  expect_output 't'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> <<( <http://example.org/s> <http://example.org/p> 1 )>> )>>'::sparql.rdfbox operator(sparql.!=) '<<( <http://example.org/s> <http://example.org/p> <<( <http://example.org/s> <http://example.org/p> 1 )>> )>>'::sparql.rdfbox" {
+  expect_output 'f'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> <<( <http://example.org/s> <http://example.org/p> 1 )>> )>>'::sparql.rdfbox operator(sparql.!=) '<<( <http://example.org/s> <http://example.org/p> <<( <http://example.org/s> <http://example.org/p> 1.0 )>> )>>'::sparql.rdfbox" {
+  expect_output 'f'
+}
+
 
 ####
 # operator <
@@ -962,6 +1118,22 @@ load ../psql_tests.bash
 }
 
 @test "op: sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar) operator(sparql.<) sparql.rdfbox_create_from_iri('http://example.org'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.<) '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox" {
+  expect_output '(null)'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.<) '<<( <http://example.org/s> <http://example.org/p> 1.0 )>>'::sparql.rdfbox" {
+  expect_output '(null)'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.<) '<<( <http://example.org/s> <http://example.org/p> 2 )>>'::sparql.rdfbox" {
+  expect_output '(null)'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.<) '<http://example.org/s>'::sparql.rdfbox" {
   expect_output '(null)'
 }
 
@@ -1166,6 +1338,22 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.>) '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox" {
+  expect_output '(null)'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.>) '<<( <http://example.org/s> <http://example.org/p> 1.0 )>>'::sparql.rdfbox" {
+  expect_output '(null)'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.>) '<<( <http://example.org/s> <http://example.org/p> 2 )>>'::sparql.rdfbox" {
+  expect_output '(null)'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.>) '<http://example.org/s>'::sparql.rdfbox" {
+  expect_output '(null)'
+}
+
 
 ####
 # operator <=
@@ -1364,6 +1552,22 @@ load ../psql_tests.bash
 }
 
 @test "op: sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar) operator(sparql.<=) sparql.rdfbox_create_from_iri('http://example.org'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.<=) '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox" {
+  expect_output '(null)'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.<=) '<<( <http://example.org/s> <http://example.org/p> 1.0 )>>'::sparql.rdfbox" {
+  expect_output '(null)'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.<=) '<<( <http://example.org/s> <http://example.org/p> 2 )>>'::sparql.rdfbox" {
+  expect_output '(null)'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.<=) '<http://example.org/s>'::sparql.rdfbox" {
   expect_output '(null)'
 }
 
@@ -1566,6 +1770,228 @@ load ../psql_tests.bash
 
 @test "op: sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar) operator(sparql.>=) sparql.rdfbox_create_from_iri('http://example.org'::varchar)" {
   expect_output '(null)'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.>=) '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox" {
+  expect_output '(null)'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.>=) '<<( <http://example.org/s> <http://example.org/p> 1.0 )>>'::sparql.rdfbox" {
+  expect_output '(null)'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.>=) '<<( <http://example.org/s> <http://example.org/p> 2 )>>'::sparql.rdfbox" {
+  expect_output '(null)'
+}
+
+@test "op: '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox operator(sparql.>=) '<http://example.org/s>'::sparql.rdfbox" {
+  expect_output '(null)'
+}
+
+
+
+####
+# rdfbox_is_same_value_as() / sameValue()
+#
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_float('NaN'::float4), sparql.rdfbox_create_from_float('NaN'::float4))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_double('NaN'::float8), sparql.rdfbox_create_from_double('NaN'::float8))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_double('NaN'::float8), sparql.rdfbox_create_from_float('NaN'::float4))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_float('NaN'::float4), sparql.rdfbox_create_from_double('NaN'::float8))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_double('NaN'::float8), sparql.rdfbox_create_from_double('-NaN'::float8))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_double('1e10'::float8), sparql.rdfbox_create_from_double('NaN'::float8))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_double('NaN'::float8), sparql.rdfbox_create_from_double('4'::float8))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_float('NaN'::float4), sparql.rdfbox_create_from_int('4'::int4))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_double('-0.0'::float8), sparql.rdfbox_create_from_double('0.0'::float8))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_float('-0.0'::float4), sparql.rdfbox_create_from_double('0.0'::float8))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_int('1'::int4), sparql.rdfbox_create_from_decimal('1.0'::decimal))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_int('1'::int4), sparql.rdfbox_create_from_int('2'::int4))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_int_with_lexical('1'::int4, '01'::varchar), sparql.rdfbox_create_from_int('1'::int4))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_boolean('t'::bool), sparql.rdfbox_create_from_boolean('t'::bool))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_boolean('t'::bool), sparql.rdfbox_create_from_boolean('f'::bool))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_datetime('2022-10-05T10:00:00Z'::timestamptz, 0::int4), sparql.rdfbox_create_from_datetime('2022-10-05T12:00:00+02:00'::timestamptz, (2*60*60)::int4))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_string('a'::varchar), sparql.rdfbox_create_from_string('a'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_string('a'::varchar), sparql.rdfbox_create_from_string('b'::varchar))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_string('a'::varchar), sparql.rdfbox_create_from_langstring('a'::varchar, 'en'::varchar))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_langstring('a'::varchar, 'en'::varchar), sparql.rdfbox_create_from_langstring('a'::varchar, 'en'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_langstring('a'::varchar, 'en'::varchar), sparql.rdfbox_create_from_langstring('a'::varchar, 'cs'::varchar))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar), sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar), sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_int('1'::int4), sparql.rdfbox_create_from_string('1'::varchar))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_typedliteral('x'::varchar, 'http://example.org/t'::varchar), sparql.rdfbox_create_from_typedliteral('x'::varchar, 'http://example.org/t'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_typedliteral('x'::varchar, 'http://example.org/t'::varchar), sparql.rdfbox_create_from_typedliteral('y'::varchar, 'http://example.org/t'::varchar))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar), sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar), sparql.rdfbox_create_from_userliteral('1'::int4, 'http://example.org'::varchar))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar), sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org/other'::varchar))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_iri('http://example.org'::varchar), sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_iri('http://example.org'::varchar), sparql.rdfbox_create_from_iri('http://example.org/'::varchar))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_iri('http://example.org'::varchar), sparql.rdfbox_create_from_string('http://example.org'::varchar))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_iblanknode('0'::int8), sparql.rdfbox_create_from_iblanknode('0'::int8))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_iblanknode('0'::int8), sparql.rdfbox_create_from_iblanknode('1'::int8))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_iblanknode('0'::int8), sparql.rdfbox_create_from_sblanknode('00000000'::varchar))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as(sparql.rdfbox_create_from_sblanknode('00000000'::varchar), sparql.rdfbox_create_from_sblanknode('00000000'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as('<<( <http://example.org/s> <http://example.org/p> 123 )>>'::sparql.rdfbox, '<<( <http://example.org/s> <http://example.org/p> 123.0 )>>'::sparql.rdfbox)" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as('<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox, '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox)" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as('<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox, '<<( <http://example.org/s> <http://example.org/p> 1.0 )>>'::sparql.rdfbox)" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as('<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox, '<<( <http://example.org/s> <http://example.org/p> 2 )>>'::sparql.rdfbox)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as('<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox, '<<( <http://example.org/s> <http://example.org/q> 1 )>>'::sparql.rdfbox)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as('<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox, '<<( <http://example.org/t> <http://example.org/p> 1 )>>'::sparql.rdfbox)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as('<<( <http://example.org/s> <http://example.org/p> \"NaN\"^^<http://www.w3.org/2001/XMLSchema#double> )>>'::sparql.rdfbox, '<<( <http://example.org/s> <http://example.org/p> \"NaN\"^^<http://www.w3.org/2001/XMLSchema#float> )>>'::sparql.rdfbox)" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as('<<( <http://example.org/s> <http://example.org/p> \"x\"^^<http://example.org/t> )>>'::sparql.rdfbox, '<<( <http://example.org/s> <http://example.org/p> \"y\"^^<http://example.org/t> )>>'::sparql.rdfbox)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as('<<( <http://example.org/s> <http://example.org/p> \"x\"^^<http://example.org/t> )>>'::sparql.rdfbox, '<<( <http://example.org/t> <http://example.org/p> \"y\"^^<http://example.org/t> )>>'::sparql.rdfbox)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as('<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox, '<http://example.org/s>'::sparql.rdfbox)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as('<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox, '\"1\"'::sparql.rdfbox)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as('<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox, '_:i0123456789abcdef'::sparql.rdfbox)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as('<<( <http://example.org/s> <http://example.org/p> <<( <http://example.org/s> <http://example.org/p> 1 )>> )>>'::sparql.rdfbox, '<<( <http://example.org/s> <http://example.org/p> <<( <http://example.org/s> <http://example.org/p> 1 )>> )>>'::sparql.rdfbox)" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_is_same_value_as('<<( <http://example.org/s> <http://example.org/p> <<( <http://example.org/s> <http://example.org/p> 1 )>> )>>'::sparql.rdfbox, '<<( <http://example.org/s> <http://example.org/p> <<( <http://example.org/s> <http://example.org/p> 1.0 )>> )>>'::sparql.rdfbox)" {
+  expect_output 't'
 }
 
 

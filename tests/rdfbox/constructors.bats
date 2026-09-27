@@ -898,6 +898,34 @@ load ../psql_tests.bash
   expect_output '_:s7fffffffid'
 }
 
+@test "fn: sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar))" {
+  expect_output '<<( <http://example.org/s> <http://example.org/p> "o"^^<http://www.w3.org/2001/XMLSchema#string> )>>'
+}
+
+@test "fn: sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iblanknode('9223372034707292160'::int8), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_int('1'::int4))" {
+  expect_output '<<( _:i7fffffff80000000 <http://example.org/p> "1"^^<http://www.w3.org/2001/XMLSchema#int> )>>'
+}
+
+@test "fn: sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_sblanknode('7fffffffid'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_rtllangstring('abc'::varchar, 'cy'::varchar))" {
+  expect_output '<<( _:s7fffffffid <http://example.org/p> "abc"@cy--rtl )>>'
+}
+
+@test "fn: sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_iri('http://example.org/o'::varchar))" {
+  expect_output '<<( <http://example.org/s> <http://example.org/p> <http://example.org/o> )>>'
+}
+
+@test "fn: sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/a'::varchar), 'http://example.org/b'::varchar, sparql.rdfbox_create_from_string('c'::varchar)))" {
+  expect_output '<<( <http://example.org/s> <http://example.org/p> <<( <http://example.org/a> <http://example.org/b> "c"^^<http://www.w3.org/2001/XMLSchema#string> )>> )>>'
+}
+
+@test "fn: sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_userliteral_with_lexical('1'::int4, 'http://example.org'::varchar, ' 1 '::varchar))" {
+  expect_output '<<( <http://example.org/s> <http://example.org/p> '"'"' 1 :integer'"'"'^^<http://example.org> )>>'
+}
+
+@test "fn: sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_double('NaN'::float8))" {
+  expect_output '<<( <http://example.org/s> <http://example.org/p> "NaN"^^<http://www.w3.org/2001/XMLSchema#double> )>>'
+}
+
 
 
 ####

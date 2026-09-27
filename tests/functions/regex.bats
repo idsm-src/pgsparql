@@ -126,6 +126,10 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.regex_rdfbox(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar)), 'B'::varchar, 'i'::varchar)" {
+  expect_output '(null)'
+}
+
 
 
 ####
@@ -213,5 +217,9 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.replace_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar), 'B.'::varchar, 'Z'::varchar, 'i'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.replace_rdfbox(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar)), 'B.'::varchar, 'Z'::varchar, 'i'::varchar)" {
   expect_output '(null)'
 }

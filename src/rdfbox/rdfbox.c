@@ -39,6 +39,9 @@
 #define UVALUE_QUOTE    '\''    // the same character as UVALUE_DELIM
 #define BLKNODE_IPREFIX "_:i"
 #define BLKNODE_SPREFIX "_:s"
+#define TRIPLE_BEGIN    "<<("
+#define TRIPLE_END      ")>>"
+#define TRIPLE_DELIM    " "
 #define PREFIX          VALUE_DELIM
 #define STRLEN(X)       (sizeof(X) - 1)
 #define PREFIX_SIZE     (STRLEN(PREFIX))
@@ -119,6 +122,19 @@ static inline const char *getmsgsblanknode(StringInfo buf, int32 size)
 }
 #else
 #define getmsgsblanknode(buf, size)     getmsgtext(buf, size)
+#endif
+
+
+#ifdef PGSPARQL_EXTRA_CHECKS
+static inline RdfBox *checked_subject(RdfBox *subject)
+{
+    if(subject->type != IRI && !rdfbox_is_blanknode(subject))
+        ereport(ERROR, (errcode(ERRCODE_INVALID_BINARY_REPRESENTATION), errmsg("invalid subject of triple term")));
+
+    return subject;
+}
+#else
+#define checked_subject(subject)        (subject)
 #endif
 
 
@@ -210,12 +226,13 @@ static char *print_literal(char quote, const char *data, size_t size, const char
 }
 
 
-PG_FUNCTION_INFO_V1(rdfbox_input);
-Datum rdfbox_input(PG_FUNCTION_ARGS)
+/*
+ * The text, the binary and the stored representation of a triple term embed those of its subject and its object,
+ * so the input, output, receive and send functions recurse into themselves: parse_term(), print_term(),
+ * receive_term() and append_term() do the work, the SQL-visible functions only wrap them.
+ */
+static RdfBox *parse_term(char *str, size_t length)
 {
-    char *str = PG_GETARG_CSTRING(0);
-    size_t length = strlen(str);
-
     RdfBox *box = NULL;
 
     if(str[0] == '"' || str[0] == '\'')
@@ -566,6 +583,71 @@ Datum rdfbox_input(PG_FUNCTION_ARGS)
             ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid RDF literal")));
         }
     }
+    else if(str[0] == '<' && str[1] == '<' && str[2] == '(')
+    {
+        /*
+         * <<( subject predicate object )>>, the components separated by whitespace. The subject is an IRI or a
+         * blank node and the predicate is an IRI, neither of which contains whitespace or '>', so an IRI ends at
+         * its '>' and a blank node label at the whitespace behind it; the object is whatever is left before the
+         * closing )>>.
+         */
+        if(length < STRLEN(TRIPLE_BEGIN TRIPLE_END) || strcmp(str + length - STRLEN(TRIPLE_END), TRIPLE_END) != 0)
+            ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid triple term")));
+
+        char *begin = str + STRLEN(TRIPLE_BEGIN);
+        char *end = str + length - STRLEN(TRIPLE_END);
+
+        while(begin < end && xsd_isspace(*begin))
+            begin++;
+
+        while(begin < end && xsd_isspace(end[-1]))
+            end--;
+
+        char *subject = begin;
+        char *subject_end = NULL;
+
+        if(subject < end && subject[0] == '<')
+        {
+            char *close = memchr(subject, '>', end - subject);
+            subject_end = close != NULL ? close + 1 : NULL;
+        }
+        else if(subject + 1 < end && subject[0] == '_' && subject[1] == ':')
+        {
+            subject_end = subject;
+
+            while(subject_end < end && !xsd_isspace(*subject_end))
+                subject_end++;
+        }
+
+        if(subject_end == NULL)
+            ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid triple term")));
+
+        char *predicate = subject_end;
+
+        while(predicate < end && xsd_isspace(*predicate))
+            predicate++;
+
+        char *predicate_end = predicate < end && predicate[0] == '<' ? memchr(predicate, '>', end - predicate) : NULL;
+
+        if(predicate_end == NULL)
+            ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid triple term")));
+
+        char *object = predicate_end + 1;
+
+        while(object < end && xsd_isspace(*object))
+            object++;
+
+        if(object == end)
+            ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid triple term")));
+
+        if(!check_iri(predicate + 1, predicate_end - predicate - 1))
+            ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid IRI")));
+
+        RdfBox *subject_box = parse_term(pnstrdup(subject, subject_end - subject), subject_end - subject);
+        RdfBox *object_box = parse_term(pnstrdup(object, end - object), end - object);
+
+        box = GetTripleTermRdfBox(subject_box, predicate + 1, predicate_end - predicate - 1, object_box);
+    }
     else if(str[0] == '<' && str[length - 1] == '>')
     {
         if(!check_iri(str + 1, length - 2))
@@ -719,14 +801,21 @@ Datum rdfbox_input(PG_FUNCTION_ARGS)
             ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid RDF term")));
     }
 
-    PG_RETURN_RDFBOX_P(box);
+    return box;
 }
 
 
-PG_FUNCTION_INFO_V1(rdfbox_output);
-Datum rdfbox_output(PG_FUNCTION_ARGS)
+PG_FUNCTION_INFO_V1(rdfbox_input);
+Datum rdfbox_input(PG_FUNCTION_ARGS)
 {
-    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    char *str = PG_GETARG_CSTRING(0);
+
+    PG_RETURN_RDFBOX_P(parse_term(str, strlen(str)));
+}
+
+
+static char *print_term(RdfBox *box)
+{
     char *result = NULL;
 
     switch(box->type)
@@ -999,18 +1088,39 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
                     *out++ = data[i];
                 }
             }
+
+            break;
+        }
+
+        case TRIPLE_TERM:
+        {
+            char *subject = print_term(RdfBoxGetTripleTermSubject(box));
+            VarChar *predicate = RdfBoxGetTripleTermPredicate(box);
+            char *object = print_term(RdfBoxGetTripleTermObject(box));
+
+            result = psprintf(TRIPLE_BEGIN TRIPLE_DELIM "%s" TRIPLE_DELIM IRI_BEGIN "%.*s" IRI_END TRIPLE_DELIM "%s" TRIPLE_DELIM TRIPLE_END, subject, (int) (VARSIZE(predicate) - VARHDRSZ), VARDATA(predicate), object);
+
+            pfree(subject);
+            pfree(object);
+            break;
         }
     }
 
-    PG_RETURN_CSTRING(result);
+    return result;
 }
 
 
-PG_FUNCTION_INFO_V1(rdfbox_recv);
-Datum rdfbox_recv(PG_FUNCTION_ARGS)
+PG_FUNCTION_INFO_V1(rdfbox_output);
+Datum rdfbox_output(PG_FUNCTION_ARGS)
 {
-    StringInfo buf = (StringInfo) PG_GETARG_POINTER(0);
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
 
+    PG_RETURN_CSTRING(print_term(box));
+}
+
+
+static RdfBox *receive_term(StringInfo buf)
+{
     uint32 header = pq_getmsgint(buf, sizeof(int32));
     uint32 type    = header & ~(1u << 31);
     bool lexical = header >> 31;
@@ -1021,7 +1131,7 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
      * differ from x, so reject it instead.
      */
     if(lexical && (type == XSD_STRING || type == RDF_LANGSTRING || type == RDF_LTR_LANGSTRING || type == RDF_RTL_LANGSTRING ||
-            type == TYPED_LITERAL || type == IRI || type == IBLANKNODE || type == SBLANKNODE))
+            type == TYPED_LITERAL || type == IRI || type == IBLANKNODE || type == SBLANKNODE || type == TRIPLE_TERM))
         ereport(ERROR, (errcode(ERRCODE_INVALID_BINARY_REPRESENTATION), errmsg("rdfbox of type %u cannot carry a lexical form", type)));
 
     RdfBox *box = NULL;
@@ -1518,37 +1628,75 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
             break;
         }
 
+        case TRIPLE_TERM:
+        {
+            int32 subject_size = pq_getmsgint(buf, sizeof(int32));
+            int32 predicate_size = pq_getmsgint(buf, sizeof(int32));
+            int32 object_size = pq_getmsgint(buf, sizeof(int32));
+
+            /* the subject and the object travel as complete messages of their own, each of which has to be consumed whole */
+            StringInfoData subject;
+            subject.data = unconstify(char *, pq_getmsgbytes(buf, subject_size));
+            subject.len = subject_size;
+            subject.maxlen = subject_size;
+            subject.cursor = 0;
+
+            RdfBox *subject_box = checked_subject(receive_term(&subject));
+
+            if(subject.cursor != subject.len)
+                ereport(ERROR, (errcode(ERRCODE_INVALID_BINARY_REPRESENTATION), errmsg("improper binary format in subject of triple term")));
+
+            const char *predicate = getmsgiri(buf, predicate_size);
+
+            StringInfoData object;
+            object.data = unconstify(char *, pq_getmsgbytes(buf, object_size));
+            object.len = object_size;
+            object.maxlen = object_size;
+            object.cursor = 0;
+
+            RdfBox *object_box = receive_term(&object);
+
+            if(object.cursor != object.len)
+                ereport(ERROR, (errcode(ERRCODE_INVALID_BINARY_REPRESENTATION), errmsg("improper binary format in object of triple term")));
+
+            box = GetTripleTermRdfBox(subject_box, predicate, predicate_size, object_box);
+            break;
+        }
+
         default:
             ereport(ERROR, (errcode(ERRCODE_INVALID_BINARY_REPRESENTATION), errmsg("invalid type of rdfbox: %u", type)));
     }
 
-    PG_RETURN_RDFBOX_P(box);
+    return box;
 }
 
 
-PG_FUNCTION_INFO_V1(rdfbox_send);
-Datum rdfbox_send(PG_FUNCTION_ARGS)
+PG_FUNCTION_INFO_V1(rdfbox_recv);
+Datum rdfbox_recv(PG_FUNCTION_ARGS)
 {
-    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    StringInfo buf = (StringInfo) PG_GETARG_POINTER(0);
 
-    StringInfoData buf;
-    pq_begintypsend(&buf);
+    PG_RETURN_RDFBOX_P(receive_term(buf));
+}
 
+
+static void append_term(StringInfo buf, RdfBox *box)
+{
     uint32 header = ((uint32) box->type) | (((uint32) box->lexical) << 31);
 
-    pq_sendint32(&buf, header);
+    pq_sendint32(buf, header);
 
     switch(box->type)
     {
         case XSD_BOOLEAN:
         {
-            pq_sendbyte(&buf, RdfBoxGetBool(box) ? 1 : 0);
+            pq_sendbyte(buf, RdfBoxGetBool(box) ? 1 : 0);
 
             if(box->lexical)
             {
                 VarChar *value = RdfBoxGetBoolLexical(box);
-                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
-                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                pq_sendint32(buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
                 break;
             }
 
@@ -1557,13 +1705,13 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
 
         case XSD_BYTE:
         {
-            pq_sendbyte(&buf, (uint8) RdfBoxGetInt8(box));
+            pq_sendbyte(buf, (uint8) RdfBoxGetInt8(box));
 
             if(box->lexical)
             {
                 VarChar *value = RdfBoxGetInt16Lexical(box);
-                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
-                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                pq_sendint32(buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
                 break;
             }
 
@@ -1572,13 +1720,13 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
 
         case XSD_UNSIGNEDBYTE:
         {
-            pq_sendbyte(&buf, RdfBoxGetUInt8(box));
+            pq_sendbyte(buf, RdfBoxGetUInt8(box));
 
             if(box->lexical)
             {
                 VarChar *value = RdfBoxGetInt16Lexical(box);
-                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
-                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                pq_sendint32(buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
                 break;
             }
 
@@ -1587,13 +1735,13 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
 
         case XSD_SHORT:
         {
-            pq_sendint16(&buf, RdfBoxGetInt16(box));
+            pq_sendint16(buf, RdfBoxGetInt16(box));
 
             if(box->lexical)
             {
                 VarChar *value = RdfBoxGetInt16Lexical(box);
-                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
-                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                pq_sendint32(buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
                 break;
             }
 
@@ -1602,13 +1750,13 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
 
         case XSD_UNSIGNEDSHORT:
         {
-            pq_sendint16(&buf, RdfBoxGetUInt16(box));
+            pq_sendint16(buf, RdfBoxGetUInt16(box));
 
             if(box->lexical)
             {
                 VarChar *value = RdfBoxGetInt32Lexical(box);
-                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
-                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                pq_sendint32(buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
                 break;
             }
 
@@ -1617,13 +1765,13 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
 
         case XSD_INT:
         {
-            pq_sendint32(&buf, RdfBoxGetInt32(box));
+            pq_sendint32(buf, RdfBoxGetInt32(box));
 
             if(box->lexical)
             {
                 VarChar *value = RdfBoxGetInt32Lexical(box);
-                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
-                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                pq_sendint32(buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
                 break;
             }
 
@@ -1632,13 +1780,13 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
 
         case XSD_UNSIGNEDINT:
         {
-            pq_sendint32(&buf, RdfBoxGetUInt32(box));
+            pq_sendint32(buf, RdfBoxGetUInt32(box));
 
             if(box->lexical)
             {
                 VarChar *value = RdfBoxGetUInt32Lexical(box);
-                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
-                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                pq_sendint32(buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
                 break;
             }
 
@@ -1647,13 +1795,13 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
 
         case XSD_LONG:
         {
-            pq_sendint64(&buf, RdfBoxGetInt64(box));
+            pq_sendint64(buf, RdfBoxGetInt64(box));
 
             if(box->lexical)
             {
                 VarChar *value = RdfBoxGetInt64Lexical(box);
-                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
-                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                pq_sendint32(buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
                 break;
             }
 
@@ -1662,13 +1810,13 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
 
         case XSD_UNSIGNEDLONG:
         {
-            pq_sendint64(&buf, RdfBoxGetUInt64(box));
+            pq_sendint64(buf, RdfBoxGetUInt64(box));
 
             if(box->lexical)
             {
                 VarChar *value = RdfBoxGetUInt64Lexical(box);
-                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
-                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                pq_sendint32(buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
                 break;
             }
 
@@ -1684,13 +1832,13 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
         {
             Numeric num = RdfBoxGetNumeric(box);
             bytea *value = DatumGetByteaP(DirectFunctionCall3(numeric_send, NumericGetDatum(num), ObjectIdGetDatum(InvalidOid), Int32GetDatum(-1)));
-            appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+            appendBinaryStringInfoNT(buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
 
             if(box->lexical)
             {
                 VarChar *lexical = RdfBoxGetAttachment(box);
-                pq_sendint32(&buf, VARSIZE(lexical) - VARHDRSZ);
-                appendBinaryStringInfoNT(&buf, VARDATA(lexical), VARSIZE(lexical) - VARHDRSZ);
+                pq_sendint32(buf, VARSIZE(lexical) - VARHDRSZ);
+                appendBinaryStringInfoNT(buf, VARDATA(lexical), VARSIZE(lexical) - VARHDRSZ);
                 break;
             }
 
@@ -1699,13 +1847,13 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
 
         case XSD_FLOAT:
         {
-            pq_sendfloat4(&buf, RdfBoxGetFloat4(box));
+            pq_sendfloat4(buf, RdfBoxGetFloat4(box));
 
             if(box->lexical)
             {
                 VarChar *value = RdfBoxGetFloat4Lexical(box);
-                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
-                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                pq_sendint32(buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
                 break;
             }
 
@@ -1714,13 +1862,13 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
 
         case XSD_DOUBLE:
         {
-            pq_sendfloat8(&buf, RdfBoxGetFloat8(box));
+            pq_sendfloat8(buf, RdfBoxGetFloat8(box));
 
             if(box->lexical)
             {
                 VarChar *value = RdfBoxGetFloat8Lexical(box);
-                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
-                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                pq_sendint32(buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
                 break;
             }
 
@@ -1729,14 +1877,14 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
 
         case XSD_DATETIME:
         {
-            pq_sendint64(&buf, RdfBoxGetZonedDateTime(box)->value);
-            pq_sendint32(&buf, RdfBoxGetZonedDateTime(box)->zone);
+            pq_sendint64(buf, RdfBoxGetZonedDateTime(box)->value);
+            pq_sendint32(buf, RdfBoxGetZonedDateTime(box)->zone);
 
             if(box->lexical)
             {
                 VarChar *value = RdfBoxGetZonedDateTimeLexical(box);
-                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
-                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                pq_sendint32(buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
                 break;
             }
 
@@ -1745,14 +1893,14 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
 
         case XSD_DATE:
         {
-            pq_sendint32(&buf, RdfBoxGetZonedDate(box).value);
-            pq_sendint32(&buf, RdfBoxGetZonedDate(box).zone);
+            pq_sendint32(buf, RdfBoxGetZonedDate(box).value);
+            pq_sendint32(buf, RdfBoxGetZonedDate(box).zone);
 
             if(box->lexical)
             {
                 VarChar *value = RdfBoxGetZonedDateLexical(box);
-                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
-                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                pq_sendint32(buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
                 break;
             }
 
@@ -1761,13 +1909,13 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
 
         case XSD_DAYTIMEDURATION:
         {
-            pq_sendint64(&buf, RdfBoxGetInt64(box));
+            pq_sendint64(buf, RdfBoxGetInt64(box));
 
             if(box->lexical)
             {
                 VarChar *value = RdfBoxGetInt64Lexical(box);
-                pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
-                appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+                pq_sendint32(buf, VARSIZE(value) - VARHDRSZ);
+                appendBinaryStringInfoNT(buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
                 break;
             }
 
@@ -1777,8 +1925,8 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
         case XSD_STRING:
         {
             VarChar *value = RdfBoxGetVarChar(box);
-            pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
-            appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+            pq_sendint32(buf, VARSIZE(value) - VARHDRSZ);
+            appendBinaryStringInfoNT(buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
             break;
         }
 
@@ -1788,10 +1936,10 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
         {
             VarChar *value = RdfBoxGetVarChar(box);
             VarChar *lang = RdfBoxGetAttachment(box);
-            pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
-            pq_sendint32(&buf, VARSIZE(lang) - VARHDRSZ);
-            appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
-            appendBinaryStringInfoNT(&buf, VARDATA(lang), VARSIZE(lang) - VARHDRSZ);
+            pq_sendint32(buf, VARSIZE(value) - VARHDRSZ);
+            pq_sendint32(buf, VARSIZE(lang) - VARHDRSZ);
+            appendBinaryStringInfoNT(buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+            appendBinaryStringInfoNT(buf, VARDATA(lang), VARSIZE(lang) - VARHDRSZ);
             break;
         }
 
@@ -1803,17 +1951,17 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
             initStringInfo(&value);
             ubox_append_binary(&value, RdfBoxGetUBox(box));
 
-            pq_sendint32(&buf, value.len);
-            pq_sendint32(&buf, VARSIZE(type) - VARHDRSZ);
-            appendBinaryStringInfoNT(&buf, value.data, value.len);
-            appendBinaryStringInfoNT(&buf, VARDATA(type), VARSIZE(type) - VARHDRSZ);
+            pq_sendint32(buf, value.len);
+            pq_sendint32(buf, VARSIZE(type) - VARHDRSZ);
+            appendBinaryStringInfoNT(buf, value.data, value.len);
+            appendBinaryStringInfoNT(buf, VARDATA(type), VARSIZE(type) - VARHDRSZ);
             pfree(value.data);
 
             if(box->lexical)
             {
                 VarChar *lexical = RdfBoxGetUserLiteralLexical(box);
-                pq_sendint32(&buf, VARSIZE(lexical) - VARHDRSZ);
-                appendBinaryStringInfoNT(&buf, VARDATA(lexical), VARSIZE(lexical) - VARHDRSZ);
+                pq_sendint32(buf, VARSIZE(lexical) - VARHDRSZ);
+                appendBinaryStringInfoNT(buf, VARDATA(lexical), VARSIZE(lexical) - VARHDRSZ);
             }
 
             break;
@@ -1823,35 +1971,69 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
         {
             VarChar *value = RdfBoxGetVarChar(box);
             VarChar *type = RdfBoxGetAttachment(box);
-            pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
-            pq_sendint32(&buf, VARSIZE(type) - VARHDRSZ);
-            appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
-            appendBinaryStringInfoNT(&buf, VARDATA(type), VARSIZE(type) - VARHDRSZ);
+            pq_sendint32(buf, VARSIZE(value) - VARHDRSZ);
+            pq_sendint32(buf, VARSIZE(type) - VARHDRSZ);
+            appendBinaryStringInfoNT(buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+            appendBinaryStringInfoNT(buf, VARDATA(type), VARSIZE(type) - VARHDRSZ);
             break;
         }
 
         case IRI:
         {
             VarChar *value = RdfBoxGetVarChar(box);
-            pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
-            appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+            pq_sendint32(buf, VARSIZE(value) - VARHDRSZ);
+            appendBinaryStringInfoNT(buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
             break;
         }
 
         case IBLANKNODE:
         {
-            pq_sendint64(&buf, RdfBoxGetInt64(box));
+            pq_sendint64(buf, RdfBoxGetInt64(box));
             break;
         }
 
         case SBLANKNODE:
         {
             VarChar *value = RdfBoxGetVarChar(box);
-            pq_sendint32(&buf, VARSIZE(value) - VARHDRSZ);
-            appendBinaryStringInfoNT(&buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+            pq_sendint32(buf, VARSIZE(value) - VARHDRSZ);
+            appendBinaryStringInfoNT(buf, VARDATA(value), VARSIZE(value) - VARHDRSZ);
+            break;
+        }
+
+        case TRIPLE_TERM:
+        {
+            VarChar *predicate = RdfBoxGetTripleTermPredicate(box);
+
+            StringInfoData subject;
+            initStringInfo(&subject);
+            append_term(&subject, RdfBoxGetTripleTermSubject(box));
+
+            StringInfoData object;
+            initStringInfo(&object);
+            append_term(&object, RdfBoxGetTripleTermObject(box));
+
+            pq_sendint32(buf, subject.len);
+            pq_sendint32(buf, VARSIZE(predicate) - VARHDRSZ);
+            pq_sendint32(buf, object.len);
+            appendBinaryStringInfoNT(buf, subject.data, subject.len);
+            appendBinaryStringInfoNT(buf, VARDATA(predicate), VARSIZE(predicate) - VARHDRSZ);
+            appendBinaryStringInfoNT(buf, object.data, object.len);
+            pfree(subject.data);
+            pfree(object.data);
             break;
         }
     }
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_send);
+Datum rdfbox_send(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+
+    StringInfoData buf;
+    pq_begintypsend(&buf);
+    append_term(&buf, box);
 
     PG_RETURN_BYTEA_P(pq_endtypsend(&buf));
 }

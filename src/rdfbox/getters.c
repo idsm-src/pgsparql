@@ -1020,6 +1020,42 @@ Datum rdfbox_get_sblanknode_segment(PG_FUNCTION_ARGS)
 }
 
 
+PG_FUNCTION_INFO_V1(rdfbox_get_tripleterm_subject);
+Datum rdfbox_get_tripleterm_subject(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+
+    if(box->type != TRIPLE_TERM)
+        PG_RETURN_NULL();
+
+    PG_RETURN_RDFBOX_P(RdfBoxGetTripleTermSubject(box));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_tripleterm_predicate);
+Datum rdfbox_get_tripleterm_predicate(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+
+    if(box->type != TRIPLE_TERM)
+        PG_RETURN_NULL();
+
+    PG_RETURN_VARCHAR_P(RdfBoxGetTripleTermPredicate(box));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_tripleterm_object);
+Datum rdfbox_get_tripleterm_object(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+
+    if(box->type != TRIPLE_TERM)
+        PG_RETURN_NULL();
+
+    PG_RETURN_RDFBOX_P(RdfBoxGetTripleTermObject(box));
+}
+
+
 PG_FUNCTION_INFO_V1(rdfbox_get_string_literal);
 Datum rdfbox_get_string_literal(PG_FUNCTION_ARGS)
 {

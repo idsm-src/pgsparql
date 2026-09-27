@@ -293,3 +293,7 @@ load ../psql_tests.bash
 @test "fn: sparql.rdfbox_get_iblanknode_value_of_segment(sparql.rdfbox_create_from_sblanknode('7fffffffid'::varchar), '-2147483648'::int4)" {
   expect_output '(null)'
 }
+
+@test "fn: sparql.rdfbox_get_iblanknode_value_of_segment(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar)), '-2147483648'::int4)" {
+  expect_output '(null)'
+}

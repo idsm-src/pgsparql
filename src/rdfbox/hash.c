@@ -119,6 +119,10 @@ static uint64 hash_term(RdfBox *box, uint64 seed)
             value = hash_combine64(ubox_hash_value(NULL, RdfBoxGetUBox(box), seed), hash_varchar(RdfBoxGetAttachment(box), seed));
             break;
 
+        case TRIPLE_TERM:
+            value = hash_combine64(hash_combine64(hash_term(RdfBoxGetTripleTermSubject(box), seed), hash_varchar(RdfBoxGetTripleTermPredicate(box), seed)), hash_term(RdfBoxGetTripleTermObject(box), seed));
+            break;
+
         default:
             elog(ERROR, "unexpected rdfbox type");
     }

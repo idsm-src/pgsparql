@@ -1049,6 +1049,108 @@ load ../psql_tests.bash
 
 
 ####
+# triple terms
+#
+
+@test "io: '<<( <http://example.org/s> <http://example.org/p> \"o\" )>>'::sparql.rdfbox" {
+  expect_output '<<( <http://example.org/s> <http://example.org/p> "o"^^<http://www.w3.org/2001/XMLSchema#string> )>>'
+}
+
+@test "io: '<<(<http://example.org/s><http://example.org/p><http://example.org/o>)>>'::sparql.rdfbox" {
+  expect_output '<<( <http://example.org/s> <http://example.org/p> <http://example.org/o> )>>'
+}
+
+@test "io: '<<( _:i0123456789abcdef <http://example.org/p> 1 )>>'::sparql.rdfbox" {
+  expect_output '<<( _:i0123456789abcdef <http://example.org/p> "1"^^<http://www.w3.org/2001/XMLSchema#integer> )>>'
+}
+
+@test "io: '<<( _:sffffffffid <http://example.org/p> ''chat''@fr--rtl )>>'::sparql.rdfbox" {
+  expect_output '<<( _:sffffffffid <http://example.org/p> "chat"@fr--rtl )>>'
+}
+
+@test "io: '<<(   <http://example.org/s>   <http://example.org/p>   1.5   )>>'::sparql.rdfbox" {
+  expect_output '<<( <http://example.org/s> <http://example.org/p> "1.5"^^<http://www.w3.org/2001/XMLSchema#decimal> )>>'
+}
+
+@test "io: E'<<(\t<http://example.org/s>\n<http://example.org/p>\r\"o\"\n)>>'::sparql.rdfbox" {
+  expect_output '<<( <http://example.org/s> <http://example.org/p> "o"^^<http://www.w3.org/2001/XMLSchema#string> )>>'
+}
+
+@test "io: '<<( <http://example.org/s> <http://example.org/p> <<( <http://example.org/a> <http://example.org/b> \"c )>>\" )>> )>>'::sparql.rdfbox" {
+  expect_output '<<( <http://example.org/s> <http://example.org/p> <<( <http://example.org/a> <http://example.org/b> "c )>>"^^<http://www.w3.org/2001/XMLSchema#string> )>> )>>'
+}
+
+@test "io: '<<( <http://example.org/s> <http://example.org/p> ''1:integer''^^<http://example.org/type> )>>'::sparql.rdfbox" {
+  expect_output '<<( <http://example.org/s> <http://example.org/p> '"'"'1:integer'"'"'^^<http://example.org/type> )>>'
+}
+
+@test "io: '<<( \"s\" <http://example.org/p> \"o\" )>>'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "io: '<<( <<( <http://example.org/a> <http://example.org/b> \"c\" )>> <http://example.org/p> \"o\" )>>'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "io: '<<( <http://example.org/s> _:i0123456789abcdef \"o\" )>>'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "io: '<<( <http://example.org/s> \"p\" \"o\" )>>'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "io: '<<( <http://example.org/s> <http://example.org/p> )>>'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "io: '<<( <http://example.org/s> )>>'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "io: '<<( )>>'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "io: '<<()>>'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "io: '<<( <http://example.org/s> <http://example.org/p> \"o\" )>'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "io: '<<( <http://example.org/s> <http://example.org/p> \"o\" >>'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "io: '<<('::sparql.rdfbox" {
+  expect_error
+}
+
+@test "io: '<<( <example.org/s> <http://example.org/p> \"o\" )>>'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "io: '<<( <http://example.org/s> <example.org/p> \"o\" )>>'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "io: '<<( <http://example.org/s> <http://example.org/p> o )>>'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "io: '<<( _:i0123456789abcdef<http://example.org/p> \"o\" )>>'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "io: '<<( <http://example.org/s><http://example.org/p> )>>'::sparql.rdfbox" {
+  expect_error
+}
+
+
+
+####
 # a lexical form is escaped like any other string: the parsers honour the
 # whitespace facet of XSD, so it may hold a line break, and a raw CR or LF is
 # rejected inside a literal delimited by a single quotation mark

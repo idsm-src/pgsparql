@@ -953,3 +953,53 @@ load ../psql_tests.bash
 @test "rs: '_:s0000000id'::sparql.rdfbox" {
   expect_error
 }
+
+
+
+####
+# triple terms
+#
+
+@test "rs: '<<( <http://example.org/s> <http://example.org/p> \"o\" )>>'::sparql.rdfbox" {
+  expect_output '<<( <http://example.org/s> <http://example.org/p> "o"^^<http://www.w3.org/2001/XMLSchema#string> )>>'
+}
+
+@test "rs: '<<(<http://example.org/s><http://example.org/p><http://example.org/o>)>>'::sparql.rdfbox" {
+  expect_output '<<( <http://example.org/s> <http://example.org/p> <http://example.org/o> )>>'
+}
+
+@test "rs: '<<( _:i0123456789abcdef <http://example.org/p> 1 )>>'::sparql.rdfbox" {
+  expect_output '<<( _:i0123456789abcdef <http://example.org/p> "1"^^<http://www.w3.org/2001/XMLSchema#integer> )>>'
+}
+
+@test "rs: '<<( _:sffffffffid <http://example.org/p> ''chat''@fr--rtl )>>'::sparql.rdfbox" {
+  expect_output '<<( _:sffffffffid <http://example.org/p> "chat"@fr--rtl )>>'
+}
+
+@test "rs: '<<(   <http://example.org/s>   <http://example.org/p>   1.5   )>>'::sparql.rdfbox" {
+  expect_output '<<( <http://example.org/s> <http://example.org/p> "1.5"^^<http://www.w3.org/2001/XMLSchema#decimal> )>>'
+}
+
+@test "rs: E'<<(\t<http://example.org/s>\n<http://example.org/p>\r\"o\"\n)>>'::sparql.rdfbox" {
+  expect_output '<<( <http://example.org/s> <http://example.org/p> "o"^^<http://www.w3.org/2001/XMLSchema#string> )>>'
+}
+
+@test "rs: '<<( <http://example.org/s> <http://example.org/p> <<( <http://example.org/a> <http://example.org/b> \"c )>>\" )>> )>>'::sparql.rdfbox" {
+  expect_output '<<( <http://example.org/s> <http://example.org/p> <<( <http://example.org/a> <http://example.org/b> "c )>>"^^<http://www.w3.org/2001/XMLSchema#string> )>> )>>'
+}
+
+@test "rs: '<<( <http://example.org/s> <http://example.org/p> ''1:integer''^^<http://example.org/type> )>>'::sparql.rdfbox" {
+  expect_output '<<( <http://example.org/s> <http://example.org/p> '"'"'1:integer'"'"'^^<http://example.org/type> )>>'
+}
+
+@test "rs: '<<( \"s\" <http://example.org/p> \"o\" )>>'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "rs: '<<( <http://example.org/s> <http://example.org/p> )>>'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "rs: '<<( <http://example.org/s> <http://example.org/p> \"o\" )>'::sparql.rdfbox" {
+  expect_error
+}

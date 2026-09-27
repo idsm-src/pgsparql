@@ -965,3 +965,15 @@ load ../psql_tests.bash
 @test "fn: sparql.rdfbox_get_date_lexical_of_zone(sparql.rdfbox_create_from_sblanknode('7fffffffid'::varchar), (14*60*60)::int4, 'false'::bool)" {
   expect_output '(null)'
 }
+
+@test "fn: sparql.rdfbox_get_date_lexical_of_zone(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar)), (14*60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_date_lexical_of_zone(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar)), (14*60*60)::int4, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_date_lexical_of_zone(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar)), (14*60*60)::int4, 'false'::bool)" {
+  expect_output '(null)'
+}

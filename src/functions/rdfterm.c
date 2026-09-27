@@ -41,6 +41,7 @@ IriComponents;
 
 static const char *rdfbox_types[] =
 {
+        NULL,   /* TRIPLE_TERM is not a literal */
         XSD_BOOLEAN_IRI,
         XSD_BYTE_IRI,
         XSD_UNSIGNEDBYTE_IRI,
@@ -234,7 +235,7 @@ PG_FUNCTION_INFO_V1(is_blank_rdfbox);
 Datum is_blank_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
-    bool result = box->type == IBLANKNODE || box->type == SBLANKNODE;
+    bool result = rdfbox_is_blanknode(box);
     PG_RETURN_BOOL(result);
 }
 
@@ -253,6 +254,15 @@ Datum is_numeric_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
     bool result = rdfbox_is_numeric(box);
+    PG_RETURN_BOOL(result);
+}
+
+
+PG_FUNCTION_INFO_V1(is_tripleterm_rdfbox);
+Datum is_tripleterm_rdfbox(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    bool result = box->type == TRIPLE_TERM;
     PG_RETURN_BOOL(result);
 }
 

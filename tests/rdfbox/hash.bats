@@ -190,6 +190,36 @@ setup_file() {
 }
 
 
+@test "fn: sparql.rdfbox_hash('<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox) = sparql.rdfbox_hash('<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox)" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash('<<( <http://example.org/s> <http://example.org/p> <<( <http://example.org/s> <http://example.org/p> 1 )>> )>>'::sparql.rdfbox) = sparql.rdfbox_hash('<<( <http://example.org/s> <http://example.org/p> <<( <http://example.org/s> <http://example.org/p> 1 )>> )>>'::sparql.rdfbox)" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash('<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox) <> sparql.rdfbox_hash('<<( <http://example.org/s> <http://example.org/p> 2 )>>'::sparql.rdfbox)" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash('<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox) <> sparql.rdfbox_hash('<<( <http://example.org/s> <http://example.org/p> 1.0 )>>'::sparql.rdfbox)" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash('<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox) <> sparql.rdfbox_hash('<<( <http://example.org/s> <http://example.org/q> 1 )>>'::sparql.rdfbox)" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash('<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox) <> sparql.rdfbox_hash('<<( <http://example.org/t> <http://example.org/p> 1 )>>'::sparql.rdfbox)" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash('<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox) <> sparql.rdfbox_hash('<http://example.org/s>'::sparql.rdfbox)" {
+  expect_output 't'
+}
+
+
+
 ####
 # extended hash
 #
@@ -231,6 +261,16 @@ setup_file() {
 }
 
 
+@test "fn: (sparql.rdfbox_hash_extended('<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox, 0::int8) & 4294967295) = (sparql.rdfbox_hash('<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox)::int8 & 4294967295)" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash_extended('<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox, 0::int8) <> sparql.rdfbox_hash_extended('<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox, 1::int8)" {
+  expect_output 't'
+}
+
+
+
 ####
 # hash operator class
 #
@@ -249,4 +289,12 @@ setup_file() {
 
 @test "oc: (select count(*) from (select distinct x from unnest(array[sparql.rdfbox_create_from_userliteral('1.0'::decimal, 'http://example.org'::varchar), sparql.rdfbox_create_from_userliteral('1.00'::decimal, 'http://example.org'::varchar), sparql.rdfbox_create_from_userliteral('1.0'::decimal, 'http://example.org/other'::varchar), sparql.rdfbox_create_from_userliteral('1'::int4, 'http://example.org'::varchar), sparql.rdfbox_create_from_userliteral_with_lexical('1'::int4, 'http://example.org'::varchar, ' 1 '::varchar)]) x) t)" {
   expect_output '4'
+}
+
+@test "oc: (select count(*) from (select distinct x from unnest(array['<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox, '<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox, '<<( <http://example.org/s> <http://example.org/p> 1.0 )>>'::sparql.rdfbox, '<<( <http://example.org/s> <http://example.org/p> 2 )>>'::sparql.rdfbox]) x) t)" {
+  expect_output '3'
+}
+
+@test "oc: (select count(*) from unnest(array['<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox, '<<( <http://example.org/s> <http://example.org/p> 2 )>>'::sparql.rdfbox]) a join unnest(array['<<( <http://example.org/s> <http://example.org/p> 1 )>>'::sparql.rdfbox, '<<( <http://example.org/s> <http://example.org/p> 1.0 )>>'::sparql.rdfbox]) b on a operator(sparql.@=) b)" {
+  expect_output '1'
 }
