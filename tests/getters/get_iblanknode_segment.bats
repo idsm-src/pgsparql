@@ -262,6 +262,14 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.rdfbox_get_iblanknode_segment(sparql.rdfbox_create_from_ltrlangstring('abc'::varchar, 'en'::varchar))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_iblanknode_segment(sparql.rdfbox_create_from_rtllangstring('abc'::varchar, 'en'::varchar))" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.rdfbox_get_iblanknode_segment(sparql.rdfbox_create_from_userliteral('abc'::varchar, 'http://example.org'::varchar))" {
   expect_output '(null)'
 }

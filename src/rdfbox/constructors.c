@@ -475,6 +475,24 @@ Datum rdfbox_create_from_langstring(PG_FUNCTION_ARGS)
 }
 
 
+PG_FUNCTION_INFO_V1(rdfbox_create_from_ltrlangstring);
+Datum rdfbox_create_from_ltrlangstring(PG_FUNCTION_ARGS)
+{
+    VarChar *value = PG_GETARG_VARCHAR_PP(0);
+    VarChar *lang = checked_language_tag(PG_GETARG_VARCHAR_PP(1));
+    PG_RETURN_RDFBOX_P(GetLtrLangStringRdfBox(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value), VARDATA_ANY(lang), VARSIZE_ANY_EXHDR(lang)));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_create_from_rtllangstring);
+Datum rdfbox_create_from_rtllangstring(PG_FUNCTION_ARGS)
+{
+    VarChar *value = PG_GETARG_VARCHAR_PP(0);
+    VarChar *lang = checked_language_tag(PG_GETARG_VARCHAR_PP(1));
+    PG_RETURN_RDFBOX_P(GetRtlLangStringRdfBox(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value), VARDATA_ANY(lang), VARSIZE_ANY_EXHDR(lang)));
+}
+
+
 PG_FUNCTION_INFO_V1(rdfbox_create_from_userliteral);
 Datum rdfbox_create_from_userliteral(PG_FUNCTION_ARGS)
 {

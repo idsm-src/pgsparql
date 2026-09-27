@@ -14,6 +14,34 @@ load ../psql_tests.bash
   expect_output '"chat"@fr'
 }
 
+@test "io: '''chat''@fr--ltr'::sparql.rdfbox" {
+  expect_output '"chat"@fr--ltr'
+}
+
+@test "io: '''chat''@fr--rtl'::sparql.rdfbox" {
+  expect_output '"chat"@fr--rtl'
+}
+
+@test "io: '''chat''@fr--LTR'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "io: '''chat''@fr--xyz'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "io: '''chat''@fr--'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "io: '''chat''@--ltr'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "io: '''chat''@fr--ltr--rtl'::sparql.rdfbox" {
+  expect_error
+}
+
 @test "io: '\"xyz\"^^<http://example.org/ns/userDatatype>'::sparql.rdfbox" {
   expect_output '"xyz"^^<http://example.org/ns/userDatatype>'
 }
@@ -1092,6 +1120,14 @@ load ../psql_tests.bash
 
 @test "io: sparql.rdfbox_create_from_langstring(('a' || chr(92) || 'b')::varchar, 'en'::varchar)::varchar::sparql.rdfbox" {
   expect_output '"a\\b"@en'
+}
+
+@test "io: sparql.rdfbox_create_from_ltrlangstring(('a' || chr(92) || 'b')::varchar, 'en'::varchar)::varchar::sparql.rdfbox" {
+  expect_output '"a\\b"@en--ltr'
+}
+
+@test "io: sparql.rdfbox_create_from_rtllangstring(('a' || chr(92) || 'b')::varchar, 'en'::varchar)::varchar::sparql.rdfbox" {
+  expect_output '"a\\b"@en--rtl'
 }
 
 @test "io: sparql.rdfbox_create_from_typedliteral(('a' || chr(92) || 'b')::varchar, 'http://example.org/t'::varchar)::varchar::sparql.rdfbox" {

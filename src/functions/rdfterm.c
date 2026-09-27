@@ -62,7 +62,9 @@ static const char *rdfbox_types[] =
         XSD_DATE_IRI,
         XSD_DAYTIMEDURATION_IRI,
         XSD_STRING_IRI,
-        "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString"
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString",
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#dirLangString",
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#dirLangString"
 };
 
 
@@ -435,6 +437,8 @@ Datum str_rdfbox(PG_FUNCTION_ARGS)
         case XSD_STRING:
         case IRI:
         case RDF_LANGSTRING:
+        case RDF_LTR_LANGSTRING:
+        case RDF_RTL_LANGSTRING:
         case TYPED_LITERAL:
             PG_RETURN_VARCHAR_P(RdfBoxGetVarChar(box));
 
@@ -449,7 +453,7 @@ Datum lang_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
 
-    if(box->type == RDF_LANGSTRING)
+    if(rdfbox_is_langstring(box))
     {
         PG_RETURN_VARCHAR_P(RdfBoxGetAttachment(box));
     }
@@ -464,6 +468,51 @@ Datum lang_rdfbox(PG_FUNCTION_ARGS)
     {
         PG_RETURN_NULL();
     }
+}
+
+
+PG_FUNCTION_INFO_V1(langdir_rdfbox);
+Datum langdir_rdfbox(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+
+    if(box->type == RDF_LTR_LANGSTRING)
+    {
+        PG_RETURN_TEXT_P(cstring_to_text(RDF_LTR_DIRECTION));
+    }
+    else if(box->type == RDF_RTL_LANGSTRING)
+    {
+        PG_RETURN_TEXT_P(cstring_to_text(RDF_RTL_DIRECTION));
+    }
+    else if(rdfbox_is_literal(box))
+    {
+        VarChar *empty = palloc(VARHDRSZ);
+        SET_VARSIZE(empty, VARHDRSZ);
+
+        PG_RETURN_VARCHAR_P(empty);
+    }
+    else
+    {
+        PG_RETURN_NULL();
+    }
+}
+
+
+PG_FUNCTION_INFO_V1(haslang_rdfbox);
+Datum haslang_rdfbox(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    bool result = rdfbox_is_langstring(box);
+    PG_RETURN_BOOL(result);
+}
+
+
+PG_FUNCTION_INFO_V1(haslangdir_rdfbox);
+Datum haslangdir_rdfbox(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    bool result = rdfbox_is_dirlangstring(box);
+    PG_RETURN_BOOL(result);
 }
 
 
@@ -835,4 +884,28 @@ Datum strlang_string(PG_FUNCTION_ARGS)
 
     Datum lcase_lang = CStringGetTextDatum(asc_tolower(VARDATA_ANY(lang), VARSIZE_ANY_EXHDR(lang)));
     PG_RETURN_RDFBOX_P(GetLangStringRdfBox(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value), VARDATA_ANY(lcase_lang), VARSIZE_ANY_EXHDR(lcase_lang)));
+}
+
+
+PG_FUNCTION_INFO_V1(strlangdir_string);
+Datum strlangdir_string(PG_FUNCTION_ARGS)
+{
+    VarChar *value = PG_GETARG_VARCHAR_PP(0);
+    VarChar *lang = PG_GETARG_VARCHAR_PP(1);
+    VarChar *dir = PG_GETARG_VARCHAR_PP(2);
+
+    char *dir_data = VARDATA_ANY(dir);
+    int dir_size = VARSIZE_ANY_EXHDR(dir);
+
+    if(!check_language_tag(VARDATA_ANY(lang), VARSIZE_ANY_EXHDR(lang)))
+        PG_RETURN_NULL();
+
+    Datum lcase_lang = CStringGetTextDatum(asc_tolower(VARDATA_ANY(lang), VARSIZE_ANY_EXHDR(lang)));
+
+    if(sizeof(RDF_LTR_DIRECTION) == dir_size + 1 && strncmp(RDF_LTR_DIRECTION, dir_data, dir_size) == 0)
+        PG_RETURN_RDFBOX_P(GetLtrLangStringRdfBox(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value), VARDATA_ANY(lcase_lang), VARSIZE_ANY_EXHDR(lcase_lang)));
+    else if(sizeof(RDF_RTL_DIRECTION) == dir_size + 1 && strncmp(RDF_RTL_DIRECTION, dir_data, dir_size) == 0)
+        PG_RETURN_RDFBOX_P(GetRtlLangStringRdfBox(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value), VARDATA_ANY(lcase_lang), VARSIZE_ANY_EXHDR(lcase_lang)));
+    else
+        PG_RETURN_NULL();
 }

@@ -778,11 +778,35 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.rdfbox_get_long(sparql.rdfbox_create_from_ltrlangstring('abc'::varchar, 'en'::varchar))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_long(sparql.rdfbox_create_from_rtllangstring('abc'::varchar, 'en'::varchar))" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.rdfbox_get_long(sparql.rdfbox_create_from_langstring('abc'::varchar, 'en'::varchar), 'true'::bool)" {
   expect_output '(null)'
 }
 
+@test "fn: sparql.rdfbox_get_long(sparql.rdfbox_create_from_ltrlangstring('abc'::varchar, 'en'::varchar), 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_long(sparql.rdfbox_create_from_rtllangstring('abc'::varchar, 'en'::varchar), 'true'::bool)" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.rdfbox_get_long(sparql.rdfbox_create_from_langstring('abc'::varchar, 'en'::varchar), 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_long(sparql.rdfbox_create_from_ltrlangstring('abc'::varchar, 'en'::varchar), 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_long(sparql.rdfbox_create_from_rtllangstring('abc'::varchar, 'en'::varchar), 'false'::bool)" {
   expect_output '(null)'
 }
 

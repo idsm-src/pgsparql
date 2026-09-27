@@ -92,6 +92,14 @@ Datum rdfbox_is_equal_to(PG_FUNCTION_ARGS)
     {
         PG_RETURN_BOOL(memcmp(left, right, Min(VARSIZE(left), VARSIZE(right))) == 0);
     }
+    else if(left->type == RDF_LTR_LANGSTRING && right->type == RDF_LTR_LANGSTRING)
+    {
+        PG_RETURN_BOOL(memcmp(left, right, Min(VARSIZE(left), VARSIZE(right))) == 0);
+    }
+    else if(left->type == RDF_RTL_LANGSTRING && right->type == RDF_RTL_LANGSTRING)
+    {
+        PG_RETURN_BOOL(memcmp(left, right, Min(VARSIZE(left), VARSIZE(right))) == 0);
+    }
     else if(left->type == USER_LITERAL && right->type == USER_LITERAL)
     {
         bool equal;
@@ -202,6 +210,14 @@ Datum rdfbox_is_not_equal_to(PG_FUNCTION_ARGS)
         PG_RETURN_BOOL(memcmp(left, right, Min(VARSIZE(left), VARSIZE(right))) != 0);
     }
     else if(left->type == RDF_LANGSTRING && right->type == RDF_LANGSTRING)
+    {
+        PG_RETURN_BOOL(memcmp(left, right, Min(VARSIZE(left), VARSIZE(right))) != 0);
+    }
+    else if(left->type == RDF_LTR_LANGSTRING && right->type == RDF_LTR_LANGSTRING)
+    {
+        PG_RETURN_BOOL(memcmp(left, right, Min(VARSIZE(left), VARSIZE(right))) != 0);
+    }
+    else if(left->type == RDF_RTL_LANGSTRING && right->type == RDF_RTL_LANGSTRING)
     {
         PG_RETURN_BOOL(memcmp(left, right, Min(VARSIZE(left), VARSIZE(right))) != 0);
     }

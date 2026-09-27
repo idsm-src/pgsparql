@@ -170,7 +170,7 @@ Datum regex_rdfbox(PG_FUNCTION_ARGS)
     bool isnull = true;
     uint32_t options;
 
-    if(parse_flags(flags, &options) && (box->type == XSD_STRING || box->type == RDF_LANGSTRING))
+    if(parse_flags(flags, &options) && rdfbox_is_string_literal(box))
     {
         int errornumber;
         PCRE2_SIZE erroroffset;
@@ -261,7 +261,7 @@ Datum replace_rdfbox(PG_FUNCTION_ARGS)
 
     uint32_t options;
 
-    if((box->type == XSD_STRING || box->type == RDF_LANGSTRING) && parse_flags(flags, &options))
+    if(rdfbox_is_string_literal(box) && parse_flags(flags, &options))
     {
         int errornumber;
         PCRE2_SIZE erroroffset;
@@ -289,18 +289,9 @@ Datum replace_rdfbox(PG_FUNCTION_ARGS)
             pcre2_code_free(re);
 
             if(rc < 0)
-            {
                 PG_RETURN_NULL();
-            }
-            else if(box->type != RDF_LANGSTRING)
-            {
-                PG_RETURN_RDFBOX_P(GetStringRdfBox(buffer, size));
-            }
-            else
-            {
-                VarChar *lang = RdfBoxGetAttachment(box);
-                PG_RETURN_RDFBOX_P(GetLangStringRdfBox(buffer, size, VARDATA(lang), VARSIZE(lang) - VARHDRSZ));
-            }
+
+            PG_RETURN_RDFBOX_P(GetDerivedStringLiteralRdfBox(box, buffer, size));
         }
     }
 

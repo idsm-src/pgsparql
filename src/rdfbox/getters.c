@@ -694,6 +694,88 @@ Datum rdfbox_get_langstring_lang(PG_FUNCTION_ARGS)
 }
 
 
+PG_FUNCTION_INFO_V1(rdfbox_get_ltrlangstring_value);
+Datum rdfbox_get_ltrlangstring_value(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+
+    if(box->type != RDF_LTR_LANGSTRING)
+        PG_RETURN_NULL();
+
+    PG_RETURN_VARCHAR_P(RdfBoxGetVarChar(box));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_ltrlangstring_value_of_lang);
+Datum rdfbox_get_ltrlangstring_value_of_lang(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    VarChar *lang = PG_GETARG_VARCHAR_PP(1);
+
+    if(box->type != RDF_LTR_LANGSTRING)
+        PG_RETURN_NULL();
+
+    if(!varchar_eq(lang, RdfBoxGetAttachment(box)))
+        PG_RETURN_NULL();
+
+    PG_RETURN_VARCHAR_P(RdfBoxGetVarChar(box));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_ltrlangstring_lang);
+Datum rdfbox_get_ltrlangstring_lang(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+
+    if(box->type != RDF_LTR_LANGSTRING)
+        PG_RETURN_NULL();
+
+    VarChar *lang = RdfBoxGetAttachment(box);
+    PG_RETURN_VARCHAR_P(lang);
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_rtllangstring_value);
+Datum rdfbox_get_rtllangstring_value(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+
+    if(box->type != RDF_RTL_LANGSTRING)
+        PG_RETURN_NULL();
+
+    PG_RETURN_VARCHAR_P(RdfBoxGetVarChar(box));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_rtllangstring_value_of_lang);
+Datum rdfbox_get_rtllangstring_value_of_lang(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+    VarChar *lang = PG_GETARG_VARCHAR_PP(1);
+
+    if(box->type != RDF_RTL_LANGSTRING)
+        PG_RETURN_NULL();
+
+    if(!varchar_eq(lang, RdfBoxGetAttachment(box)))
+        PG_RETURN_NULL();
+
+    PG_RETURN_VARCHAR_P(RdfBoxGetVarChar(box));
+}
+
+
+PG_FUNCTION_INFO_V1(rdfbox_get_rtllangstring_lang);
+Datum rdfbox_get_rtllangstring_lang(PG_FUNCTION_ARGS)
+{
+    RdfBox *box = PG_GETARG_RDFBOX_P(0);
+
+    if(box->type != RDF_RTL_LANGSTRING)
+        PG_RETURN_NULL();
+
+    VarChar *lang = RdfBoxGetAttachment(box);
+    PG_RETURN_VARCHAR_P(lang);
+}
+
+
 PG_FUNCTION_INFO_V1(rdfbox_get_userliteral_value);
 Datum rdfbox_get_userliteral_value(PG_FUNCTION_ARGS)
 {
@@ -943,7 +1025,7 @@ Datum rdfbox_get_string_literal(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
 
-    if(box->type != XSD_STRING && box->type != RDF_LANGSTRING)
+    if(!rdfbox_is_string_literal(box))
         PG_RETURN_NULL();
 
     PG_RETURN_VARCHAR_P(RdfBoxGetVarChar(box));

@@ -778,11 +778,35 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_ltrlangstring('abc'::varchar, 'en'::varchar), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_rtllangstring('abc'::varchar, 'en'::varchar), 'http://example.org'::varchar, null::varchar)" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_langstring('abc'::varchar, 'en'::varchar), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
   expect_output '(null)'
 }
 
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_ltrlangstring('abc'::varchar, 'en'::varchar), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_rtllangstring('abc'::varchar, 'en'::varchar), 'http://example.org'::varchar, null::varchar, 'true'::bool)" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_langstring('abc'::varchar, 'en'::varchar), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_ltrlangstring('abc'::varchar, 'en'::varchar), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_userliteral_typedvalue_of_type(sparql.rdfbox_create_from_rtllangstring('abc'::varchar, 'en'::varchar), 'http://example.org'::varchar, null::varchar, 'false'::bool)" {
   expect_output '(null)'
 }
 

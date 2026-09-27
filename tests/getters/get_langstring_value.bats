@@ -10,8 +10,24 @@ load ../psql_tests.bash
   expect_output ''
 }
 
+@test "fn: sparql.rdfbox_get_langstring_value(sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_langstring_value(sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar))" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.rdfbox_get_langstring_value(sparql.rdfbox_create_from_langstring('abc'::varchar, 'cy'::varchar))" {
   expect_output 'abc'
+}
+
+@test "fn: sparql.rdfbox_get_langstring_value(sparql.rdfbox_create_from_ltrlangstring('abc'::varchar, 'cy'::varchar))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.rdfbox_get_langstring_value(sparql.rdfbox_create_from_rtllangstring('abc'::varchar, 'cy'::varchar))" {
+  expect_output '(null)'
 }
 
 @test "fn: sparql.rdfbox_get_langstring_value(sparql.rdfbox_create_from_boolean('t'::bool))" {

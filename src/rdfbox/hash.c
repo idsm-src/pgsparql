@@ -109,6 +109,8 @@ static uint64 hash_term(RdfBox *box, uint64 seed)
             break;
 
         case RDF_LANGSTRING:
+        case RDF_LTR_LANGSTRING:
+        case RDF_RTL_LANGSTRING:
         case TYPED_LITERAL:
             value = hash_combine64(hash_varchar(RdfBoxGetVarChar(box), seed), hash_varchar(RdfBoxGetAttachment(box), seed));
             break;

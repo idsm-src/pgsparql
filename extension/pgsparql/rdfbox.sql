@@ -66,6 +66,8 @@ CREATE FUNCTION rdfbox_create_from_daytimeduration(int8) RETURNS rdfbox AS 'MODU
 CREATE FUNCTION rdfbox_create_from_daytimeduration_with_lexical(int8,varchar) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
 CREATE FUNCTION rdfbox_create_from_string(varchar) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
 CREATE FUNCTION rdfbox_create_from_langstring(varchar,varchar) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+CREATE FUNCTION rdfbox_create_from_ltrlangstring(varchar,varchar) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+CREATE FUNCTION rdfbox_create_from_rtllangstring(varchar,varchar) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
 CREATE FUNCTION rdfbox_create_from_userliteral(anyelement,varchar) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
 CREATE FUNCTION rdfbox_create_from_userliteral(ubox,varchar) RETURNS rdfbox AS 'MODULE_PATHNAME','rdfbox_create_from_boxed_userliteral' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
 CREATE FUNCTION rdfbox_create_from_userliteral_with_lexical(anyelement,varchar,varchar) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
@@ -176,6 +178,12 @@ CREATE FUNCTION rdfbox_get_string(rdfbox) RETURNS varchar AS 'MODULE_PATHNAME' L
 CREATE FUNCTION rdfbox_get_langstring_value(rdfbox) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
 CREATE FUNCTION rdfbox_get_langstring_value_of_lang(rdfbox,varchar) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
 CREATE FUNCTION rdfbox_get_langstring_lang(rdfbox) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+CREATE FUNCTION rdfbox_get_ltrlangstring_value(rdfbox) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+CREATE FUNCTION rdfbox_get_ltrlangstring_value_of_lang(rdfbox,varchar) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+CREATE FUNCTION rdfbox_get_ltrlangstring_lang(rdfbox) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+CREATE FUNCTION rdfbox_get_rtllangstring_value(rdfbox) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+CREATE FUNCTION rdfbox_get_rtllangstring_value_of_lang(rdfbox,varchar) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+CREATE FUNCTION rdfbox_get_rtllangstring_lang(rdfbox) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
 CREATE FUNCTION rdfbox_get_userliteral_value(rdfbox) RETURNS ubox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
 CREATE FUNCTION rdfbox_get_userliteral_value(rdfbox,bool) RETURNS ubox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
 CREATE FUNCTION rdfbox_get_userliteral_value_of_type(rdfbox,varchar) RETURNS ubox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;

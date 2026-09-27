@@ -934,6 +934,14 @@ load ../psql_tests.bash
   expect_output '"b"@en'
 }
 
+@test "fn: sparql.min(x) from (values (sparql.rdfbox_create_from_string('b'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output '"b"@en--ltr'
+}
+
+@test "fn: sparql.min(x) from (values (sparql.rdfbox_create_from_string('b'::varchar)), (sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output '"b"@en--rtl'
+}
+
 @test "fn: sparql.min(x) from (values (sparql.rdfbox_create_from_iri('http://example.org'::varchar)), (sparql.rdfbox_create_from_iblanknode('0'::int8))) as tab(x)" {
   expect_output '_:i0000000000000000'
 }
@@ -1516,6 +1524,14 @@ load ../psql_tests.bash
   expect_output '"b"^^<http://www.w3.org/2001/XMLSchema#string>'
 }
 
+@test "fn: sparql.max_rdfbox(x) from (values (sparql.rdfbox_create_from_string('b'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output '"b"^^<http://www.w3.org/2001/XMLSchema#string>'
+}
+
+@test "fn: sparql.max_rdfbox(x) from (values (sparql.rdfbox_create_from_string('b'::varchar)), (sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output '"b"^^<http://www.w3.org/2001/XMLSchema#string>'
+}
+
 @test "fn: sparql.max_rdfbox(x) from (values (sparql.rdfbox_create_from_iri('http://example.org'::varchar)), (sparql.rdfbox_create_from_iblanknode('0'::int8))) as tab(x)" {
   expect_output '<http://example.org>'
 }
@@ -1688,7 +1704,23 @@ load ../psql_tests.bash
   expect_output 'a b'
 }
 
+@test "fn: sparql.group_concat_rdfbox(x) from (values (sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x) from (values (sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a b'
+}
+
 @test "fn: sparql.group_concat_rdfbox(x) from (values (sparql.rdfbox_create_from_langstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_langstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a   b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x) from (values (sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a   b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x) from (values (sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
   expect_output 'a   b'
 }
 
@@ -1696,7 +1728,23 @@ load ../psql_tests.bash
   expect_output 'a b c d'
 }
 
+@test "fn: sparql.group_concat_rdfbox(x) from (values (sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('c'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('d'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a b c d'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x) from (values (sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('c'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('d'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a b c d'
+}
+
 @test "fn: sparql.group_concat_rdfbox(x) from (values (sparql.rdfbox_create_from_langstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_string('b'::varchar))) as tab(x)" {
+  expect_output 'a b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x) from (values (sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_string('b'::varchar))) as tab(x)" {
+  expect_output 'a b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x) from (values (sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_string('b'::varchar))) as tab(x)" {
   expect_output 'a b'
 }
 
@@ -1704,7 +1752,23 @@ load ../psql_tests.bash
   expect_output 'a b'
 }
 
+@test "fn: sparql.group_concat_rdfbox(x) from (values (sparql.rdfbox_create_from_string('a'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x) from (values (sparql.rdfbox_create_from_string('a'::varchar)), (sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a b'
+}
+
 @test "fn: sparql.group_concat_rdfbox(x) from (values (sparql.rdfbox_create_from_langstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_langstring('b'::varchar, 'us'::varchar))) as tab(x)" {
+  expect_output 'a b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x) from (values (sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'us'::varchar))) as tab(x)" {
+  expect_output 'a b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x) from (values (sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'us'::varchar))) as tab(x)" {
   expect_output 'a b'
 }
 
@@ -1744,7 +1808,23 @@ load ../psql_tests.bash
   expect_output 'a b'
 }
 
+@test "fn: sparql.group_concat_rdfbox(x, NULL) from (values (sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, NULL) from (values (sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a b'
+}
+
 @test "fn: sparql.group_concat_rdfbox(x, NULL) from (values (sparql.rdfbox_create_from_langstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_langstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a   b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, NULL) from (values (sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a   b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, NULL) from (values (sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
   expect_output 'a   b'
 }
 
@@ -1752,7 +1832,23 @@ load ../psql_tests.bash
   expect_output 'a b c d'
 }
 
+@test "fn: sparql.group_concat_rdfbox(x, NULL) from (values (sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('c'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('d'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a b c d'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, NULL) from (values (sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('c'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('d'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a b c d'
+}
+
 @test "fn: sparql.group_concat_rdfbox(x, NULL) from (values (sparql.rdfbox_create_from_langstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_string('b'::varchar))) as tab(x)" {
+  expect_output 'a b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, NULL) from (values (sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_string('b'::varchar))) as tab(x)" {
+  expect_output 'a b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, NULL) from (values (sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_string('b'::varchar))) as tab(x)" {
   expect_output 'a b'
 }
 
@@ -1760,7 +1856,23 @@ load ../psql_tests.bash
   expect_output 'a b'
 }
 
+@test "fn: sparql.group_concat_rdfbox(x, NULL) from (values (sparql.rdfbox_create_from_string('a'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, NULL) from (values (sparql.rdfbox_create_from_string('a'::varchar)), (sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a b'
+}
+
 @test "fn: sparql.group_concat_rdfbox(x, NULL) from (values (sparql.rdfbox_create_from_langstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_langstring('b'::varchar, 'us'::varchar))) as tab(x)" {
+  expect_output 'a b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, NULL) from (values (sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'us'::varchar))) as tab(x)" {
+  expect_output 'a b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, NULL) from (values (sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'us'::varchar))) as tab(x)" {
   expect_output 'a b'
 }
 
@@ -1800,7 +1912,23 @@ load ../psql_tests.bash
   expect_output 'ab'
 }
 
+@test "fn: sparql.group_concat_rdfbox(x, ''::varchar) from (values (sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'ab'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, ''::varchar) from (values (sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'ab'
+}
+
 @test "fn: sparql.group_concat_rdfbox(x, ''::varchar) from (values (sparql.rdfbox_create_from_langstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_langstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'ab'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, ''::varchar) from (values (sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'ab'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, ''::varchar) from (values (sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
   expect_output 'ab'
 }
 
@@ -1808,7 +1936,23 @@ load ../psql_tests.bash
   expect_output 'abcd'
 }
 
+@test "fn: sparql.group_concat_rdfbox(x, ''::varchar) from (values (sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('c'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('d'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'abcd'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, ''::varchar) from (values (sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('c'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('d'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'abcd'
+}
+
 @test "fn: sparql.group_concat_rdfbox(x, ''::varchar) from (values (sparql.rdfbox_create_from_langstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_string('b'::varchar))) as tab(x)" {
+  expect_output 'ab'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, ''::varchar) from (values (sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_string('b'::varchar))) as tab(x)" {
+  expect_output 'ab'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, ''::varchar) from (values (sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_string('b'::varchar))) as tab(x)" {
   expect_output 'ab'
 }
 
@@ -1816,7 +1960,23 @@ load ../psql_tests.bash
   expect_output 'ab'
 }
 
+@test "fn: sparql.group_concat_rdfbox(x, ''::varchar) from (values (sparql.rdfbox_create_from_string('a'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'ab'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, ''::varchar) from (values (sparql.rdfbox_create_from_string('a'::varchar)), (sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'ab'
+}
+
 @test "fn: sparql.group_concat_rdfbox(x, ''::varchar) from (values (sparql.rdfbox_create_from_langstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_langstring('b'::varchar, 'us'::varchar))) as tab(x)" {
+  expect_output 'ab'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, ''::varchar) from (values (sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'us'::varchar))) as tab(x)" {
+  expect_output 'ab'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, ''::varchar) from (values (sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'us'::varchar))) as tab(x)" {
   expect_output 'ab'
 }
 
@@ -1856,7 +2016,23 @@ load ../psql_tests.bash
   expect_output 'a-b'
 }
 
+@test "fn: sparql.group_concat_rdfbox(x, '-'::varchar) from (values (sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a-b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, '-'::varchar) from (values (sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a-b'
+}
+
 @test "fn: sparql.group_concat_rdfbox(x, '-'::varchar) from (values (sparql.rdfbox_create_from_langstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_langstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a---b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, '-'::varchar) from (values (sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a---b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, '-'::varchar) from (values (sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
   expect_output 'a---b'
 }
 
@@ -1864,7 +2040,23 @@ load ../psql_tests.bash
   expect_output 'a-b-c-d'
 }
 
+@test "fn: sparql.group_concat_rdfbox(x, '-'::varchar) from (values (sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('c'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('d'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a-b-c-d'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, '-'::varchar) from (values (sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('c'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('d'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a-b-c-d'
+}
+
 @test "fn: sparql.group_concat_rdfbox(x, '-'::varchar) from (values (sparql.rdfbox_create_from_langstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_string('b'::varchar))) as tab(x)" {
+  expect_output 'a-b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, '-'::varchar) from (values (sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_string('b'::varchar))) as tab(x)" {
+  expect_output 'a-b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, '-'::varchar) from (values (sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_string('b'::varchar))) as tab(x)" {
   expect_output 'a-b'
 }
 
@@ -1872,7 +2064,23 @@ load ../psql_tests.bash
   expect_output 'a-b'
 }
 
+@test "fn: sparql.group_concat_rdfbox(x, '-'::varchar) from (values (sparql.rdfbox_create_from_string('a'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a-b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, '-'::varchar) from (values (sparql.rdfbox_create_from_string('a'::varchar)), (sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a-b'
+}
+
 @test "fn: sparql.group_concat_rdfbox(x, '-'::varchar) from (values (sparql.rdfbox_create_from_langstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_langstring('b'::varchar, 'us'::varchar))) as tab(x)" {
+  expect_output 'a-b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, '-'::varchar) from (values (sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'us'::varchar))) as tab(x)" {
+  expect_output 'a-b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, '-'::varchar) from (values (sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'us'::varchar))) as tab(x)" {
   expect_output 'a-b'
 }
 
@@ -1912,7 +2120,23 @@ load ../psql_tests.bash
   expect_output 'a | b'
 }
 
+@test "fn: sparql.group_concat_rdfbox(x, ' | '::varchar) from (values (sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a | b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, ' | '::varchar) from (values (sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a | b'
+}
+
 @test "fn: sparql.group_concat_rdfbox(x, ' | '::varchar) from (values (sparql.rdfbox_create_from_langstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_langstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a |  |  | b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, ' | '::varchar) from (values (sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a |  |  | b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, ' | '::varchar) from (values (sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
   expect_output 'a |  |  | b'
 }
 
@@ -1920,7 +2144,23 @@ load ../psql_tests.bash
   expect_output 'a | b | c | d'
 }
 
+@test "fn: sparql.group_concat_rdfbox(x, ' | '::varchar) from (values (sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('c'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('d'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a | b | c | d'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, ' | '::varchar) from (values (sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('c'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('d'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a | b | c | d'
+}
+
 @test "fn: sparql.group_concat_rdfbox(x, ' | '::varchar) from (values (sparql.rdfbox_create_from_langstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_string('b'::varchar))) as tab(x)" {
+  expect_output 'a | b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, ' | '::varchar) from (values (sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_string('b'::varchar))) as tab(x)" {
+  expect_output 'a | b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, ' | '::varchar) from (values (sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_string('b'::varchar))) as tab(x)" {
   expect_output 'a | b'
 }
 
@@ -1928,7 +2168,23 @@ load ../psql_tests.bash
   expect_output 'a | b'
 }
 
+@test "fn: sparql.group_concat_rdfbox(x, ' | '::varchar) from (values (sparql.rdfbox_create_from_string('a'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a | b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, ' | '::varchar) from (values (sparql.rdfbox_create_from_string('a'::varchar)), (sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar))) as tab(x)" {
+  expect_output 'a | b'
+}
+
 @test "fn: sparql.group_concat_rdfbox(x, ' | '::varchar) from (values (sparql.rdfbox_create_from_langstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_langstring('b'::varchar, 'us'::varchar))) as tab(x)" {
+  expect_output 'a | b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, ' | '::varchar) from (values (sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'us'::varchar))) as tab(x)" {
+  expect_output 'a | b'
+}
+
+@test "fn: sparql.group_concat_rdfbox(x, ' | '::varchar) from (values (sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar)), (sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'us'::varchar))) as tab(x)" {
   expect_output 'a | b'
 }
 

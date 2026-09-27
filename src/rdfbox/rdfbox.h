@@ -14,8 +14,11 @@
 /*
  * The order of the types is semantic:
  *
- *   - XSD_BOOLEAN .. TYPED_LITERAL are the literals (rdfbox_is_literal) and XSD_BYTE .. XSD_DOUBLE the numbers
- *     among them (rdfbox_is_numeric),
+ *   - XSD_BOOLEAN .. TYPED_LITERAL are the literals (rdfbox_is_literal), XSD_BYTE .. XSD_DOUBLE the numbers among
+ *     them (rdfbox_is_numeric) and XSD_STRING .. RDF_RTL_LANGSTRING the string literals among them
+ *     (rdfbox_is_string_literal), of which RDF_LANGSTRING .. RDF_RTL_LANGSTRING are language-tagged
+ *     (rdfbox_is_langstring) and RDF_LTR_LANGSTRING .. RDF_RTL_LANGSTRING have a base direction
+ *     (rdfbox_is_dirlangstring),
  *
  *   - the numeric types are listed so that for each promotion target (xsd:short, xsd:int, xsd:long, xsd:integer,
  *     xsd:decimal, xsd:float and xsd:double) the types from XSD_BYTE up to the target are exactly those whose values
@@ -55,13 +58,20 @@ typedef enum
     XSD_DAYTIMEDURATION = 19,
     XSD_STRING = 20,
     RDF_LANGSTRING = 21,
-    USER_LITERAL = 22,
-    TYPED_LITERAL = 23,
-    IRI = 24,
-    IBLANKNODE = 25,
-    SBLANKNODE = 26
+    RDF_LTR_LANGSTRING = 22,
+    RDF_RTL_LANGSTRING = 23,
+    USER_LITERAL = 24,
+    TYPED_LITERAL = 25,
+    IRI = 26,
+    IBLANKNODE = 27,
+    SBLANKNODE = 28
 }
 RdfType;
+
+
+/* the base directions of the directional language-tagged strings, as LANGDIR() returns them */
+#define RDF_LTR_DIRECTION   "ltr"
+#define RDF_RTL_DIRECTION   "rtl"
 
 
 typedef struct
@@ -731,6 +741,68 @@ static inline RdfBox *GetLangStringRdfBox(const char *data, int size, const char
 }
 
 
+static inline RdfBox *GetLtrLangStringRdfBox(const char *data, int size, const char *lang, int lang_size)
+{
+    RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + align_size(size + VARHDRSZ) + lang_size + VARHDRSZ);
+    SET_VARSIZE(result, sizeof(RdfBoxVarlena) + align_size(size + VARHDRSZ) + lang_size + VARHDRSZ);
+    result->header.type = RDF_LTR_LANGSTRING;
+    SET_VARSIZE(result->value, size + VARHDRSZ);
+    memcpy(VARDATA(result->value), data, size);
+    SET_VARSIZE(result->value + align_size(size + VARHDRSZ), lang_size + VARHDRSZ);
+    memcpy(VARDATA(result->value + align_size(size + VARHDRSZ)), lang, lang_size);
+    return (RdfBox *) result;
+}
+
+
+static inline RdfBox *GetRtlLangStringRdfBox(const char *data, int size, const char *lang, int lang_size)
+{
+    RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + align_size(size + VARHDRSZ) + lang_size + VARHDRSZ);
+    SET_VARSIZE(result, sizeof(RdfBoxVarlena) + align_size(size + VARHDRSZ) + lang_size + VARHDRSZ);
+    result->header.type = RDF_RTL_LANGSTRING;
+    SET_VARSIZE(result->value, size + VARHDRSZ);
+    memcpy(VARDATA(result->value), data, size);
+    SET_VARSIZE(result->value + align_size(size + VARHDRSZ), lang_size + VARHDRSZ);
+    memcpy(VARDATA(result->value + align_size(size + VARHDRSZ)), lang, lang_size);
+    return (RdfBox *) result;
+}
+
+
+/*
+ * A string literal of the same kind as the given one -- of the same type and, for a language-tagged string, with
+ * the same language tag -- but with the given lexical form. The string functions build their results this way,
+ * as SPARQL 1.2 has them return a literal of the same kind as their first argument.
+ */
+static inline RdfBox *GetDerivedStringLiteralRdfBox(RdfBox *box, const char *data, int size)
+{
+    switch(box->type)
+    {
+        case XSD_STRING:
+            return GetStringRdfBox(data, size);
+
+        case RDF_LANGSTRING:
+        {
+            VarChar *lang = RdfBoxGetAttachment(box);
+            return GetLangStringRdfBox(data, size, VARDATA(lang), VARSIZE(lang) - VARHDRSZ);
+        }
+
+        case RDF_LTR_LANGSTRING:
+        {
+            VarChar *lang = RdfBoxGetAttachment(box);
+            return GetLtrLangStringRdfBox(data, size, VARDATA(lang), VARSIZE(lang) - VARHDRSZ);
+        }
+
+        case RDF_RTL_LANGSTRING:
+        {
+            VarChar *lang = RdfBoxGetAttachment(box);
+            return GetRtlLangStringRdfBox(data, size, VARDATA(lang), VARSIZE(lang) - VARHDRSZ);
+        }
+
+        default:
+            elog(ERROR, "unexpected rdfbox type");
+    }
+}
+
+
 static inline RdfBox *GetUserLiteralRdfBox(UBox *value, const char *type, int type_size)
 {
     int size = VARSIZE(value);
@@ -1081,6 +1153,24 @@ static inline bool rdfbox_is_numeric(RdfBox *box)
 static inline bool rdfbox_is_literal(RdfBox *box)
 {
     return box->type >= XSD_BOOLEAN && box->type <= TYPED_LITERAL;
+}
+
+
+static inline bool rdfbox_is_string_literal(RdfBox *box)
+{
+    return box->type >= XSD_STRING && box->type <= RDF_RTL_LANGSTRING;
+}
+
+
+static inline bool rdfbox_is_langstring(RdfBox *box)
+{
+    return box->type >= RDF_LANGSTRING && box->type <= RDF_RTL_LANGSTRING;
+}
+
+
+static inline bool rdfbox_is_dirlangstring(RdfBox *box)
+{
+    return box->type >= RDF_LTR_LANGSTRING && box->type <= RDF_RTL_LANGSTRING;
 }
 
 #endif /* RDFBOX_RDFBOX_H_ */

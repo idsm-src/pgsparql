@@ -355,6 +355,8 @@ static int compare_values_of_same_type(RdfBox *left, RdfBox *right)
             return varchar_cmp(RdfBoxGetVarChar(left), RdfBoxGetVarChar(right));
 
         case RDF_LANGSTRING:
+        case RDF_LTR_LANGSTRING:
+        case RDF_RTL_LANGSTRING:
         case TYPED_LITERAL:
         {
             int result = varchar_cmp(RdfBoxGetVarChar(left), RdfBoxGetVarChar(right));

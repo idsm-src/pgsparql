@@ -778,8 +778,24 @@ load ../psql_tests.bash
   expect_output '""@en'
 }
 
+@test "fn: sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar)" {
+  expect_output '""@en--ltr'
+}
+
+@test "fn: sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar)" {
+  expect_output '""@en--rtl'
+}
+
 @test "fn: sparql.rdfbox_create_from_langstring('abc'::varchar, 'cy'::varchar)" {
   expect_output '"abc"@cy'
+}
+
+@test "fn: sparql.rdfbox_create_from_ltrlangstring('abc'::varchar, 'cy'::varchar)" {
+  expect_output '"abc"@cy--ltr'
+}
+
+@test "fn: sparql.rdfbox_create_from_rtllangstring('abc'::varchar, 'cy'::varchar)" {
+  expect_output '"abc"@cy--rtl'
 }
 
 @test "fn: sparql.rdfbox_create_from_userliteral(''::varchar, 'http://example.org'::varchar)" {

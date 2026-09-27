@@ -48,6 +48,14 @@ setup_file() {
   expect_output 't'
 }
 
+@test "fn: sparql.rdfbox_hash(sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar)) = sparql.rdfbox_hash(sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash(sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar)) = sparql.rdfbox_hash(sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar))" {
+  expect_output 't'
+}
+
 @test "fn: sparql.rdfbox_hash(sparql.rdfbox_create_from_int('1'::int4)) <> sparql.rdfbox_hash(sparql.rdfbox_create_from_int('2'::int4))" {
   expect_output 't'
 }
@@ -72,7 +80,31 @@ setup_file() {
   expect_output 't'
 }
 
+@test "fn: sparql.rdfbox_hash(sparql.rdfbox_create_from_string('a'::varchar)) <> sparql.rdfbox_hash(sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash(sparql.rdfbox_create_from_string('a'::varchar)) <> sparql.rdfbox_hash(sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar))" {
+  expect_output 't'
+}
+
 @test "fn: sparql.rdfbox_hash(sparql.rdfbox_create_from_langstring('a'::varchar, 'en'::varchar)) <> sparql.rdfbox_hash(sparql.rdfbox_create_from_langstring('a'::varchar, 'cs'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash(sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar)) <> sparql.rdfbox_hash(sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'cs'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash(sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar)) <> sparql.rdfbox_hash(sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'cs'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash(sparql.rdfbox_create_from_langstring('a'::varchar, 'en'::varchar)) <> sparql.rdfbox_hash(sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.rdfbox_hash(sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar)) <> sparql.rdfbox_hash(sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar))" {
   expect_output 't'
 }
 
@@ -207,8 +239,8 @@ setup_file() {
   expect_output '8'
 }
 
-@test "oc: (select count(*) from (select x from unnest(array[sparql.rdfbox_create_from_string('a'::varchar), sparql.rdfbox_create_from_string('a'::varchar), sparql.rdfbox_create_from_langstring('a'::varchar, 'en'::varchar), sparql.rdfbox_create_from_iri('http://example.org/a'::varchar), sparql.rdfbox_create_from_sblanknode('00000000a'::varchar)]) x group by x) t)" {
-  expect_output '4'
+@test "oc: (select count(*) from (select x from unnest(array[sparql.rdfbox_create_from_string('a'::varchar), sparql.rdfbox_create_from_string('a'::varchar), sparql.rdfbox_create_from_langstring('a'::varchar, 'en'::varchar), sparql.rdfbox_create_from_ltrlangstring('a'::varchar, 'en'::varchar), sparql.rdfbox_create_from_rtllangstring('a'::varchar, 'en'::varchar), sparql.rdfbox_create_from_iri('http://example.org/a'::varchar), sparql.rdfbox_create_from_sblanknode('00000000a'::varchar)]) x group by x) t)" {
+  expect_output '6'
 }
 
 @test "oc: (select count(*) from unnest(array[sparql.rdfbox_create_from_int('1'::int4), sparql.rdfbox_create_from_int('2'::int4), sparql.rdfbox_create_from_decimal('1.0'::decimal)]) a join unnest(array[sparql.rdfbox_create_from_int('1'::int4), sparql.rdfbox_create_from_decimal('1.00'::decimal), sparql.rdfbox_create_from_long('1'::int8)]) b on a operator(sparql.@=) b)" {

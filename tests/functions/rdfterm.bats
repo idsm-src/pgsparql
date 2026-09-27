@@ -66,6 +66,14 @@ load ../psql_tests.bash
   expect_output 'f'
 }
 
+@test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar))" {
+  expect_output 'f'
+}
+
 @test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_typedliteral(''::varchar, 'http://example.org'::varchar))" {
   expect_output 'f'
 }
@@ -157,6 +165,14 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar))" {
   expect_output 'f'
 }
 
@@ -254,6 +270,14 @@ load ../psql_tests.bash
   expect_output 't'
 }
 
+@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar))" {
+  expect_output 't'
+}
+
 @test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_typedliteral(''::varchar, 'http://example.org'::varchar))" {
   expect_output 't'
 }
@@ -345,6 +369,14 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar))" {
   expect_output 'f'
 }
 
@@ -610,6 +642,14 @@ load ../psql_tests.bash
   expect_output 'hello'
 }
 
+@test "fn: sparql.str_rdfbox(sparql.rdfbox_create_from_ltrlangstring('hello'::varchar, 'en'::varchar))" {
+  expect_output 'hello'
+}
+
+@test "fn: sparql.str_rdfbox(sparql.rdfbox_create_from_rtllangstring('hello'::varchar, 'en'::varchar))" {
+  expect_output 'hello'
+}
+
 @test "fn: sparql.str_rdfbox(sparql.rdfbox_create_from_typedliteral('value'::varchar, 'http://example.org'::varchar))" {
   expect_output 'value'
 }
@@ -720,6 +760,14 @@ load ../psql_tests.bash
   expect_output 'en'
 }
 
+@test "fn: sparql.lang_rdfbox(sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar))" {
+  expect_output 'en'
+}
+
+@test "fn: sparql.lang_rdfbox(sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar))" {
+  expect_output 'en'
+}
+
 @test "fn: sparql.lang_rdfbox(sparql.rdfbox_create_from_typedliteral(''::varchar, 'http://example.org'::varchar))" {
   expect_output ''
 }
@@ -746,6 +794,312 @@ load ../psql_tests.bash
 
 @test "fn: sparql.lang_rdfbox(sparql.rdfbox_create_from_sblanknode(''::varchar, '0'::int4))" {
   expect_output '(null)'
+}
+
+
+
+####
+# langdir()
+#
+
+@test "fn: sparql.langdir_rdfbox(sparql.rdfbox_create_from_boolean('f'::bool))" {
+  expect_output ''
+}
+
+@test "fn: sparql.langdir_rdfbox(sparql.rdfbox_create_from_short('0'::int2))" {
+  expect_output ''
+}
+
+@test "fn: sparql.langdir_rdfbox(sparql.rdfbox_create_from_int('0'::int4))" {
+  expect_output ''
+}
+
+@test "fn: sparql.langdir_rdfbox(sparql.rdfbox_create_from_long('0'::int8))" {
+  expect_output ''
+}
+
+@test "fn: sparql.langdir_rdfbox(sparql.rdfbox_create_from_integer('0'::decimal))" {
+  expect_output ''
+}
+
+@test "fn: sparql.langdir_rdfbox(sparql.rdfbox_create_from_decimal('0'::decimal))" {
+  expect_output ''
+}
+
+@test "fn: sparql.langdir_rdfbox(sparql.rdfbox_create_from_float('0'::float4))" {
+  expect_output ''
+}
+
+@test "fn: sparql.langdir_rdfbox(sparql.rdfbox_create_from_double('0'::float8))" {
+  expect_output ''
+}
+
+@test "fn: sparql.langdir_rdfbox(sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z'::sparql.zoneddatetime))" {
+  expect_output ''
+}
+
+@test "fn: sparql.langdir_rdfbox(sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z'::timestamptz, '0'::int4))" {
+  expect_output ''
+}
+
+@test "fn: sparql.langdir_rdfbox(sparql.rdfbox_create_from_date('0001-01-01Z'::sparql.zoneddate))" {
+  expect_output ''
+}
+
+@test "fn: sparql.langdir_rdfbox(sparql.rdfbox_create_from_date('0001-01-01Z'::date, '0'::int4))" {
+  expect_output ''
+}
+
+@test "fn: sparql.langdir_rdfbox(sparql.rdfbox_create_from_daytimeduration('0'::int8))" {
+  expect_output ''
+}
+
+@test "fn: sparql.langdir_rdfbox(sparql.rdfbox_create_from_string(''::varchar))" {
+  expect_output ''
+}
+
+@test "fn: sparql.langdir_rdfbox(sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
+  expect_output ''
+}
+
+@test "fn: sparql.langdir_rdfbox(sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar))" {
+  expect_output 'ltr'
+}
+
+@test "fn: sparql.langdir_rdfbox(sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar))" {
+  expect_output 'rtl'
+}
+
+@test "fn: sparql.langdir_rdfbox(sparql.rdfbox_create_from_typedliteral(''::varchar, 'http://example.org'::varchar))" {
+  expect_output ''
+}
+
+@test "fn: sparql.langdir_rdfbox(sparql.rdfbox_create_from_userliteral('123'::int4, 'http://example.org'::varchar))" {
+  expect_output ''
+}
+
+@test "fn: sparql.langdir_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.langdir_rdfbox(sparql.rdfbox_create_from_iblanknode('0'::int8))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.langdir_rdfbox(sparql.rdfbox_create_from_iblanknode('0'::int4, '0'::int4))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.langdir_rdfbox(sparql.rdfbox_create_from_sblanknode('00000000'::varchar))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.langdir_rdfbox(sparql.rdfbox_create_from_sblanknode(''::varchar, '0'::int4))" {
+  expect_output '(null)'
+}
+
+
+
+####
+# hasLang()
+#
+
+@test "fn: sparql.haslang_rdfbox(sparql.rdfbox_create_from_boolean('f'::bool))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslang_rdfbox(sparql.rdfbox_create_from_short('0'::int2))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslang_rdfbox(sparql.rdfbox_create_from_int('0'::int4))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslang_rdfbox(sparql.rdfbox_create_from_long('0'::int8))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslang_rdfbox(sparql.rdfbox_create_from_integer('0'::decimal))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslang_rdfbox(sparql.rdfbox_create_from_decimal('0'::decimal))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslang_rdfbox(sparql.rdfbox_create_from_float('0'::float4))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslang_rdfbox(sparql.rdfbox_create_from_double('0'::float8))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslang_rdfbox(sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z'::sparql.zoneddatetime))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslang_rdfbox(sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z'::timestamptz, '0'::int4))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslang_rdfbox(sparql.rdfbox_create_from_date('0001-01-01Z'::sparql.zoneddate))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslang_rdfbox(sparql.rdfbox_create_from_date('0001-01-01Z'::date, '0'::int4))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslang_rdfbox(sparql.rdfbox_create_from_daytimeduration('0'::int8))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslang_rdfbox(sparql.rdfbox_create_from_string(''::varchar))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslang_rdfbox(sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.haslang_rdfbox(sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.haslang_rdfbox(sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.haslang_rdfbox(sparql.rdfbox_create_from_typedliteral(''::varchar, 'http://example.org'::varchar))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslang_rdfbox(sparql.rdfbox_create_from_userliteral('123'::int4, 'http://example.org'::varchar))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslang_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslang_rdfbox(sparql.rdfbox_create_from_iblanknode('0'::int8))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslang_rdfbox(sparql.rdfbox_create_from_iblanknode('0'::int4, '0'::int4))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslang_rdfbox(sparql.rdfbox_create_from_sblanknode('00000000'::varchar))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslang_rdfbox(sparql.rdfbox_create_from_sblanknode(''::varchar, '0'::int4))" {
+  expect_output 'f'
+}
+
+
+
+####
+# hasLangdir()
+#
+
+@test "fn: sparql.haslangdir_rdfbox(sparql.rdfbox_create_from_boolean('f'::bool))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslangdir_rdfbox(sparql.rdfbox_create_from_short('0'::int2))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslangdir_rdfbox(sparql.rdfbox_create_from_int('0'::int4))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslangdir_rdfbox(sparql.rdfbox_create_from_long('0'::int8))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslangdir_rdfbox(sparql.rdfbox_create_from_integer('0'::decimal))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslangdir_rdfbox(sparql.rdfbox_create_from_decimal('0'::decimal))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslangdir_rdfbox(sparql.rdfbox_create_from_float('0'::float4))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslangdir_rdfbox(sparql.rdfbox_create_from_double('0'::float8))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslangdir_rdfbox(sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z'::sparql.zoneddatetime))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslangdir_rdfbox(sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z'::timestamptz, '0'::int4))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslangdir_rdfbox(sparql.rdfbox_create_from_date('0001-01-01Z'::sparql.zoneddate))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslangdir_rdfbox(sparql.rdfbox_create_from_date('0001-01-01Z'::date, '0'::int4))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslangdir_rdfbox(sparql.rdfbox_create_from_daytimeduration('0'::int8))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslangdir_rdfbox(sparql.rdfbox_create_from_string(''::varchar))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslangdir_rdfbox(sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslangdir_rdfbox(sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.haslangdir_rdfbox(sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.haslangdir_rdfbox(sparql.rdfbox_create_from_typedliteral(''::varchar, 'http://example.org'::varchar))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslangdir_rdfbox(sparql.rdfbox_create_from_userliteral('123'::int4, 'http://example.org'::varchar))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslangdir_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslangdir_rdfbox(sparql.rdfbox_create_from_iblanknode('0'::int8))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslangdir_rdfbox(sparql.rdfbox_create_from_iblanknode('0'::int4, '0'::int4))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslangdir_rdfbox(sparql.rdfbox_create_from_sblanknode('00000000'::varchar))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.haslangdir_rdfbox(sparql.rdfbox_create_from_sblanknode(''::varchar, '0'::int4))" {
+  expect_output 'f'
 }
 
 
@@ -812,6 +1166,14 @@ load ../psql_tests.bash
 
 @test "fn: sparql.datatype_rdfbox(sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
   expect_output 'http://www.w3.org/1999/02/22-rdf-syntax-ns#langString'
+}
+
+@test "fn: sparql.datatype_rdfbox(sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar))" {
+  expect_output 'http://www.w3.org/1999/02/22-rdf-syntax-ns#dirLangString'
+}
+
+@test "fn: sparql.datatype_rdfbox(sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar))" {
+  expect_output 'http://www.w3.org/1999/02/22-rdf-syntax-ns#dirLangString'
 }
 
 @test "fn: sparql.datatype_rdfbox(sparql.rdfbox_create_from_typedliteral(''::varchar, 'http://example.org'::varchar))" {
@@ -1032,6 +1394,14 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.iri_rdfbox('https://base.org/basedir?basequery#basetag'::varchar, sparql.rdfbox_create_from_ltrlangstring('http://example.org/dir?query#tag'::varchar, 'en'))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.iri_rdfbox('https://base.org/basedir?basequery#basetag'::varchar, sparql.rdfbox_create_from_rtllangstring('http://example.org/dir?query#tag'::varchar, 'en'))" {
+  expect_output '(null)'
+}
+
 
 
 ####
@@ -1123,6 +1493,44 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.strlang_string('value'::varchar, ''::varchar)" {
+  expect_output '(null)'
+}
+
+
+
+####
+# strlangdir()
+#
+
+@test "fn: sparql.strlangdir_string('value'::varchar, 'en-US'::varchar, 'ltr'::varchar)" {
+  expect_output '"value"@en-us--ltr'
+}
+
+@test "fn: sparql.strlangdir_string('value'::varchar, 'en'::varchar, 'ltr'::varchar)" {
+  expect_output '"value"@en--ltr'
+}
+
+@test "fn: sparql.strlangdir_string('value'::varchar, 'ar'::varchar, 'rtl'::varchar)" {
+  expect_output '"value"@ar--rtl'
+}
+
+@test "fn: sparql.strlangdir_string('value'::varchar, 'en'::varchar, 'LTR'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.strlangdir_string('value'::varchar, 'en'::varchar, 'xyz'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.strlangdir_string('value'::varchar, 'en'::varchar, ''::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.strlangdir_string('value'::varchar, 'e'::varchar, 'ltr'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.strlangdir_string('value'::varchar, ''::varchar, 'ltr'::varchar)" {
   expect_output '(null)'
 }
 

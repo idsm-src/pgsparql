@@ -14,7 +14,15 @@ load ../psql_tests.bash
   expect_output '"abc"^^<http://www.w3.org/2001/XMLSchema#string>'
 }
 
-@test "rx: 00000018 00000013 687474703a2f2f6578616d706c652e6f72672f" {
+@test "rx: 00000016 00000001 00000002 41 656e" {
+  expect_output '"A"@en--ltr'
+}
+
+@test "rx: 00000017 00000001 00000002 41 656e" {
+  expect_output '"A"@en--rtl'
+}
+
+@test "rx: 0000001a 00000013 687474703a2f2f6578616d706c652e6f72672f" {
   expect_output '<http://example.org/>'
 }
 
@@ -36,7 +44,7 @@ load ../psql_tests.bash
   expect_error
 }
 
-@test "rx: 0000001b" {
+@test "rx: 0000001d" {
   expect_error
 }
 
@@ -54,11 +62,11 @@ load ../psql_tests.bash
   expect_error
 }
 
-@test "rx: 00000018 ffffffff" {
+@test "rx: 0000001a ffffffff" {
   expect_error
 }
 
-@test "rx: 0000001a ffffffff" {
+@test "rx: 0000001c ffffffff" {
   expect_error
 }
 
@@ -74,11 +82,27 @@ load ../psql_tests.bash
   expect_error
 }
 
+@test "rx: 00000016 ffffffff 00000001 41" {
+  expect_error
+}
+
+@test "rx: 00000016 00000001 ffffffff 41" {
+  expect_error
+}
+
 @test "rx: 00000017 ffffffff 00000001 41" {
   expect_error
 }
 
 @test "rx: 00000017 00000001 ffffffff 41" {
+  expect_error
+}
+
+@test "rx: 00000019 ffffffff 00000001 41" {
+  expect_error
+}
+
+@test "rx: 00000019 00000001 ffffffff 41" {
   expect_error
 }
 
@@ -100,11 +124,11 @@ load ../psql_tests.bash
   expect_error
 }
 
-@test "rx: 00000018 00000010 4142" {
+@test "rx: 0000001a 00000010 4142" {
   expect_error
 }
 
-@test "rx: 0000001a 00000010 4142" {
+@test "rx: 0000001c 00000010 4142" {
   expect_error
 }
 
@@ -112,11 +136,19 @@ load ../psql_tests.bash
   expect_error
 }
 
+@test "rx: 00000016 00000004 00000004 4142" {
+  expect_error
+}
+
 @test "rx: 00000017 00000004 00000004 4142" {
   expect_error
 }
 
-@test "rx: 00000016 7fffffff 00000001 41" {
+@test "rx: 00000019 00000004 00000004 4142" {
+  expect_error
+}
+
+@test "rx: 00000018 7fffffff 00000001 41" {
   expect_error
 }
 
@@ -138,7 +170,7 @@ load ../psql_tests.bash
   expect_error
 }
 
-@test "rx: 00000019 0000000000000001 41" {
+@test "rx: 0000001b 0000000000000001 41" {
   expect_error
 }
 
@@ -149,7 +181,7 @@ load ../psql_tests.bash
 # take twelve bytes, the thirteenth is left over
 #
 
-@test "rx: 00000016 0000000d 00000001 696e7465676572 00 0000002a 00 41" {
+@test "rx: 00000018 0000000d 00000001 696e7465676572 00 0000002a 00 41" {
   expect_error
 }
 
@@ -248,6 +280,14 @@ load ../psql_tests.bash
   expect_error
 }
 
+@test "rx: 00000016 00000001 00000003 41 6373ff" {
+  expect_error
+}
+
+@test "rx: 00000017 00000001 00000003 41 6373ff" {
+  expect_error
+}
+
 @test "rx: 80000000 01 00000002 61ff" {
   expect_error
 }
@@ -263,11 +303,23 @@ load ../psql_tests.bash
   expect_error
 }
 
-@test "rx: 80000018 00000003 616263" {
+@test "rx: 80000015 00000001 00000002 41 656e" {
   expect_error
 }
 
-@test "rx: 8000001a 00000009 3030303030303030 61" {
+@test "rx: 80000016 00000001 00000002 41 656e" {
+  expect_error
+}
+
+@test "rx: 80000017 00000001 00000002 41 656e" {
+  expect_error
+}
+
+@test "rx: 8000001a 00000003 616263" {
+  expect_error
+}
+
+@test "rx: 8000001c 00000009 3030303030303030 61" {
   expect_error
 }
 
@@ -278,7 +330,7 @@ load ../psql_tests.bash
 # nothing else
 #
 
-@test "rx: 0000001a 00000008 3030303030303031" {
+@test "rx: 0000001c 00000008 3030303030303031" {
   expect_output '_:s00000001'
 }
 

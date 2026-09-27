@@ -142,7 +142,31 @@ load ../psql_tests.bash
   expect_output 't'
 }
 
+@test "op: sparql.rdfbox_create_from_ltrlangstring('0'::varchar, 'en'::varchar) operator(sparql.===) sparql.rdfbox_create_from_ltrlangstring('0'::varchar, 'en'::varchar)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_rtllangstring('0'::varchar, 'en'::varchar) operator(sparql.===) sparql.rdfbox_create_from_rtllangstring('0'::varchar, 'en'::varchar)" {
+  expect_output 't'
+}
+
 @test "op: sparql.rdfbox_create_from_langstring('0'::varchar, 'en'::varchar) operator(sparql.===) sparql.rdfbox_create_from_langstring('-1'::varchar, 'en'::varchar)" {
+  expect_output 'f'
+}
+
+@test "op: sparql.rdfbox_create_from_ltrlangstring('0'::varchar, 'en'::varchar) operator(sparql.===) sparql.rdfbox_create_from_ltrlangstring('-1'::varchar, 'en'::varchar)" {
+  expect_output 'f'
+}
+
+@test "op: sparql.rdfbox_create_from_rtllangstring('0'::varchar, 'en'::varchar) operator(sparql.===) sparql.rdfbox_create_from_rtllangstring('-1'::varchar, 'en'::varchar)" {
+  expect_output 'f'
+}
+
+@test "op: sparql.rdfbox_create_from_langstring('0'::varchar, 'en'::varchar) operator(sparql.===) sparql.rdfbox_create_from_ltrlangstring('0'::varchar, 'en'::varchar)" {
+  expect_output 'f'
+}
+
+@test "op: sparql.rdfbox_create_from_ltrlangstring('0'::varchar, 'en'::varchar) operator(sparql.===) sparql.rdfbox_create_from_rtllangstring('0'::varchar, 'en'::varchar)" {
   expect_output 'f'
 }
 
@@ -195,6 +219,14 @@ load ../psql_tests.bash
 }
 
 @test "op: sparql.rdfbox_create_from_string('0'::varchar) operator(sparql.===) sparql.rdfbox_create_from_langstring('-1'::varchar, 'en'::varchar)" {
+  expect_output 'f'
+}
+
+@test "op: sparql.rdfbox_create_from_string('0'::varchar) operator(sparql.===) sparql.rdfbox_create_from_ltrlangstring('-1'::varchar, 'en'::varchar)" {
+  expect_output 'f'
+}
+
+@test "op: sparql.rdfbox_create_from_string('0'::varchar) operator(sparql.===) sparql.rdfbox_create_from_rtllangstring('-1'::varchar, 'en'::varchar)" {
   expect_output 'f'
 }
 
@@ -435,6 +467,42 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "op: sparql.rdfbox_create_from_string('b'::varchar) operator(sparql.=) sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_string('b'::varchar) operator(sparql.=) sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_langstring('b'::varchar, 'en'::varchar) operator(sparql.=) sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar) operator(sparql.=) sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar) operator(sparql.=) sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar) operator(sparql.=) sparql.rdfbox_create_from_ltrlangstring('c'::varchar, 'en'::varchar)" {
+  expect_output 'f'
+}
+
+@test "op: sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar) operator(sparql.=) sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'cy'::varchar)" {
+  expect_output 'f'
+}
+
+@test "op: sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar) operator(sparql.=) sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar) operator(sparql.=) sparql.rdfbox_create_from_rtllangstring('c'::varchar, 'en'::varchar)" {
+  expect_output 'f'
+}
+
 @test "op: sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar) operator(sparql.=) sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar)" {
   expect_output 't'
 }
@@ -616,6 +684,42 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "op: sparql.rdfbox_create_from_string('b'::varchar) operator(sparql.!=) sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_string('b'::varchar) operator(sparql.!=) sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_langstring('b'::varchar, 'en'::varchar) operator(sparql.!=) sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar) operator(sparql.!=) sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar) operator(sparql.!=) sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar)" {
+  expect_output 'f'
+}
+
+@test "op: sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar) operator(sparql.!=) sparql.rdfbox_create_from_ltrlangstring('c'::varchar, 'en'::varchar)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar) operator(sparql.!=) sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'cy'::varchar)" {
+  expect_output 't'
+}
+
+@test "op: sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar) operator(sparql.!=) sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar)" {
+  expect_output 'f'
+}
+
+@test "op: sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar) operator(sparql.!=) sparql.rdfbox_create_from_rtllangstring('c'::varchar, 'en'::varchar)" {
+  expect_output 't'
+}
+
 @test "op: sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar) operator(sparql.!=) sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar)" {
   expect_output 'f'
 }
@@ -794,6 +898,26 @@ load ../psql_tests.bash
 }
 
 @test "op: sparql.rdfbox_create_from_string('b'::varchar) operator(sparql.<) sparql.rdfbox_create_from_langstring('b'::varchar, 'en'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_string('b'::varchar) operator(sparql.<) sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_string('b'::varchar) operator(sparql.<) sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_langstring('b'::varchar, 'en'::varchar) operator(sparql.<) sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar) operator(sparql.<) sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar) operator(sparql.<) sparql.rdfbox_create_from_ltrlangstring('c'::varchar, 'en'::varchar)" {
   expect_output '(null)'
 }
 
@@ -978,6 +1102,26 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "op: sparql.rdfbox_create_from_string('b'::varchar) operator(sparql.>) sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_string('b'::varchar) operator(sparql.>) sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_langstring('b'::varchar, 'en'::varchar) operator(sparql.>) sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar) operator(sparql.>) sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar) operator(sparql.>) sparql.rdfbox_create_from_ltrlangstring('c'::varchar, 'en'::varchar)" {
+  expect_output '(null)'
+}
+
 @test "op: sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar) operator(sparql.>) sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar)" {
   expect_output 'f'
 }
@@ -1159,6 +1303,26 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "op: sparql.rdfbox_create_from_string('b'::varchar) operator(sparql.<=) sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_string('b'::varchar) operator(sparql.<=) sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_langstring('b'::varchar, 'en'::varchar) operator(sparql.<=) sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar) operator(sparql.<=) sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar) operator(sparql.<=) sparql.rdfbox_create_from_ltrlangstring('c'::varchar, 'en'::varchar)" {
+  expect_output '(null)'
+}
+
 @test "op: sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar) operator(sparql.<=) sparql.rdfbox_create_from_userliteral('0'::int4, 'http://example.org'::varchar)" {
   expect_output 't'
 }
@@ -1337,6 +1501,26 @@ load ../psql_tests.bash
 }
 
 @test "op: sparql.rdfbox_create_from_string('b'::varchar) operator(sparql.>=) sparql.rdfbox_create_from_langstring('b'::varchar, 'en'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_string('b'::varchar) operator(sparql.>=) sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_string('b'::varchar) operator(sparql.>=) sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_langstring('b'::varchar, 'en'::varchar) operator(sparql.>=) sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar) operator(sparql.>=) sparql.rdfbox_create_from_rtllangstring('b'::varchar, 'en'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: sparql.rdfbox_create_from_ltrlangstring('b'::varchar, 'en'::varchar) operator(sparql.>=) sparql.rdfbox_create_from_ltrlangstring('c'::varchar, 'en'::varchar)" {
   expect_output '(null)'
 }
 

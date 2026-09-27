@@ -14,6 +14,14 @@ load ../psql_tests.bash
   expect_output '"chat"@fr'
 }
 
+@test "rs: '''chat''@fr--ltr'::sparql.rdfbox" {
+  expect_output '"chat"@fr--ltr'
+}
+
+@test "rs: '''chat''@fr--rtl'::sparql.rdfbox" {
+  expect_output '"chat"@fr--rtl'
+}
+
 @test "rs: '\"xyz\"^^<http://example.org/ns/userDatatype>'::sparql.rdfbox" {
   expect_output '"xyz"^^<http://example.org/ns/userDatatype>'
 }

@@ -31,6 +31,7 @@
 #define IRI_BEGIN       "<"
 #define IRI_END         ">"
 #define LANG_DELIM      "@"
+#define DIR_DELIM       "--"
 #define TYPE_DELIM      "^^"
 #define VALUE_DELIM     "\""
 #define UVALUE_DELIM    "'"
@@ -293,11 +294,22 @@ Datum rdfbox_input(PG_FUNCTION_ARGS)
         {
             char *lang = str + i + 1;
             size_t lang_size = length - i - 1;
+            char *dir = strstr(lang, DIR_DELIM);
+
+            if(dir != NULL)
+                lang_size = dir - lang;
 
             if(!check_language_tag(lang, lang_size))
                 ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid language tag")));
 
-            box = GetLangStringRdfBox(data, size, lang, lang_size);
+            if(dir == NULL)
+                box = GetLangStringRdfBox(data, size, lang, lang_size);
+            else if(strcmp(dir + STRLEN(DIR_DELIM), RDF_LTR_DIRECTION) == 0)
+                box = GetLtrLangStringRdfBox(data, size, lang, lang_size);
+            else if(strcmp(dir + STRLEN(DIR_DELIM), RDF_RTL_DIRECTION) == 0)
+                box = GetRtlLangStringRdfBox(data, size, lang, lang_size);
+            else
+                ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid base direction")));
         }
         else if(str[i] == '^' && str[i + 1] == '^' && str[i + 2] == '<' && str[length - 1] == '>' && begin == '\'')
         {
@@ -884,6 +896,29 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
             break;
         }
 
+        case RDF_LTR_LANGSTRING:
+        case RDF_RTL_LANGSTRING:
+        {
+            VarChar *value = RdfBoxGetVarChar(box);
+            int size = VARSIZE(value);
+            VarChar *lang = RdfBoxGetAttachment(box);
+            const char *dir = box->type == RDF_LTR_LANGSTRING ? RDF_LTR_DIRECTION : RDF_RTL_DIRECTION;
+
+            int value_size = size - VARHDRSZ;
+            int lang_size = VARSIZE(lang) - VARHDRSZ;
+            int dir_size = strlen(dir);
+            int escaped_size = strlen_escaped(VARDATA(value), value_size);
+
+            result = (char *) palloc0(PREFIX_SIZE + escaped_size + STRLEN(VALUE_DELIM LANG_DELIM) + lang_size + STRLEN(DIR_DELIM) + dir_size + 1);
+            memcpy(result, PREFIX, PREFIX_SIZE);
+            memcpy_escaped(result + PREFIX_SIZE, VARDATA(value), value_size);
+            memcpy(result + PREFIX_SIZE + escaped_size, VALUE_DELIM LANG_DELIM, STRLEN(VALUE_DELIM LANG_DELIM));
+            memcpy(result + PREFIX_SIZE + escaped_size + STRLEN(VALUE_DELIM LANG_DELIM), VARDATA(lang), lang_size);
+            memcpy(result + PREFIX_SIZE + escaped_size + STRLEN(VALUE_DELIM LANG_DELIM) + lang_size, DIR_DELIM, STRLEN(DIR_DELIM));
+            memcpy(result + PREFIX_SIZE + escaped_size + STRLEN(VALUE_DELIM LANG_DELIM) + lang_size + STRLEN(DIR_DELIM), dir, dir_size);
+            break;
+        }
+
         case USER_LITERAL:
         {
             UBox *ubox = RdfBoxGetUBox(box);
@@ -985,8 +1020,8 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
      * Ignoring the bit for the others would make rdfbox_send(rdfbox_recv(x))
      * differ from x, so reject it instead.
      */
-    if(lexical && (type == XSD_STRING || type == RDF_LANGSTRING || type == TYPED_LITERAL || type == IRI ||
-            type == IBLANKNODE || type == SBLANKNODE))
+    if(lexical && (type == XSD_STRING || type == RDF_LANGSTRING || type == RDF_LTR_LANGSTRING || type == RDF_RTL_LANGSTRING ||
+            type == TYPED_LITERAL || type == IRI || type == IBLANKNODE || type == SBLANKNODE))
         ereport(ERROR, (errcode(ERRCODE_INVALID_BINARY_REPRESENTATION), errmsg("rdfbox of type %u cannot carry a lexical form", type)));
 
     RdfBox *box = NULL;
@@ -1391,6 +1426,30 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
             break;
         }
 
+        case RDF_LTR_LANGSTRING:
+        {
+            int32 value_size = pq_getmsgint(buf, sizeof(int32));
+            int32 lang_size = pq_getmsgint(buf, sizeof(int32));
+
+            const char *value = getmsgtext(buf, value_size);
+            const char *lang = getmsglang(buf, lang_size);
+
+            box = GetLtrLangStringRdfBox(value, value_size, lang, lang_size);
+            break;
+        }
+
+        case RDF_RTL_LANGSTRING:
+        {
+            int32 value_size = pq_getmsgint(buf, sizeof(int32));
+            int32 lang_size = pq_getmsgint(buf, sizeof(int32));
+
+            const char *value = getmsgtext(buf, value_size);
+            const char *lang = getmsglang(buf, lang_size);
+
+            box = GetRtlLangStringRdfBox(value, value_size, lang, lang_size);
+            break;
+        }
+
         case USER_LITERAL:
         {
             int32 value_size = pq_getmsgint(buf, sizeof(int32));
@@ -1724,6 +1783,8 @@ Datum rdfbox_send(PG_FUNCTION_ARGS)
         }
 
         case RDF_LANGSTRING:
+        case RDF_LTR_LANGSTRING:
+        case RDF_RTL_LANGSTRING:
         {
             VarChar *value = RdfBoxGetVarChar(box);
             VarChar *lang = RdfBoxGetAttachment(box);

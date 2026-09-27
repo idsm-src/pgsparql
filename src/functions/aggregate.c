@@ -1193,7 +1193,7 @@ Datum group_concat_rdfbox_accum(PG_FUNCTION_ARGS)
         initStringInfo(&state->buffer);
     }
 
-    if(box != NULL && (box->type == RDF_LANGSTRING || box->type == XSD_STRING))
+    if(box != NULL && rdfbox_is_string_literal(box))
     {
         VarChar *value = RdfBoxGetVarChar(box);
         appendBinaryStringInfo(&state->buffer, VARDATA(value), VARSIZE(value) - VARHDRSZ);
