@@ -87,7 +87,7 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_typedliteral('true'::varchar, 'http://www.w3.org/2001/XMLSchema#int'::varchar))" {
-  expect_output 'f'
+  expect_output '(null)'
 }
 
 @test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_userliteral('true'::varchar, 'http://example.org'::varchar))" {
@@ -181,13 +181,13 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.ebv_rdfbox('\"abc\"^^<http://www.w3.org/2001/XMLSchema#unsignedByte>'::sparql.rdfbox)" {
-  expect_output 'f'
+  expect_output '(null)'
 }
 
 @test "fn: sparql.ebv_rdfbox('\"256\"^^<http://www.w3.org/2001/XMLSchema#unsignedByte>'::sparql.rdfbox)" {
-  expect_output 'f'
+  expect_output '(null)'
 }
 
 @test "fn: sparql.ebv_rdfbox('\"0\"^^<http://www.w3.org/2001/XMLSchema#positiveInteger>'::sparql.rdfbox)" {
-  expect_output 'f'
+  expect_output '(null)'
 }
