@@ -19,12 +19,12 @@ static inline bool rdfbox_is_nan(RdfBox *box)
 
 
 /*
- * The function sameValue() of SPARQL 1.2 (section 17.4.2.2), which defines the operator = on the pairs of RDF terms
- * that no specific row of the operator mapping covers. On IRIs, blank nodes and literals it agrees with the operator
- * = of this file except for NaN: two NaN values, of xsd:float or xsd:double in any combination, are the same value,
- * whereas op:numeric-equal never holds for a NaN. Two triple terms are compared component by component, and an
- * error (NULL) of any component is an error of the whole. The operator = recurs into sameValue() when it is
- * applied to two triple terms, rather than into itself.
+ * The function sameValue() of SPARQL 1.2 (section 17.4.2.2) as the section defines it, behind rdfbox_is_same_value_as()
+ * only: the operator = of this file does not use it, because the operator mapping covers every pair of terms the
+ * function would decide differently. On IRIs, blank nodes and literals it agrees with the operator = except for NaN:
+ * two NaN values, of xsd:float or xsd:double in any combination, are the same value, whereas op:numeric-equal never
+ * holds for a NaN. Two triple terms are compared component by component, and an error (NULL) of any component is an
+ * error of the whole, whereas the operator = on two triple terms follows the operator mapping, see tripleterm_is_equal_to().
  */
 static NullableDatum same_value(RdfBox *left, RdfBox *right)
 {
@@ -48,6 +48,28 @@ static NullableDatum same_value(RdfBox *left, RdfBox *right)
         return NULLABLE_DATUM(BoolGetDatum(true));
 
     return NullableFunctionCall2(rdfbox_is_equal_to, RdfBoxGetDatum(left), RdfBoxGetDatum(right));
+}
+
+
+/*
+ * The operator = on two triple terms as the operator mapping of SPARQL 1.2 defines it: (A.subject = B.subject) &&
+ * (A.predicate = B.predicate) && (A.object = B.object), with the three-valued && of SPARQL: a component that differs
+ * decides even when another one cannot be compared, otherwise an error (NULL) of a component is an error of the whole.
+ * The components are compared by the operator = itself, so two NaN objects are not equal, unlike in sameValue().
+ */
+static NullableDatum tripleterm_is_equal_to(RdfBox *left, RdfBox *right)
+{
+    NullableDatum subject = NullableFunctionCall2(rdfbox_is_equal_to, RdfBoxGetDatum(RdfBoxGetTripleTermSubject(left)), RdfBoxGetDatum(RdfBoxGetTripleTermSubject(right)));
+    NullableDatum object = NullableFunctionCall2(rdfbox_is_equal_to, RdfBoxGetDatum(RdfBoxGetTripleTermObject(left)), RdfBoxGetDatum(RdfBoxGetTripleTermObject(right)));
+    bool predicate = varchar_eq(RdfBoxGetTripleTermPredicate(left), RdfBoxGetTripleTermPredicate(right));
+
+    if(!predicate || (!subject.isnull && !DatumGetBool(subject.value)) || (!object.isnull && !DatumGetBool(object.value)))
+        return NULLABLE_DATUM(BoolGetDatum(false));
+
+    if(subject.isnull || object.isnull)
+        return NULL_DATUM;
+
+    return NULLABLE_DATUM(BoolGetDatum(true));
 }
 
 
@@ -81,6 +103,13 @@ Datum rdfbox_is_same_value_as(PG_FUNCTION_ARGS)
 }
 
 
+/*
+ * The operator = of SPARQL 1.2 (and != as its negation): the rows of the operator mapping for the pairs of types they
+ * cover, including two triple terms (see tripleterm_is_equal_to()), sameValue() for the other pairs. Two literals of
+ * different datatypes handled here are different values, whereas a typed literal, whose datatype is not handled here
+ * or whose lexical form is invalid, equals the same term only and cannot be compared (NULL) with any other literal.
+ * Unlike sameValue(), op:numeric-equal never holds for a NaN.
+ */
 PG_FUNCTION_INFO_V1(rdfbox_is_equal_to);
 Datum rdfbox_is_equal_to(PG_FUNCTION_ARGS)
 {
@@ -163,7 +192,7 @@ Datum rdfbox_is_equal_to(PG_FUNCTION_ARGS)
         bool equal;
 
         if(!varchar_eq(RdfBoxGetAttachment(left), RdfBoxGetAttachment(right)))
-            PG_RETURN_NULL();
+            PG_RETURN_BOOL(false);
 
         if(!ubox_equals(NULL, RdfBoxGetUBox(left), RdfBoxGetUBox(right), &equal))
             PG_RETURN_NULL();
@@ -179,7 +208,12 @@ Datum rdfbox_is_equal_to(PG_FUNCTION_ARGS)
     }
     else if(rdfbox_is_literal(left) && rdfbox_is_literal(right))
     {
-        PG_RETURN_NULL();
+        /* a typed literal has no known value: its datatype is not handled here, or its lexical form is invalid */
+        if(left->type == TYPED_LITERAL || right->type == TYPED_LITERAL)
+            PG_RETURN_NULL();
+
+        /* literals of two different handled datatypes are different values */
+        PG_RETURN_BOOL(false);
     }
     else if(left->type == IRI && right->type == IRI)
     {
@@ -197,7 +231,7 @@ Datum rdfbox_is_equal_to(PG_FUNCTION_ARGS)
     }
     else if(left->type == TRIPLE_TERM && right->type == TRIPLE_TERM)
     {
-        PG_RETURN(same_value(left, right));
+        PG_RETURN(tripleterm_is_equal_to(left, right));
     }
     else
     {
@@ -288,7 +322,7 @@ Datum rdfbox_is_not_equal_to(PG_FUNCTION_ARGS)
         bool equal;
 
         if(!varchar_eq(RdfBoxGetAttachment(left), RdfBoxGetAttachment(right)))
-            PG_RETURN_NULL();
+            PG_RETURN_BOOL(true);
 
         if(!ubox_equals(NULL, RdfBoxGetUBox(left), RdfBoxGetUBox(right), &equal))
             PG_RETURN_NULL();
@@ -304,7 +338,12 @@ Datum rdfbox_is_not_equal_to(PG_FUNCTION_ARGS)
     }
     else if(rdfbox_is_literal(left) && rdfbox_is_literal(right))
     {
-        PG_RETURN_NULL();
+        /* a typed literal has no known value: its datatype is not handled here, or its lexical form is invalid */
+        if(left->type == TYPED_LITERAL || right->type == TYPED_LITERAL)
+            PG_RETURN_NULL();
+
+        /* literals of two different handled datatypes are different values */
+        PG_RETURN_BOOL(true);
     }
     else if(left->type == IRI && right->type == IRI)
     {
@@ -322,7 +361,7 @@ Datum rdfbox_is_not_equal_to(PG_FUNCTION_ARGS)
     }
     else if(left->type == TRIPLE_TERM && right->type == TRIPLE_TERM)
     {
-        NullableDatum result = same_value(left, right);
+        NullableDatum result = tripleterm_is_equal_to(left, right);
 
         if(result.isnull)
             PG_RETURN_NULL();
