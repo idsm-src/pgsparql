@@ -222,8 +222,8 @@ static char *iri_remove_dot_segments(char *path)
 }
 
 
-PG_FUNCTION_INFO_V1(is_iri_rdfbox);
-Datum is_iri_rdfbox(PG_FUNCTION_ARGS)
+PG_FUNCTION_INFO_V1(isiri_rdfbox);
+Datum isiri_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
     bool result = box->type == IRI;
@@ -231,8 +231,8 @@ Datum is_iri_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
-PG_FUNCTION_INFO_V1(is_blank_rdfbox);
-Datum is_blank_rdfbox(PG_FUNCTION_ARGS)
+PG_FUNCTION_INFO_V1(isblank_rdfbox);
+Datum isblank_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
     bool result = rdfbox_is_blanknode(box);
@@ -240,8 +240,8 @@ Datum is_blank_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
-PG_FUNCTION_INFO_V1(is_literal_rdfbox);
-Datum is_literal_rdfbox(PG_FUNCTION_ARGS)
+PG_FUNCTION_INFO_V1(isliteral_rdfbox);
+Datum isliteral_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
     bool result = rdfbox_is_literal(box);
@@ -249,8 +249,8 @@ Datum is_literal_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
-PG_FUNCTION_INFO_V1(is_numeric_rdfbox);
-Datum is_numeric_rdfbox(PG_FUNCTION_ARGS)
+PG_FUNCTION_INFO_V1(isnumeric_rdfbox);
+Datum isnumeric_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
     bool result = rdfbox_is_numeric(box);
@@ -258,8 +258,8 @@ Datum is_numeric_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
-PG_FUNCTION_INFO_V1(is_tripleterm_rdfbox);
-Datum is_tripleterm_rdfbox(PG_FUNCTION_ARGS)
+PG_FUNCTION_INFO_V1(istriple_rdfbox);
+Datum istriple_rdfbox(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
     bool result = box->type == TRIPLE_TERM;

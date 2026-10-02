@@ -6,103 +6,125 @@ load ../psql_tests.bash
 # isIRI()
 #
 
-@test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_boolean('f'::bool))" {
+@test "fn: sparql.isiri_rdfbox(sparql.rdfbox_create_from_boolean('f'::bool))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_short('0'::int2))" {
+@test "fn: sparql.isiri_rdfbox(sparql.rdfbox_create_from_short('0'::int2))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_int('0'::int4))" {
+@test "fn: sparql.isiri_rdfbox(sparql.rdfbox_create_from_int('0'::int4))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_long('0'::int8))" {
+@test "fn: sparql.isiri_rdfbox(sparql.rdfbox_create_from_long('0'::int8))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_integer('0'::decimal))" {
+@test "fn: sparql.isiri_rdfbox(sparql.rdfbox_create_from_integer('0'::decimal))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_decimal('0'::decimal))" {
+@test "fn: sparql.isiri_rdfbox(sparql.rdfbox_create_from_decimal('0'::decimal))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_float('0'::float4))" {
+@test "fn: sparql.isiri_rdfbox(sparql.rdfbox_create_from_float('0'::float4))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_double('0'::float8))" {
+@test "fn: sparql.isiri_rdfbox(sparql.rdfbox_create_from_double('0'::float8))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z'::sparql.zoneddatetime))" {
+@test "fn: sparql.isiri_rdfbox(sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z'::sparql.zoneddatetime))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z'::timestamptz, '0'::int4))" {
+@test "fn: sparql.isiri_rdfbox(sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z'::timestamptz, '0'::int4))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_date('0001-01-01Z'::sparql.zoneddate))" {
+@test "fn: sparql.isiri_rdfbox(sparql.rdfbox_create_from_date('0001-01-01Z'::sparql.zoneddate))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_date('0001-01-01Z'::date, '0'::int4))" {
+@test "fn: sparql.isiri_rdfbox(sparql.rdfbox_create_from_date('0001-01-01Z'::date, '0'::int4))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_daytimeduration('0'::int8))" {
+@test "fn: sparql.isiri_rdfbox(sparql.rdfbox_create_from_daytimeduration('0'::int8))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_string(''::varchar))" {
+@test "fn: sparql.isiri_rdfbox(sparql.rdfbox_create_from_string(''::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
+@test "fn: sparql.isiri_rdfbox(sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar))" {
+@test "fn: sparql.isiri_rdfbox(sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar))" {
+@test "fn: sparql.isiri_rdfbox(sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_typedliteral(''::varchar, 'http://example.org'::varchar))" {
+@test "fn: sparql.isiri_rdfbox(sparql.rdfbox_create_from_typedliteral(''::varchar, 'http://example.org'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_userliteral('123'::int4, 'http://example.org'::varchar))" {
+@test "fn: sparql.isiri_rdfbox(sparql.rdfbox_create_from_userliteral('123'::int4, 'http://example.org'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
+@test "fn: sparql.isiri_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_iblanknode('0'::int8))" {
+@test "fn: sparql.isiri_rdfbox(sparql.rdfbox_create_from_iblanknode('0'::int8))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_iblanknode('0'::int4, '0'::int4))" {
+@test "fn: sparql.isiri_rdfbox(sparql.rdfbox_create_from_iblanknode('0'::int4, '0'::int4))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_sblanknode('00000000'::varchar))" {
+@test "fn: sparql.isiri_rdfbox(sparql.rdfbox_create_from_sblanknode('00000000'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_sblanknode(''::varchar, '0'::int4))" {
+@test "fn: sparql.isiri_rdfbox(sparql.rdfbox_create_from_sblanknode(''::varchar, '0'::int4))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_iri_rdfbox(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar)))" {
+@test "fn: sparql.isiri_rdfbox(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar)))" {
+  expect_output 'f'
+}
+
+
+
+####
+# isURI()
+#
+
+@test "fn: sparql.isuri_rdfbox(sparql.rdfbox_create_from_string(''::varchar))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.isuri_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
+  expect_output 't'
+}
+
+@test "fn: sparql.isuri_rdfbox(sparql.rdfbox_create_from_iblanknode('0'::int8))" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.isuri_rdfbox(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar)))" {
   expect_output 'f'
 }
 
@@ -112,103 +134,103 @@ load ../psql_tests.bash
 # isBlank()
 #
 
-@test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_boolean('f'::bool))" {
+@test "fn: sparql.isblank_rdfbox(sparql.rdfbox_create_from_boolean('f'::bool))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_short('0'::int2))" {
+@test "fn: sparql.isblank_rdfbox(sparql.rdfbox_create_from_short('0'::int2))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_int('0'::int4))" {
+@test "fn: sparql.isblank_rdfbox(sparql.rdfbox_create_from_int('0'::int4))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_long('0'::int8))" {
+@test "fn: sparql.isblank_rdfbox(sparql.rdfbox_create_from_long('0'::int8))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_integer('0'::decimal))" {
+@test "fn: sparql.isblank_rdfbox(sparql.rdfbox_create_from_integer('0'::decimal))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_decimal('0'::decimal))" {
+@test "fn: sparql.isblank_rdfbox(sparql.rdfbox_create_from_decimal('0'::decimal))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_float('0'::float4))" {
+@test "fn: sparql.isblank_rdfbox(sparql.rdfbox_create_from_float('0'::float4))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_double('0'::float8))" {
+@test "fn: sparql.isblank_rdfbox(sparql.rdfbox_create_from_double('0'::float8))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z'::sparql.zoneddatetime))" {
+@test "fn: sparql.isblank_rdfbox(sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z'::sparql.zoneddatetime))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z'::timestamptz, '0'::int4))" {
+@test "fn: sparql.isblank_rdfbox(sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z'::timestamptz, '0'::int4))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_date('0001-01-01Z'::sparql.zoneddate))" {
+@test "fn: sparql.isblank_rdfbox(sparql.rdfbox_create_from_date('0001-01-01Z'::sparql.zoneddate))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_date('0001-01-01Z'::date, '0'::int4))" {
+@test "fn: sparql.isblank_rdfbox(sparql.rdfbox_create_from_date('0001-01-01Z'::date, '0'::int4))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_daytimeduration('0'::int8))" {
+@test "fn: sparql.isblank_rdfbox(sparql.rdfbox_create_from_daytimeduration('0'::int8))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_string(''::varchar))" {
+@test "fn: sparql.isblank_rdfbox(sparql.rdfbox_create_from_string(''::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
+@test "fn: sparql.isblank_rdfbox(sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar))" {
+@test "fn: sparql.isblank_rdfbox(sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar))" {
+@test "fn: sparql.isblank_rdfbox(sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_typedliteral(''::varchar, 'http://example.org'::varchar))" {
+@test "fn: sparql.isblank_rdfbox(sparql.rdfbox_create_from_typedliteral(''::varchar, 'http://example.org'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_userliteral('123'::int4, 'http://example.org'::varchar))" {
+@test "fn: sparql.isblank_rdfbox(sparql.rdfbox_create_from_userliteral('123'::int4, 'http://example.org'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
+@test "fn: sparql.isblank_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_iblanknode('0'::int8))" {
+@test "fn: sparql.isblank_rdfbox(sparql.rdfbox_create_from_iblanknode('0'::int8))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_iblanknode('0'::int4, '0'::int4))" {
+@test "fn: sparql.isblank_rdfbox(sparql.rdfbox_create_from_iblanknode('0'::int4, '0'::int4))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_sblanknode('00000000'::varchar))" {
+@test "fn: sparql.isblank_rdfbox(sparql.rdfbox_create_from_sblanknode('00000000'::varchar))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_sblanknode(''::varchar, '0'::int4))" {
+@test "fn: sparql.isblank_rdfbox(sparql.rdfbox_create_from_sblanknode(''::varchar, '0'::int4))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_blank_rdfbox(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar)))" {
+@test "fn: sparql.isblank_rdfbox(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar)))" {
   expect_output 'f'
 }
 
@@ -218,103 +240,103 @@ load ../psql_tests.bash
 # isLiteral()
 #
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_boolean('f'::bool))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_boolean('f'::bool))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_short('0'::int2))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_short('0'::int2))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_int('0'::int4))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_int('0'::int4))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_long('0'::int8))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_long('0'::int8))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_integer('0'::decimal))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_integer('0'::decimal))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_decimal('0'::decimal))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_decimal('0'::decimal))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_float('0'::float4))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_float('0'::float4))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_double('0'::float8))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_double('0'::float8))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z'::sparql.zoneddatetime))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z'::sparql.zoneddatetime))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z'::timestamptz, '0'::int4))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z'::timestamptz, '0'::int4))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_date('0001-01-01Z'::sparql.zoneddate))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_date('0001-01-01Z'::sparql.zoneddate))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_date('0001-01-01Z'::date, '0'::int4))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_date('0001-01-01Z'::date, '0'::int4))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_daytimeduration('0'::int8))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_daytimeduration('0'::int8))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_string(''::varchar))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_string(''::varchar))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_typedliteral(''::varchar, 'http://example.org'::varchar))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_typedliteral(''::varchar, 'http://example.org'::varchar))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_userliteral('123'::int4, 'http://example.org'::varchar))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_userliteral('123'::int4, 'http://example.org'::varchar))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_iblanknode('0'::int8))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_iblanknode('0'::int8))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_iblanknode('0'::int4, '0'::int4))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_iblanknode('0'::int4, '0'::int4))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_sblanknode('00000000'::varchar))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_sblanknode('00000000'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_sblanknode(''::varchar, '0'::int4))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_sblanknode(''::varchar, '0'::int4))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar)))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar)))" {
   expect_output 'f'
 }
 
@@ -324,103 +346,103 @@ load ../psql_tests.bash
 # isNumeric()
 #
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_boolean('f'::bool))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_boolean('f'::bool))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_short('0'::int2))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_short('0'::int2))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_int('0'::int4))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_int('0'::int4))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_long('0'::int8))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_long('0'::int8))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_integer('0'::decimal))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_integer('0'::decimal))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_decimal('0'::decimal))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_decimal('0'::decimal))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_float('0'::float4))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_float('0'::float4))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_double('0'::float8))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_double('0'::float8))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z'::sparql.zoneddatetime))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z'::sparql.zoneddatetime))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z'::timestamptz, '0'::int4))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z'::timestamptz, '0'::int4))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_date('0001-01-01Z'::sparql.zoneddate))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_date('0001-01-01Z'::sparql.zoneddate))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_date('0001-01-01Z'::date, '0'::int4))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_date('0001-01-01Z'::date, '0'::int4))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_daytimeduration('0'::int8))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_daytimeduration('0'::int8))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_string(''::varchar))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_string(''::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_typedliteral(''::varchar, 'http://example.org'::varchar))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_typedliteral(''::varchar, 'http://example.org'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_userliteral('123'::int4, 'http://example.org'::varchar))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_userliteral('123'::int4, 'http://example.org'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_iblanknode('0'::int8))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_iblanknode('0'::int8))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_iblanknode('0'::int4, '0'::int4))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_iblanknode('0'::int4, '0'::int4))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_sblanknode('00000000'::varchar))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_sblanknode('00000000'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_sblanknode(''::varchar, '0'::int4))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_sblanknode(''::varchar, '0'::int4))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar)))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar)))" {
   expect_output 'f'
 }
 
@@ -430,115 +452,115 @@ load ../psql_tests.bash
 # isTriple()
 #
 
-@test "fn: sparql.is_tripleterm_rdfbox(sparql.rdfbox_create_from_boolean('f'::bool))" {
+@test "fn: sparql.istriple_rdfbox(sparql.rdfbox_create_from_boolean('f'::bool))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_tripleterm_rdfbox(sparql.rdfbox_create_from_short('0'::int2))" {
+@test "fn: sparql.istriple_rdfbox(sparql.rdfbox_create_from_short('0'::int2))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_tripleterm_rdfbox(sparql.rdfbox_create_from_int('0'::int4))" {
+@test "fn: sparql.istriple_rdfbox(sparql.rdfbox_create_from_int('0'::int4))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_tripleterm_rdfbox(sparql.rdfbox_create_from_long('0'::int8))" {
+@test "fn: sparql.istriple_rdfbox(sparql.rdfbox_create_from_long('0'::int8))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_tripleterm_rdfbox(sparql.rdfbox_create_from_integer('0'::decimal))" {
+@test "fn: sparql.istriple_rdfbox(sparql.rdfbox_create_from_integer('0'::decimal))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_tripleterm_rdfbox(sparql.rdfbox_create_from_decimal('0'::decimal))" {
+@test "fn: sparql.istriple_rdfbox(sparql.rdfbox_create_from_decimal('0'::decimal))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_tripleterm_rdfbox(sparql.rdfbox_create_from_float('0'::float4))" {
+@test "fn: sparql.istriple_rdfbox(sparql.rdfbox_create_from_float('0'::float4))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_tripleterm_rdfbox(sparql.rdfbox_create_from_double('0'::float8))" {
+@test "fn: sparql.istriple_rdfbox(sparql.rdfbox_create_from_double('0'::float8))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_tripleterm_rdfbox(sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z'::sparql.zoneddatetime))" {
+@test "fn: sparql.istriple_rdfbox(sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z'::sparql.zoneddatetime))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_tripleterm_rdfbox(sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z'::timestamptz, '0'::int4))" {
+@test "fn: sparql.istriple_rdfbox(sparql.rdfbox_create_from_datetime('0001-01-01T00:00:00Z'::timestamptz, '0'::int4))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_tripleterm_rdfbox(sparql.rdfbox_create_from_date('0001-01-01Z'::sparql.zoneddate))" {
+@test "fn: sparql.istriple_rdfbox(sparql.rdfbox_create_from_date('0001-01-01Z'::sparql.zoneddate))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_tripleterm_rdfbox(sparql.rdfbox_create_from_date('0001-01-01Z'::date, '0'::int4))" {
+@test "fn: sparql.istriple_rdfbox(sparql.rdfbox_create_from_date('0001-01-01Z'::date, '0'::int4))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_tripleterm_rdfbox(sparql.rdfbox_create_from_daytimeduration('0'::int8))" {
+@test "fn: sparql.istriple_rdfbox(sparql.rdfbox_create_from_daytimeduration('0'::int8))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_tripleterm_rdfbox(sparql.rdfbox_create_from_string(''::varchar))" {
+@test "fn: sparql.istriple_rdfbox(sparql.rdfbox_create_from_string(''::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_tripleterm_rdfbox(sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
+@test "fn: sparql.istriple_rdfbox(sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_tripleterm_rdfbox(sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar))" {
+@test "fn: sparql.istriple_rdfbox(sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_tripleterm_rdfbox(sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar))" {
+@test "fn: sparql.istriple_rdfbox(sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_tripleterm_rdfbox(sparql.rdfbox_create_from_typedliteral(''::varchar, 'http://example.org'::varchar))" {
+@test "fn: sparql.istriple_rdfbox(sparql.rdfbox_create_from_typedliteral(''::varchar, 'http://example.org'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_tripleterm_rdfbox(sparql.rdfbox_create_from_userliteral('123'::int4, 'http://example.org'::varchar))" {
+@test "fn: sparql.istriple_rdfbox(sparql.rdfbox_create_from_userliteral('123'::int4, 'http://example.org'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_tripleterm_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
+@test "fn: sparql.istriple_rdfbox(sparql.rdfbox_create_from_iri('http://example.org'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_tripleterm_rdfbox(sparql.rdfbox_create_from_iblanknode('0'::int8))" {
+@test "fn: sparql.istriple_rdfbox(sparql.rdfbox_create_from_iblanknode('0'::int8))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_tripleterm_rdfbox(sparql.rdfbox_create_from_iblanknode('0'::int4, '0'::int4))" {
+@test "fn: sparql.istriple_rdfbox(sparql.rdfbox_create_from_iblanknode('0'::int4, '0'::int4))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_tripleterm_rdfbox(sparql.rdfbox_create_from_sblanknode('00000000'::varchar))" {
+@test "fn: sparql.istriple_rdfbox(sparql.rdfbox_create_from_sblanknode('00000000'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_tripleterm_rdfbox(sparql.rdfbox_create_from_sblanknode(''::varchar, '0'::int4))" {
+@test "fn: sparql.istriple_rdfbox(sparql.rdfbox_create_from_sblanknode(''::varchar, '0'::int4))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_tripleterm_rdfbox(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar)))" {
+@test "fn: sparql.istriple_rdfbox(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar)))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_tripleterm_rdfbox(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/a'::varchar), 'http://example.org/b'::varchar, sparql.rdfbox_create_from_string('c'::varchar))))" {
+@test "fn: sparql.istriple_rdfbox(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/a'::varchar), 'http://example.org/b'::varchar, sparql.rdfbox_create_from_string('c'::varchar))))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_tripleterm_rdfbox(sparql.rdfbox_get_tripleterm_object(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/a'::varchar), 'http://example.org/b'::varchar, sparql.rdfbox_create_from_string('c'::varchar)))))" {
+@test "fn: sparql.istriple_rdfbox(sparql.rdfbox_get_tripleterm_object(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/a'::varchar), 'http://example.org/b'::varchar, sparql.rdfbox_create_from_string('c'::varchar)))))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_tripleterm_rdfbox(sparql.rdfbox_get_tripleterm_subject(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/a'::varchar), 'http://example.org/b'::varchar, sparql.rdfbox_create_from_string('c'::varchar)))))" {
+@test "fn: sparql.istriple_rdfbox(sparql.rdfbox_get_tripleterm_subject(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/a'::varchar), 'http://example.org/b'::varchar, sparql.rdfbox_create_from_string('c'::varchar)))))" {
   expect_output 'f'
 }
 
@@ -1563,6 +1585,36 @@ load ../psql_tests.bash
 
 
 ####
+# uri()
+#
+
+@test "fn: sparql.uri_string('https://base.org/basedir?basequery#basetag'::varchar, 'http://example.org/a/../b'::varchar)" {
+  expect_output 'http://example.org/b'
+}
+
+@test "fn: sparql.uri_string('https://base.org/basedir/sub?basequery#basetag'::varchar, '../dir/a/b'::varchar)" {
+  expect_output 'https://base.org/dir/a/b'
+}
+
+@test "fn: sparql.uri_string('https://base.org/basedir?basequery#basetag'::varchar, '##'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.uri_rdfbox('https://base.org/basedir/sub?basequery#basetag'::varchar, sparql.rdfbox_create_from_string('../dir/a/b'::varchar))" {
+  expect_output 'https://base.org/dir/a/b'
+}
+
+@test "fn: sparql.uri_rdfbox('https://base.org/basedir?basequery#basetag'::varchar, sparql.rdfbox_create_from_iri('http://example.org/dir?query#tag'::varchar))" {
+  expect_output 'http://example.org/dir?query#tag'
+}
+
+@test "fn: sparql.uri_rdfbox('https://base.org/basedir?basequery#basetag'::varchar, sparql.rdfbox_create_from_langstring('http://example.org/dir?query#tag'::varchar, 'en'))" {
+  expect_output '(null)'
+}
+
+
+
+####
 # bnode()
 #
 
@@ -1698,75 +1750,75 @@ load ../psql_tests.bash
 # the integer types derived from xsd:integer
 #
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_byte('-128'::int2))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_byte('-128'::int2))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_unsignedbyte('255'::int2))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_unsignedbyte('255'::int2))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_unsignedshort('65535'::int4))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_unsignedshort('65535'::int4))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_unsignedint('4294967295'::int8))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_unsignedint('4294967295'::int8))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_nonpositiveinteger('-18446744073709551616'::decimal))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_nonpositiveinteger('-18446744073709551616'::decimal))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_negativeinteger('-1'::decimal))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_negativeinteger('-1'::decimal))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_nonnegativeinteger('0'::decimal))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_nonnegativeinteger('0'::decimal))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.rdfbox_create_from_positiveinteger('18446744073709551616'::decimal))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.rdfbox_create_from_positiveinteger('18446744073709551616'::decimal))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_byte('-128'::int2))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_byte('-128'::int2))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_unsignedbyte('255'::int2))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_unsignedbyte('255'::int2))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_unsignedshort('65535'::int4))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_unsignedshort('65535'::int4))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_unsignedint('4294967295'::int8))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_unsignedint('4294967295'::int8))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_nonpositiveinteger('-18446744073709551616'::decimal))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_nonpositiveinteger('-18446744073709551616'::decimal))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_negativeinteger('-1'::decimal))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_negativeinteger('-1'::decimal))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_nonnegativeinteger('0'::decimal))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_nonnegativeinteger('0'::decimal))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_literal_rdfbox(sparql.rdfbox_create_from_positiveinteger('18446744073709551616'::decimal))" {
+@test "fn: sparql.isliteral_rdfbox(sparql.rdfbox_create_from_positiveinteger('18446744073709551616'::decimal))" {
   expect_output 't'
 }
 
@@ -1886,47 +1938,47 @@ load ../psql_tests.bash
   expect_output 'http://www.w3.org/2001/XMLSchema#positiveInteger'
 }
 
-@test "fn: sparql.is_numeric_rdfbox('\"128\"^^<http://www.w3.org/2001/XMLSchema#byte>'::sparql.rdfbox)" {
+@test "fn: sparql.isnumeric_rdfbox('\"128\"^^<http://www.w3.org/2001/XMLSchema#byte>'::sparql.rdfbox)" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox('\"256\"^^<http://www.w3.org/2001/XMLSchema#unsignedByte>'::sparql.rdfbox)" {
+@test "fn: sparql.isnumeric_rdfbox('\"256\"^^<http://www.w3.org/2001/XMLSchema#unsignedByte>'::sparql.rdfbox)" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox('\"-1\"^^<http://www.w3.org/2001/XMLSchema#unsignedByte>'::sparql.rdfbox)" {
+@test "fn: sparql.isnumeric_rdfbox('\"-1\"^^<http://www.w3.org/2001/XMLSchema#unsignedByte>'::sparql.rdfbox)" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox('\"65536\"^^<http://www.w3.org/2001/XMLSchema#unsignedShort>'::sparql.rdfbox)" {
+@test "fn: sparql.isnumeric_rdfbox('\"65536\"^^<http://www.w3.org/2001/XMLSchema#unsignedShort>'::sparql.rdfbox)" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox('\"4294967296\"^^<http://www.w3.org/2001/XMLSchema#unsignedInt>'::sparql.rdfbox)" {
+@test "fn: sparql.isnumeric_rdfbox('\"4294967296\"^^<http://www.w3.org/2001/XMLSchema#unsignedInt>'::sparql.rdfbox)" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox('\"18446744073709551616\"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'::sparql.rdfbox)" {
+@test "fn: sparql.isnumeric_rdfbox('\"18446744073709551616\"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'::sparql.rdfbox)" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox('\"-1\"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'::sparql.rdfbox)" {
+@test "fn: sparql.isnumeric_rdfbox('\"-1\"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'::sparql.rdfbox)" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox('\"1\"^^<http://www.w3.org/2001/XMLSchema#nonPositiveInteger>'::sparql.rdfbox)" {
+@test "fn: sparql.isnumeric_rdfbox('\"1\"^^<http://www.w3.org/2001/XMLSchema#nonPositiveInteger>'::sparql.rdfbox)" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox('\"0\"^^<http://www.w3.org/2001/XMLSchema#negativeInteger>'::sparql.rdfbox)" {
+@test "fn: sparql.isnumeric_rdfbox('\"0\"^^<http://www.w3.org/2001/XMLSchema#negativeInteger>'::sparql.rdfbox)" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox('\"-1\"^^<http://www.w3.org/2001/XMLSchema#nonNegativeInteger>'::sparql.rdfbox)" {
+@test "fn: sparql.isnumeric_rdfbox('\"-1\"^^<http://www.w3.org/2001/XMLSchema#nonNegativeInteger>'::sparql.rdfbox)" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox('\"0\"^^<http://www.w3.org/2001/XMLSchema#positiveInteger>'::sparql.rdfbox)" {
+@test "fn: sparql.isnumeric_rdfbox('\"0\"^^<http://www.w3.org/2001/XMLSchema#positiveInteger>'::sparql.rdfbox)" {
   expect_output 'f'
 }
 
@@ -1934,7 +1986,7 @@ load ../psql_tests.bash
   expect_output '" 1 "^^<http://www.w3.org/2001/XMLSchema#byte>'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#byte'::varchar))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#byte'::varchar))" {
   expect_output 't'
 }
 
@@ -1942,7 +1994,7 @@ load ../psql_tests.bash
   expect_output '" 1 "^^<http://www.w3.org/2001/XMLSchema#unsignedByte>'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#unsignedByte'::varchar))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#unsignedByte'::varchar))" {
   expect_output 't'
 }
 
@@ -1950,7 +2002,7 @@ load ../psql_tests.bash
   expect_output '" 1 "^^<http://www.w3.org/2001/XMLSchema#unsignedShort>'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#unsignedShort'::varchar))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#unsignedShort'::varchar))" {
   expect_output 't'
 }
 
@@ -1958,7 +2010,7 @@ load ../psql_tests.bash
   expect_output '" 1 "^^<http://www.w3.org/2001/XMLSchema#unsignedInt>'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#unsignedInt'::varchar))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#unsignedInt'::varchar))" {
   expect_output 't'
 }
 
@@ -1966,7 +2018,7 @@ load ../psql_tests.bash
   expect_output '" 1 "^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#unsignedLong'::varchar))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#unsignedLong'::varchar))" {
   expect_output 't'
 }
 
@@ -1974,7 +2026,7 @@ load ../psql_tests.bash
   expect_output '" 0 "^^<http://www.w3.org/2001/XMLSchema#nonPositiveInteger>'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.strdt_string(' 0 '::varchar, 'http://www.w3.org/2001/XMLSchema#nonPositiveInteger'::varchar))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.strdt_string(' 0 '::varchar, 'http://www.w3.org/2001/XMLSchema#nonPositiveInteger'::varchar))" {
   expect_output 't'
 }
 
@@ -1982,7 +2034,7 @@ load ../psql_tests.bash
   expect_output '" -1 "^^<http://www.w3.org/2001/XMLSchema#negativeInteger>'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.strdt_string(' -1 '::varchar, 'http://www.w3.org/2001/XMLSchema#negativeInteger'::varchar))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.strdt_string(' -1 '::varchar, 'http://www.w3.org/2001/XMLSchema#negativeInteger'::varchar))" {
   expect_output 't'
 }
 
@@ -1990,7 +2042,7 @@ load ../psql_tests.bash
   expect_output '" 1 "^^<http://www.w3.org/2001/XMLSchema#nonNegativeInteger>'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#nonNegativeInteger'::varchar))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#nonNegativeInteger'::varchar))" {
   expect_output 't'
 }
 
@@ -1998,19 +2050,19 @@ load ../psql_tests.bash
   expect_output '" 1 "^^<http://www.w3.org/2001/XMLSchema#positiveInteger>'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#positiveInteger'::varchar))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#positiveInteger'::varchar))" {
   expect_output 't'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.strdt_string('-1'::varchar, 'http://www.w3.org/2001/XMLSchema#unsignedByte'::varchar))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.strdt_string('-1'::varchar, 'http://www.w3.org/2001/XMLSchema#unsignedByte'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.strdt_string('0'::varchar, 'http://www.w3.org/2001/XMLSchema#positiveInteger'::varchar))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.strdt_string('0'::varchar, 'http://www.w3.org/2001/XMLSchema#positiveInteger'::varchar))" {
   expect_output 'f'
 }
 
-@test "fn: sparql.is_numeric_rdfbox(sparql.strdt_string('18446744073709551616'::varchar, 'http://www.w3.org/2001/XMLSchema#unsignedLong'::varchar))" {
+@test "fn: sparql.isnumeric_rdfbox(sparql.strdt_string('18446744073709551616'::varchar, 'http://www.w3.org/2001/XMLSchema#unsignedLong'::varchar))" {
   expect_output 'f'
 }
 
