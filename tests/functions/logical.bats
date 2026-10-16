@@ -86,6 +86,30 @@ load ../psql_tests.bash
   expect_output 'f'
 }
 
+@test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_langstring(' '::varchar, 'en'::varchar))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_langstring(''::varchar, 'en'::varchar))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_ltrlangstring(' '::varchar, 'en'::varchar))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_ltrlangstring(''::varchar, 'en'::varchar))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_rtllangstring(' '::varchar, 'en'::varchar))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_rtllangstring(''::varchar, 'en'::varchar))" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.ebv_rdfbox(sparql.rdfbox_create_from_typedliteral('true'::varchar, 'http://www.w3.org/2001/XMLSchema#int'::varchar))" {
   expect_output '(null)'
 }
