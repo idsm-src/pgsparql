@@ -48,6 +48,14 @@ static inline float4 round_half_up_float(float4 value)
 }
 
 
+/* the addition is exact for a numeric, which has no negative zero either */
+static inline Numeric round_half_up_numeric(Numeric value)
+{
+    Numeric sum = DatumGetNumeric(DirectFunctionCall2(numeric_add, NumericGetDatum(value), NumericGetDatum(get_half())));
+    return DatumGetNumeric(DirectFunctionCall1(numeric_floor, NumericGetDatum(sum)));
+}
+
+
 PG_FUNCTION_INFO_V1(abs_rdfbox);
 Datum abs_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -154,12 +162,7 @@ Datum round_rdfbox(PG_FUNCTION_ARGS)
         }
 
         case XSD_DECIMAL:
-        {
-            Numeric value = RdfBoxGetNumeric(box);
-            Numeric sum = DatumGetNumeric(DirectFunctionCall2(numeric_add, NumericGetDatum(value), NumericGetDatum(get_half())));
-            Numeric res = DatumGetNumeric(DirectFunctionCall1(numeric_floor, NumericGetDatum(sum)));
-            PG_RETURN_RDFBOX_P(GetDecimalRdfBox(res));
-        }
+            PG_RETURN_RDFBOX_P(GetDecimalRdfBox(round_half_up_numeric(RdfBoxGetNumeric(box))));
 
         case XSD_FLOAT:
             PG_RETURN_RDFBOX_P(GetFloatRdfBox(round_half_up_float(RdfBoxGetFloat4(box))));
@@ -170,6 +173,32 @@ Datum round_rdfbox(PG_FUNCTION_ARGS)
         default:
             PG_RETURN_NULL();
     }
+}
+
+
+/*
+ * ROUND() of a value stored in a column of its own type; round() of PostgreSQL
+ * cannot serve there, as it rounds a numeric half away from zero and a double
+ * half to even.
+ */
+PG_FUNCTION_INFO_V1(round_decimal);
+Datum round_decimal(PG_FUNCTION_ARGS)
+{
+    PG_RETURN_NUMERIC(round_half_up_numeric(PG_GETARG_NUMERIC(0)));
+}
+
+
+PG_FUNCTION_INFO_V1(round_float);
+Datum round_float(PG_FUNCTION_ARGS)
+{
+    PG_RETURN_FLOAT4(round_half_up_float(PG_GETARG_FLOAT4(0)));
+}
+
+
+PG_FUNCTION_INFO_V1(round_double);
+Datum round_double(PG_FUNCTION_ARGS)
+{
+    PG_RETURN_FLOAT8(round_half_up(PG_GETARG_FLOAT8(0)));
 }
 
 

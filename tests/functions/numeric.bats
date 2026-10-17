@@ -375,6 +375,113 @@ load ../psql_tests.bash
 
 
 ####
+# round() of a typed value, which round() of PostgreSQL would round a half
+# away from zero (numeric) or to even (double)
+#
+
+@test "fn: sparql.round_decimal('-92233720.36854775808'::decimal)" {
+  expect_output '-92233720'
+}
+
+@test "fn: sparql.round_decimal('-2.5'::decimal)" {
+  expect_output '-2'
+}
+
+@test "fn: sparql.round_decimal('-0.5'::decimal)" {
+  expect_output '0'
+}
+
+@test "fn: sparql.round_decimal('0.5'::decimal)" {
+  expect_output '1'
+}
+
+@test "fn: sparql.round_decimal('2.5'::decimal)" {
+  expect_output '3'
+}
+
+@test "fn: sparql.round_decimal('92233720.36854775807'::decimal)" {
+  expect_output '92233720'
+}
+
+@test "fn: sparql.round_float('-inf'::float4)" {
+  expect_output '-Infinity'
+}
+
+@test "fn: sparql.round_float('-2.5'::float4)" {
+  expect_output '-2'
+}
+
+@test "fn: sparql.round_float('-0.5'::float4)" {
+  expect_output '-0'
+}
+
+@test "fn: sparql.round_float('0.5'::float4)" {
+  expect_output '1'
+}
+
+@test "fn: sparql.round_float('1234.5'::float4)" {
+  expect_output '1235'
+}
+
+@test "fn: sparql.round_float('2.5'::float4)" {
+  expect_output '3'
+}
+
+@test "fn: sparql.round_float('inf'::float4)" {
+  expect_output 'Infinity'
+}
+
+@test "fn: sparql.round_float('nan'::float4)" {
+  expect_output 'NaN'
+}
+
+@test "fn: pg_typeof(sparql.round_float('2.5'::float4))" {
+  expect_output 'real'
+}
+
+@test "fn: sparql.round_double('-inf'::float8)" {
+  expect_output '-Infinity'
+}
+
+@test "fn: sparql.round_double('-2.5'::float8)" {
+  expect_output '-2'
+}
+
+@test "fn: sparql.round_double('-1.5'::float8)" {
+  expect_output '-1'
+}
+
+@test "fn: sparql.round_double('-0.5'::float8)" {
+  expect_output '-0'
+}
+
+@test "fn: sparql.round_double('0.49999999999999994'::float8)" {
+  expect_output '0'
+}
+
+@test "fn: sparql.round_double('0.5'::float8)" {
+  expect_output '1'
+}
+
+@test "fn: sparql.round_double('2.5'::float8)" {
+  expect_output '3'
+}
+
+@test "fn: sparql.round_double('1.7976931348623157e308'::float8)" {
+  expect_output '1.7976931348623157e+308'
+}
+
+@test "fn: sparql.round_double('inf'::float8)" {
+  expect_output 'Infinity'
+}
+
+@test "fn: sparql.round_double('nan'::float8)" {
+  expect_output 'NaN'
+}
+
+
+
+####
 # ceil()
 #
 
