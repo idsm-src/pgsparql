@@ -7,6 +7,38 @@
 #include "rdfbox/promotion.h"
 
 
+PG_FUNCTION_INFO_V1(rdfbox_uplus);
+Datum rdfbox_uplus(PG_FUNCTION_ARGS)
+{
+    RdfBox *arg = PG_GETARG_RDFBOX_P(0);
+
+    if(!rdfbox_is_numeric(arg))
+    {
+        PG_RETURN_NULL();
+    }
+    else if(arg->type == XSD_DOUBLE)
+    {
+        PG_RETURN_RDFBOX_P(GetDoubleRdfBox(rdfbox_get_numeric_as_double(arg)));
+    }
+    else if(arg->type == XSD_FLOAT)
+    {
+        PG_RETURN_RDFBOX_P(GetFloatRdfBox(rdfbox_get_numeric_as_float(arg)));
+    }
+    else
+    {
+        Numeric a = rdfbox_get_numeric_as_decimal(arg);
+
+        if(numeric_is_inf(a) || numeric_is_nan(a))
+            PG_RETURN_NULL();
+
+        if(arg->type == XSD_DECIMAL)
+            PG_RETURN_RDFBOX_P(GetDecimalRdfBox(a));
+        else
+            PG_RETURN_RDFBOX_P(GetIntegerRdfBox(a));
+    }
+}
+
+
 PG_FUNCTION_INFO_V1(rdfbox_uminus);
 Datum rdfbox_uminus(PG_FUNCTION_ARGS)
 {

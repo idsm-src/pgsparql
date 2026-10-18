@@ -214,6 +214,7 @@ CREATE FUNCTION rdfbox_get_tripleterm_subject(rdfbox) RETURNS rdfbox AS 'MODULE_
 CREATE FUNCTION rdfbox_get_tripleterm_predicate(rdfbox) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
 CREATE FUNCTION rdfbox_get_tripleterm_object(rdfbox) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
 CREATE FUNCTION rdfbox_get_string_literal(rdfbox) RETURNS varchar AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+CREATE FUNCTION rdfbox_uplus(rdfbox) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
 CREATE FUNCTION rdfbox_uminus(rdfbox) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
 CREATE FUNCTION rdfbox_add(rdfbox,rdfbox) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
 CREATE FUNCTION rdfbox_sub(rdfbox,rdfbox) RETURNS rdfbox AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
@@ -349,6 +350,11 @@ CREATE OPERATOR @<= (
     negator = @>,
     restrict = scalarlesel,
     join = scalarlejoinsel
+);
+
+CREATE OPERATOR + (
+    rightarg = rdfbox,
+    procedure = rdfbox_uplus
 );
 
 CREATE OPERATOR - (

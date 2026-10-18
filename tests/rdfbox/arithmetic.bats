@@ -3,6 +3,69 @@ load ../psql_tests.bash
 
 
 ####
+# + x
+#
+
+@test "op: operator(sparql.+) sparql.rdfbox_create_from_short('4'::int2)" {
+  expect_output '"4"^^<http://www.w3.org/2001/XMLSchema#integer>'
+}
+
+@test "op: operator(sparql.+) sparql.rdfbox_create_from_int('4'::int4)" {
+  expect_output '"4"^^<http://www.w3.org/2001/XMLSchema#integer>'
+}
+
+@test "op: operator(sparql.+) sparql.rdfbox_create_from_long('4'::int8)" {
+  expect_output '"4"^^<http://www.w3.org/2001/XMLSchema#integer>'
+}
+
+@test "op: operator(sparql.+) sparql.rdfbox_create_from_integer('4'::decimal)" {
+  expect_output '"4"^^<http://www.w3.org/2001/XMLSchema#integer>'
+}
+
+@test "op: operator(sparql.+) sparql.rdfbox_create_from_decimal('4'::decimal)" {
+  expect_output '"4.0"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+}
+
+@test "op: operator(sparql.+) sparql.rdfbox_create_from_float('4'::float4)" {
+  expect_output '"4.0E0"^^<http://www.w3.org/2001/XMLSchema#float>'
+}
+
+@test "op: operator(sparql.+) sparql.rdfbox_create_from_double('4'::float8)" {
+  expect_output '"4.0E0"^^<http://www.w3.org/2001/XMLSchema#double>'
+}
+
+@test "op: operator(sparql.+) sparql.rdfbox_create_from_double('-0.0'::float8)" {
+  expect_output '"-0.0E0"^^<http://www.w3.org/2001/XMLSchema#double>'
+}
+
+@test "op: operator(sparql.+) sparql.rdfbox_create_from_string('4'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "op: operator(sparql.+) sparql.rdfbox_create_from_decimal('Infinity'::decimal)" {
+  expect_output '(null)'
+}
+
+@test "op: operator(sparql.+) sparql.rdfbox_create_from_integer('NaN'::decimal)" {
+  expect_output '(null)'
+}
+
+# the value is kept, the lexical form is not
+@test "op: operator(sparql.+) '\"04\"^^<http://www.w3.org/2001/XMLSchema#integer>'::sparql.rdfbox" {
+  expect_output '"4"^^<http://www.w3.org/2001/XMLSchema#integer>'
+}
+
+@test "op: operator(sparql.+) '\"4.50\"^^<http://www.w3.org/2001/XMLSchema#decimal>'::sparql.rdfbox" {
+  expect_output '"4.5"^^<http://www.w3.org/2001/XMLSchema#decimal>'
+}
+
+@test "op: operator(sparql.+) '\"4.5e0\"^^<http://www.w3.org/2001/XMLSchema#double>'::sparql.rdfbox" {
+  expect_output '"4.5E0"^^<http://www.w3.org/2001/XMLSchema#double>'
+}
+
+
+
+####
 # - x
 #
 
@@ -297,6 +360,18 @@ load ../psql_tests.bash
 ####
 # the integer types derived from xsd:integer are promoted to xsd:integer
 #
+
+@test "op: operator(sparql.+) sparql.rdfbox_create_from_byte('-128'::int2)" {
+  expect_output '"-128"^^<http://www.w3.org/2001/XMLSchema#integer>'
+}
+
+@test "op: operator(sparql.+) sparql.rdfbox_create_from_unsignedlong('18446744073709551615'::decimal)" {
+  expect_output '"18446744073709551615"^^<http://www.w3.org/2001/XMLSchema#integer>'
+}
+
+@test "op: operator(sparql.+) sparql.rdfbox_create_from_positiveinteger('1'::decimal)" {
+  expect_output '"1"^^<http://www.w3.org/2001/XMLSchema#integer>'
+}
 
 @test "op: operator(sparql.-) sparql.rdfbox_create_from_byte('-128'::int2)" {
   expect_output '"128"^^<http://www.w3.org/2001/XMLSchema#integer>'
