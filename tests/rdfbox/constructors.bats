@@ -230,6 +230,26 @@ load ../psql_tests.bash
   expect_error
 }
 
+@test "fn: sparql.rdfbox_create_from_unsignedlong('5.0'::decimal)" {
+  expect_output '"5"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'
+}
+
+@test "fn: sparql.rdfbox_create_from_unsignedlong('0.00'::decimal)" {
+  expect_output '"0"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'
+}
+
+@test "fn: sparql.rdfbox_create_from_unsignedlong('18446744073709551615.0'::decimal)" {
+  expect_output '"18446744073709551615"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'
+}
+
+@test "fn: sparql.rdfbox_create_from_unsignedlong('18446744073709551615.5'::decimal)" {
+  expect_error
+}
+
+@test "fn: sparql.rdfbox_create_from_unsignedlong_with_lexical('5.0'::decimal, '+5'::varchar)" {
+  expect_output '"+5"^^<http://www.w3.org/2001/XMLSchema#unsignedLong>'
+}
+
 @test "fn: sparql.rdfbox_create_from_unsignedlong('NaN'::decimal)" {
   expect_error
 }

@@ -61,18 +61,19 @@ static inline Numeric unsignedlong_as_numeric(uint64 value)
 
 
 /**
- * Converts the numeric that represents an xsd:unsignedLong in SQL to the value, by parsing its text form.
+ * Converts the numeric that represents an xsd:unsignedLong in SQL to the value, by parsing its text form without the
+ * trailing zeros of a fractional part.
  *
  * Unlike the other constructors, the conversion cannot be done without looking at the value, so a numeric that is not
  * an integer of the range of xsd:unsignedLong is always reported as an error.
  *
  * @param value the numeric
- * @return the value; a numeric out of the range of xsd:unsignedLong or with a fractional part, even one of zeros,
- *         raises an error
+ * @return the value; a numeric out of the range of xsd:unsignedLong or with a non-zero fractional part raises an
+ *         error
  */
 static inline uint64 unsignedlong_from_numeric(Numeric value)
 {
-    char *string = DatumGetCString(DirectFunctionCall1(numeric_out, NumericGetDatum(value)));
+    char *string = numeric_normalize(value);
     uint64 result = unsignedlong_parse(string, strlen(string));
     pfree(string);
     return result;
