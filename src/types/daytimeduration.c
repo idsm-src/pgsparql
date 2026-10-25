@@ -76,7 +76,7 @@ static int64 add_duration_part(int64 sum, int64 value, int64 multiplier)
 
 /**
  * Parses a lexical form of xsd:dayTimeDuration, `-?P(nD)?(T(nH)?(nM)?(n(.n)?S)?)?` surrounded by optional XML Schema
- * whitespace, where at least one part follows `T`.
+ * whitespace, with at least one part, and at least one part after `T` when it is present.
  *
  * The number of a part may be of any size as long as the whole duration fits into an int64 of microseconds; the
  * fractional seconds may have more than six digits only if the extra digits are zeros.
@@ -184,6 +184,9 @@ int64 daytimeduration_parse(char *data, int size)
         if(last < 2)
             ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed xsd:dayTimeDuration literal")));
     }
+
+    if(last == 0)
+        ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("malformed xsd:dayTimeDuration literal")));
 
     while(pos < size && xsd_isspace(data[pos]))
         pos++;

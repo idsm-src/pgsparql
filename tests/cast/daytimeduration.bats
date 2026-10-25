@@ -102,6 +102,38 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.cast_as_daytimeduration_from_string('P'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_daytimeduration_from_string('-P'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_daytimeduration_from_string('PT'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_daytimeduration_from_string('-PT'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_daytimeduration_from_string('P0D'::varchar)" {
+  expect_output '0'
+}
+
+@test "fn: sparql.cast_as_daytimeduration_from_string('-PT0S'::varchar)" {
+  expect_output '0'
+}
+
+@test "fn: sparql.cast_as_daytimeduration_from_rdfbox('\"P\"^^<http://www.w3.org/2001/XMLSchema#dayTimeDuration>'::sparql.rdfbox)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_daytimeduration_from_rdfbox('\"P0D\"^^<http://www.w3.org/2001/XMLSchema#dayTimeDuration>'::sparql.rdfbox)" {
+  expect_output '0'
+}
+
 @test "fn: sparql.cast_as_daytimeduration_from_string(' PT15.S '::varchar)" {
   expect_output '(null)'
 }
