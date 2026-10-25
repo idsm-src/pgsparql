@@ -16,6 +16,18 @@
 Numeric decimal_parse(char *data, int size);
 
 
+/*
+ * xsd:decimal is represented by a numeric in SQL, so a constructor may be handed NaN or an infinity, which are no
+ * values of xsd:decimal. It is the responsibility of the caller not to do so; the check is compiled in only with
+ * --enable-extra-checks.
+ */
+#ifdef PGSPARQL_EXTRA_CHECKS
+Numeric checked_decimal(Numeric value);
+#else
+#define checked_decimal(x)    (x)
+#endif
+
+
 /**
  * Prints the canonical lexical form of an xsd:decimal into a new varchar: the value without trailing zeros of its
  * fraction but with at least one fractional digit, as in `1.0` or `-0.25`.

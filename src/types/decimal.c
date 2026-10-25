@@ -1,6 +1,7 @@
 /**
  * @file
- * Parsing of the lexical forms of xsd:decimal and the arithmetic operators of xsd:decimal.
+ * Parsing of the lexical forms of xsd:decimal, the arithmetic operators of xsd:decimal and the check of the values
+ * handed to its constructors with `--enable-extra-checks`.
  *
  * The operators are those of numeric, except that a result that xsd:decimal cannot hold is NULL instead of an error
  * or NaN: a result out of the range of numeric, NaN, an infinity and the result of a division by zero.
@@ -241,3 +242,24 @@ Datum decimal_div(PG_FUNCTION_ARGS)
 
     PG_RETURN(decimal_result(result));
 }
+
+
+#ifdef PGSPARQL_EXTRA_CHECKS
+/**
+ * Checks that a numeric holds an xsd:decimal.
+ *
+ * The constructors take the value as a numeric, which may be NaN or an infinity. It is the responsibility of the
+ * caller not to pass such a value; the check is compiled in only with `--enable-extra-checks`, otherwise
+ * checked_decimal() is a macro that passes the value through.
+ *
+ * @param value the numeric
+ * @return the value; NaN or an infinity raises an error
+ */
+Numeric checked_decimal(Numeric value)
+{
+    if(numeric_is_nan(value) || numeric_is_inf(value))
+        ereport(ERROR, (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE), errmsg("xsd:decimal out of range")));
+
+    return value;
+}
+#endif

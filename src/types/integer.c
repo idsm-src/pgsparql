@@ -152,7 +152,7 @@ Numeric positiveinteger_parse(char *data, int size)
 
 #ifdef PGSPARQL_EXTRA_CHECKS
 /**
- * Checks that a numeric is a value of a type derived from xsd:integer by a bound.
+ * Checks that a numeric is a value of xsd:integer or of a type derived from it by a bound.
  *
  * @param value the numeric
  * @param min_sign the least allowed sign
@@ -170,6 +170,22 @@ static Numeric check(Numeric value, int min_sign, int max_sign, const char *type
         ereport(ERROR, (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE), errmsg("%s is not an integer", type)));
 
     return bounded(value, min_sign, max_sign, type);
+}
+
+
+/**
+ * Checks that a numeric holds an xsd:integer.
+ *
+ * The constructors take the value as a numeric, which may not be an integer. It is the responsibility of the caller
+ * not to pass such a value; the check is compiled in only with `--enable-extra-checks`, otherwise checked_integer()
+ * is a macro that passes the value through.
+ *
+ * @param value the numeric
+ * @return the value; a value that is not an xsd:integer raises an error
+ */
+Numeric checked_integer(Numeric value)
+{
+    return check(value, -1, 1, "xsd:integer");
 }
 
 

@@ -12,16 +12,18 @@
 
 
 /*
- * The types derived from xsd:integer by a bound are represented by a numeric in SQL, so a constructor may be handed
- * a value that is not an integer or lies outside of the bound. It is the responsibility of the caller not to do so;
- * the checks are compiled in only with --enable-extra-checks.
+ * xsd:integer and the types derived from it by a bound are represented by a numeric in SQL, so a constructor may be
+ * handed a value that is not an integer or lies outside of the bound. It is the responsibility of the caller not to
+ * do so; the checks are compiled in only with --enable-extra-checks.
  */
 #ifdef PGSPARQL_EXTRA_CHECKS
+Numeric checked_integer(Numeric value);
 Numeric checked_nonpositiveinteger(Numeric value);
 Numeric checked_negativeinteger(Numeric value);
 Numeric checked_nonnegativeinteger(Numeric value);
 Numeric checked_positiveinteger(Numeric value);
 #else
+#define checked_integer(x)               (x)
 #define checked_nonpositiveinteger(x)    (x)
 #define checked_negativeinteger(x)       (x)
 #define checked_nonnegativeinteger(x)    (x)

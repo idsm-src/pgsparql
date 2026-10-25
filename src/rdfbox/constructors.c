@@ -18,13 +18,14 @@
 #include "call.h"
 #include "rdfbox/syntax.h"
 #include "types/byte.h"
-#include "types/unsignedbyte.h"
-#include "types/unsignedshort.h"
-#include "types/unsignedint.h"
-#include "types/unsignedlong.h"
+#include "types/decimal.h"
 #include "types/integer.h"
 #include "types/sblanknode.h"
 #include "types/timezone.h"
+#include "types/unsignedbyte.h"
+#include "types/unsignedint.h"
+#include "types/unsignedlong.h"
+#include "types/unsignedshort.h"
 #include "rdfbox/rdfbox.h"
 
 
@@ -417,7 +418,7 @@ Datum rdfbox_create_from_unsignedlong_with_lexical(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(rdfbox_create_from_integer);
 Datum rdfbox_create_from_integer(PG_FUNCTION_ARGS)
 {
-    PG_RETURN_RDFBOX_P(GetIntegerRdfBox(PG_GETARG_NUMERIC(0)));
+    PG_RETURN_RDFBOX_P(GetIntegerRdfBox(checked_integer(PG_GETARG_NUMERIC(0))));
 }
 
 
@@ -431,7 +432,7 @@ Datum rdfbox_create_from_integer(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(rdfbox_create_from_integer_with_lexical);
 Datum rdfbox_create_from_integer_with_lexical(PG_FUNCTION_ARGS)
 {
-    Numeric value = PG_GETARG_NUMERIC(0);
+    Numeric value = checked_integer(PG_GETARG_NUMERIC(0));
     VarChar *lexical = PG_GETARG_VARCHAR_PP(1);
 
     if(VARSIZE_ANY_EXHDR(lexical) == 0)
@@ -575,26 +576,26 @@ Datum rdfbox_create_from_positiveinteger_with_lexical(PG_FUNCTION_ARGS)
 /**
  * Boxes an xsd:decimal.
  *
- * @param fcinfo the numeric value
+ * @param fcinfo the numeric value, which has to be finite
  * @return the rdfbox
  */
 PG_FUNCTION_INFO_V1(rdfbox_create_from_decimal);
 Datum rdfbox_create_from_decimal(PG_FUNCTION_ARGS)
 {
-    PG_RETURN_RDFBOX_P(GetDecimalRdfBox(PG_GETARG_NUMERIC(0)));
+    PG_RETURN_RDFBOX_P(GetDecimalRdfBox(checked_decimal(PG_GETARG_NUMERIC(0))));
 }
 
 
 /**
  * Boxes an xsd:decimal together with its lexical form.
  *
- * @param fcinfo the numeric value and the varchar lexical form, empty for the canonical one
+ * @param fcinfo the numeric value, which has to be finite, and the varchar lexical form, empty for the canonical one
  * @return the rdfbox
  */
 PG_FUNCTION_INFO_V1(rdfbox_create_from_decimal_with_lexical);
 Datum rdfbox_create_from_decimal_with_lexical(PG_FUNCTION_ARGS)
 {
-    Numeric value = PG_GETARG_NUMERIC(0);
+    Numeric value = checked_decimal(PG_GETARG_NUMERIC(0));
     VarChar *lexical = PG_GETARG_VARCHAR_PP(1);
 
     if(VARSIZE_ANY_EXHDR(lexical) == 0)
