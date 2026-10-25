@@ -27,15 +27,14 @@ CREATE FUNCTION zoneddate_hash(zoneddate) RETURNS int4 AS 'MODULE_PATHNAME' LANG
 CREATE FUNCTION zoneddate_hash_extended(zoneddate,int8) RETURNS int8 AS 'MODULE_PATHNAME' LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
 
 
+-- the representation of int8: eight bytes passed by value where float8 is, by reference otherwise
 CREATE TYPE zoneddate
 (
-    internallength = 8,
     input = zoneddate_input,
     output = zoneddate_output,
     receive = zoneddate_recv,
     send = zoneddate_send,
-    alignment = double,
-    passedbyvalue
+    like = pg_catalog.int8
 );
 
 

@@ -16,7 +16,8 @@
 /**
  * An xsd:date with an optional time zone, the value of the type zoneddate.
  *
- * It is eight bytes long and passed by value, packed into an int64 Datum.
+ * It is eight bytes long and has the representation of int8, which its SQL declaration copies by `LIKE`: it is
+ * packed into the Datum where float8 is passed by value (`USE_FLOAT8_BYVAL`) and passed by reference otherwise.
  */
 typedef struct
 {
