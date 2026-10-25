@@ -3,10 +3,10 @@
  * The SPARQL aggregates SUM, AVG, MIN, MAX, GROUP_CONCAT and SAMPLE as PostgreSQL aggregates, declared in
  * `extension/pgsparql/aggregate.sql`, with the support functions for parallel aggregation.
  *
- * Except for the serial and deserial functions, max_rdfbox(), group_concat_string() and sample(), the functions are
- * not STRICT: a NULL state stands for a group without an input so far, and a NULL input for an error of the
- * aggregated expression, which makes the result of SUM, AVG, MIN and GROUP_CONCAT NULL. The state transition and
- * combine functions keep their states in the aggregate memory context.
+ * Except for the serial and deserial functions, max_rdfbox() and sample(), the functions are not STRICT: a NULL
+ * state stands for a group without an input so far, and a NULL input for an error of the aggregated expression,
+ * which makes the result of SUM, AVG, MIN and GROUP_CONCAT NULL. The state transition and combine functions keep
+ * their states in the aggregate memory context.
  */
 #include <postgres.h>
 #include <utils/datum.h>
@@ -1408,34 +1408,6 @@ Datum max_rdfbox(PG_FUNCTION_ARGS)
         PG_RETURN_DATUM(box1);
     else
         PG_RETURN_DATUM(box2);
-}
-
-
-/**
- * Appends a separator and a string to a string.
- *
- * @param fcinfo the varchar so far, the varchar to append and the varchar separator to put between them
- * @return the joined varchar
- */
-PG_FUNCTION_INFO_V1(group_concat_string);
-Datum group_concat_string(PG_FUNCTION_ARGS)
-{
-    VarChar *state = PG_GETARG_VARCHAR_PP(0);
-    VarChar *value = PG_GETARG_VARCHAR_PP(1);
-    VarChar *delim = PG_GETARG_VARCHAR_PP(2);
-
-    int state_size = VARSIZE_ANY_EXHDR(state);
-    int value_size = VARSIZE_ANY_EXHDR(value);
-    int delim_size = VARSIZE_ANY_EXHDR(delim);
-
-    VarChar *merged = (VarChar *) palloc(VARHDRSZ + state_size + delim_size + value_size);
-    SET_VARSIZE(merged, VARHDRSZ + state_size + delim_size + value_size);
-
-    memcpy(VARDATA(merged), VARDATA_ANY(state), state_size);
-    memcpy(VARDATA(merged) + state_size, VARDATA_ANY(delim), delim_size);
-    memcpy(VARDATA(merged) + state_size + delim_size, VARDATA_ANY(value), value_size);
-
-    PG_RETURN_VARCHAR_P(merged);
 }
 
 
