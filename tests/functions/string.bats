@@ -2028,8 +2028,32 @@ load ../psql_tests.bash
   expect_output 'f'
 }
 
+@test "fn: sparql.langmatches_string_string('FR-BE'::varchar, 'fr-be'::varchar)" {
+  expect_output 't'
+}
+
+@test "fn: sparql.langmatches_string_string('fr'::varchar, 'fr-be'::varchar)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.langmatches_string_string('fr-be'::varchar, '*'::varchar)" {
+  expect_output 't'
+}
+
+@test "fn: sparql.langmatches_string_string(''::varchar, '*'::varchar)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.langmatches_string_string(''::varchar, 'fr'::varchar)" {
+  expect_output 'f'
+}
+
 @test "fn: sparql.langmatches_rdfbox_rdfbox(sparql.rdfbox_create_from_string('fr-be'::varchar), sparql.rdfbox_create_from_string('fr'::varchar))" {
   expect_output 't'
+}
+
+@test "fn: sparql.langmatches_rdfbox_rdfbox(sparql.rdfbox_create_from_string(''::varchar), sparql.rdfbox_create_from_string('*'::varchar))" {
+  expect_output 'f'
 }
 
 @test "fn: sparql.langmatches_rdfbox_rdfbox(sparql.rdfbox_create_from_string('fr-be'::varchar), sparql.rdfbox_create_from_string('en'::varchar))" {

@@ -751,7 +751,8 @@ Datum concat_rdfbox_rdfbox(PG_FUNCTION_ARGS)
 
 /**
  * The SPARQL function langMatches of two simple literals, the basic filtering of RFC 4647: the range `*` matches
- * every tag, any other range a tag that is equal to it or begins with it followed by `-`, ignoring case.
+ * every non-empty tag, as SPARQL has it, any other range a tag that is equal to it or begins with it followed by
+ * `-`, ignoring case.
  *
  * @param fcinfo the varchar language tag and the varchar language range
  * @return true if the language tag matches the range
@@ -767,7 +768,7 @@ Datum langmatches_string_string(PG_FUNCTION_ARGS)
 
     if(pattern_size == 1 && *VARDATA_ANY(pattern) == '*')
     {
-        PG_RETURN_BOOL(true);
+        PG_RETURN_BOOL(lang_size > 0);
     }
     else if(pattern_size <= lang_size)
     {
