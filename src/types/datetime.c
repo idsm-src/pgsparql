@@ -430,13 +430,13 @@ Datum zoneddatetime_send(PG_FUNCTION_ARGS)
  * Builds a zoneddatetime from its value and its zone.
  *
  * @param fcinfo the timestamptz value and the int4 zone, an offset in seconds east of UTC or #ZONE_UNSPECIFIED; with
- *               `--enable-extra-checks`, an invalid zone raises an error
+ *               `--enable-extra-checks`, an infinite instant or an invalid zone raises an error
  * @return the zoneddatetime
  */
 PG_FUNCTION_INFO_V1(zoneddatetime_create);
 Datum zoneddatetime_create(PG_FUNCTION_ARGS)
 {
-    TimestampTz value = PG_GETARG_TIMESTAMPTZ(0);
+    TimestampTz value = checked_timestamp(PG_GETARG_TIMESTAMPTZ(0));
     int32 zone = checked_zone(PG_GETARG_INT32(1));
 
     ZonedDateTime *result = palloc0(sizeof(ZonedDateTime));

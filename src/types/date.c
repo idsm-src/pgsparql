@@ -380,13 +380,13 @@ Datum zoneddate_send(PG_FUNCTION_ARGS)
  * Builds a zoneddate from its value and its zone.
  *
  * @param fcinfo the date value and the int4 zone, an offset in seconds east of UTC or #ZONE_UNSPECIFIED; with
- *               `--enable-extra-checks`, an invalid zone raises an error
+ *               `--enable-extra-checks`, an infinite date or an invalid zone raises an error
  * @return the zoneddate
  */
 PG_FUNCTION_INFO_V1(zoneddate_create);
 Datum zoneddate_create(PG_FUNCTION_ARGS)
 {
-    DateADT value = PG_GETARG_DATEADT(0);
+    DateADT value = checked_date(PG_GETARG_DATEADT(0));
     int32 zone = checked_zone(PG_GETARG_INT32(1));
     ZonedDate result = { .value = value, .zone = zone };
     PG_RETURN_ZONEDDATE(result);

@@ -70,6 +70,28 @@ ZonedDateTime;
 #define PG_GETARG_DATETIME() (PG_NARGS() == 1 ? *PG_GETARG_ZONEDDATETIME_P(0) : (ZonedDateTime) { .value = PG_GETARG_TIMESTAMPTZ(0), .zone = PG_GETARG_INT32(1) })
 
 
+/**
+ * Checks that an instant handed to a constructor is a value of xsd:dateTime, which an infinite timestamp is not.
+ *
+ * It is the responsibility of the caller to pass a finite instant; the check is compiled in only with
+ * `--enable-extra-checks`, otherwise checked_timestamp() is a macro that passes the value through.
+ *
+ * @param value the instant
+ * @return the instant; an infinite timestamp or one out of range raises an error
+ */
+#ifdef PGSPARQL_EXTRA_CHECKS
+static inline TimestampTz checked_timestamp(TimestampTz value)
+{
+    if(!IS_VALID_TIMESTAMP(value))
+        ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("xsd:dateTime out of range")));
+
+    return value;
+}
+#else
+#define checked_timestamp(x)    (x)
+#endif
+
+
 ZonedDateTime *datetime_parse(char *data, int size);
 int datetime_print(ZonedDateTime *value, char *buffer);
 int datetime_order_compare(ZonedDateTime *left, ZonedDateTime *right);

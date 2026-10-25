@@ -682,7 +682,7 @@ Datum rdfbox_create_from_datetime(PG_FUNCTION_ARGS)
     if(PG_NARGS() == 1)
         PG_RETURN_RDFBOX_P(GetDateTimeRdfBox(PG_GETARG_ZONEDDATETIME_P(0)));
     else
-        PG_RETURN_RDFBOX_P(GetDateTimeRdfBox(&((ZonedDateTime) { .value = PG_GETARG_TIMESTAMPTZ(0), .zone = checked_zone(PG_GETARG_INT32(1))})));
+        PG_RETURN_RDFBOX_P(GetDateTimeRdfBox(&((ZonedDateTime) { .value = checked_timestamp(PG_GETARG_TIMESTAMPTZ(0)), .zone = checked_zone(PG_GETARG_INT32(1))})));
 }
 
 
@@ -696,7 +696,7 @@ Datum rdfbox_create_from_datetime(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(rdfbox_create_from_datetime_with_lexical);
 Datum rdfbox_create_from_datetime_with_lexical(PG_FUNCTION_ARGS)
 {
-    ZonedDateTime *value = PG_NARGS() == 2 ? PG_GETARG_ZONEDDATETIME_P(0) : &((ZonedDateTime) { .value = PG_GETARG_TIMESTAMPTZ(0), .zone = checked_zone(PG_GETARG_INT32(1))});
+    ZonedDateTime *value = PG_NARGS() == 2 ? PG_GETARG_ZONEDDATETIME_P(0) : &((ZonedDateTime) { .value = checked_timestamp(PG_GETARG_TIMESTAMPTZ(0)), .zone = checked_zone(PG_GETARG_INT32(1))});
     VarChar *lexical = PG_GETARG_VARCHAR_PP(PG_NARGS() - 1);
 
     if(VARSIZE_ANY_EXHDR(lexical) == 0)
@@ -719,7 +719,7 @@ Datum rdfbox_create_from_date(PG_FUNCTION_ARGS)
     if(PG_NARGS() == 1)
         PG_RETURN_RDFBOX_P(GetDateRdfBox(PG_GETARG_ZONEDDATE(0)));
     else
-        PG_RETURN_RDFBOX_P(GetDateRdfBox((ZonedDate) { .value = PG_GETARG_DATEADT(0), .zone = checked_zone(PG_GETARG_INT32(1))}));
+        PG_RETURN_RDFBOX_P(GetDateRdfBox((ZonedDate) { .value = checked_date(PG_GETARG_DATEADT(0)), .zone = checked_zone(PG_GETARG_INT32(1))}));
 }
 
 
@@ -733,7 +733,7 @@ Datum rdfbox_create_from_date(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(rdfbox_create_from_date_with_lexical);
 Datum rdfbox_create_from_date_with_lexical(PG_FUNCTION_ARGS)
 {
-    ZonedDate value = PG_NARGS() == 2 ? PG_GETARG_ZONEDDATE(0) : (ZonedDate) { .value = PG_GETARG_DATEADT(0), .zone = checked_zone(PG_GETARG_INT32(1))};
+    ZonedDate value = PG_NARGS() == 2 ? PG_GETARG_ZONEDDATE(0) : (ZonedDate) { .value = checked_date(PG_GETARG_DATEADT(0)), .zone = checked_zone(PG_GETARG_INT32(1))};
     VarChar *lexical = PG_GETARG_VARCHAR_PP(PG_NARGS() - 1);
 
     if(VARSIZE_ANY_EXHDR(lexical) == 0)

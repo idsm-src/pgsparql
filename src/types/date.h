@@ -105,6 +105,28 @@ static inline Datum ZonedDateGetDatum(ZonedDate val)
 #define PG_GETARG_DATE() (PG_NARGS() == 1 ? PG_GETARG_ZONEDDATE(0) : (ZonedDate) { .value = PG_GETARG_DATEADT(0), .zone = PG_GETARG_INT32(1) })
 
 
+/**
+ * Checks that a date handed to a constructor is a value of xsd:date, which an infinite date is not.
+ *
+ * It is the responsibility of the caller to pass a finite date; the check is compiled in only with
+ * `--enable-extra-checks`, otherwise checked_date() is a macro that passes the value through.
+ *
+ * @param value the date
+ * @return the date; an infinite date or one out of range raises an error
+ */
+#ifdef PGSPARQL_EXTRA_CHECKS
+static inline DateADT checked_date(DateADT value)
+{
+    if(!IS_VALID_DATE(value))
+        ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("xsd:date out of range")));
+
+    return value;
+}
+#else
+#define checked_date(x)    (x)
+#endif
+
+
 ZonedDate date_parse(char *data, int size);
 int date_print(ZonedDate value, char *buffer);
 int date_order_compare(ZonedDate left, ZonedDate right);
