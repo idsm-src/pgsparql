@@ -234,6 +234,18 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.cast_as_unsignedlong_from_float('-0.5'::float4)" {
+  expect_output '0'
+}
+
+@test "fn: sparql.cast_as_unsignedlong_from_float('1.9'::float4)" {
+  expect_output '1'
+}
+
+@test "fn: sparql.cast_as_unsignedlong_from_float('-1.5'::float4)" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.cast_as_unsignedlong_from_double('-inf'::float8)" {
   expect_output '(null)'
 }
@@ -267,6 +279,18 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.cast_as_unsignedlong_from_double('nan'::float8)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_unsignedlong_from_double('-0.5'::float8)" {
+  expect_output '0'
+}
+
+@test "fn: sparql.cast_as_unsignedlong_from_double('4503599627370495.5'::float8)" {
+  expect_output '4503599627370495'
+}
+
+@test "fn: sparql.cast_as_unsignedlong_from_double('-1.5'::float8)" {
   expect_output '(null)'
 }
 

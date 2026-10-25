@@ -206,6 +206,18 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.cast_as_byte_from_float('-128.9'::float4)" {
+  expect_output '-128'
+}
+
+@test "fn: sparql.cast_as_byte_from_float('127.9'::float4)" {
+  expect_output '127'
+}
+
+@test "fn: sparql.cast_as_byte_from_float('-0.5'::float4)" {
+  expect_output '0'
+}
+
 @test "fn: sparql.cast_as_byte_from_double('-inf'::float8)" {
   expect_output '(null)'
 }
@@ -232,6 +244,18 @@ load ../psql_tests.bash
 
 @test "fn: sparql.cast_as_byte_from_double('nan'::float8)" {
   expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_byte_from_double('-128.9'::float8)" {
+  expect_output '-128'
+}
+
+@test "fn: sparql.cast_as_byte_from_double('127.9'::float8)" {
+  expect_output '127'
+}
+
+@test "fn: sparql.cast_as_byte_from_double('-0.5'::float8)" {
+  expect_output '0'
 }
 
 @test "fn: sparql.cast_as_byte_from_string(' -infinity '::varchar)" {

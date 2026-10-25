@@ -161,14 +161,17 @@ Datum cast_as_unsignedint_from_decimal(PG_FUNCTION_ARGS)
  * Casts an xsd:float to xsd:unsignedInt, discarding its fractional part.
  *
  * @param fcinfo the float4 to cast
- * @return the truncated value as an int8, NULL if the value is NaN or out of the range of xsd:unsignedInt
+ * @return the truncated value as an int8, NULL if the value is NaN or its truncation is out of the range of
+ *         xsd:unsignedInt
  */
 PG_FUNCTION_INFO_V1(cast_as_unsignedint_from_float);
 Datum cast_as_unsignedint_from_float(PG_FUNCTION_ARGS)
 {
-    float4 value = PG_GETARG_FLOAT4(0);
+    float4 value = truncf(PG_GETARG_FLOAT4(0));
 
     /*
+     * The cast goes through xsd:integer: the fractional part is discarded
+     * first and the range of the target type is checked on the result.
      * Converting a floating point value to an integer is undefined for NaN and
      * for anything outside the range of the target type, so the range has to be
      * checked before the conversion and not after it.  Both bounds are exactly
@@ -176,9 +179,6 @@ Datum cast_as_unsignedint_from_float(PG_FUNCTION_ARGS)
      * every comparison with NaN being false.
      */
     if(!(value >= 0.0 && value <= 4294967295.0))
-        PG_RETURN_NULL();
-
-    if((int64) value != truncf(value))
         PG_RETURN_NULL();
 
     PG_RETURN_INT64((int64) value);
@@ -189,14 +189,17 @@ Datum cast_as_unsignedint_from_float(PG_FUNCTION_ARGS)
  * Casts an xsd:double to xsd:unsignedInt, discarding its fractional part.
  *
  * @param fcinfo the float8 to cast
- * @return the truncated value as an int8, NULL if the value is NaN or out of the range of xsd:unsignedInt
+ * @return the truncated value as an int8, NULL if the value is NaN or its truncation is out of the range of
+ *         xsd:unsignedInt
  */
 PG_FUNCTION_INFO_V1(cast_as_unsignedint_from_double);
 Datum cast_as_unsignedint_from_double(PG_FUNCTION_ARGS)
 {
-    float8 value = PG_GETARG_FLOAT8(0);
+    float8 value = trunc(PG_GETARG_FLOAT8(0));
 
     /*
+     * The cast goes through xsd:integer: the fractional part is discarded
+     * first and the range of the target type is checked on the result.
      * Converting a floating point value to an integer is undefined for NaN and
      * for anything outside the range of the target type, so the range has to be
      * checked before the conversion and not after it.  Both bounds are exactly
@@ -204,9 +207,6 @@ Datum cast_as_unsignedint_from_double(PG_FUNCTION_ARGS)
      * every comparison with NaN being false.
      */
     if(!(value >= 0.0 && value <= 4294967295.0))
-        PG_RETURN_NULL();
-
-    if((int64) value != trunc(value))
         PG_RETURN_NULL();
 
     PG_RETURN_INT64((int64) value);

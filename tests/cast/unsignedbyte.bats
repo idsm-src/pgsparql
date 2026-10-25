@@ -214,6 +214,18 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.cast_as_unsignedbyte_from_float('-0.5'::float4)" {
+  expect_output '0'
+}
+
+@test "fn: sparql.cast_as_unsignedbyte_from_float('255.9'::float4)" {
+  expect_output '255'
+}
+
+@test "fn: sparql.cast_as_unsignedbyte_from_float('-1.5'::float4)" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.cast_as_unsignedbyte_from_double('-inf'::float8)" {
   expect_output '(null)'
 }
@@ -239,6 +251,18 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.cast_as_unsignedbyte_from_double('nan'::float8)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_unsignedbyte_from_double('-0.5'::float8)" {
+  expect_output '0'
+}
+
+@test "fn: sparql.cast_as_unsignedbyte_from_double('255.9'::float8)" {
+  expect_output '255'
+}
+
+@test "fn: sparql.cast_as_unsignedbyte_from_double('-1.5'::float8)" {
   expect_output '(null)'
 }
 

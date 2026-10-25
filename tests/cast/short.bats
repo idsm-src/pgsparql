@@ -254,6 +254,18 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.cast_as_short_from_float('-32768.9'::float4)" {
+  expect_output '-32768'
+}
+
+@test "fn: sparql.cast_as_short_from_float('32767.9'::float4)" {
+  expect_output '32767'
+}
+
+@test "fn: sparql.cast_as_short_from_float('-0.5'::float4)" {
+  expect_output '0'
+}
+
 @test "fn: sparql.cast_as_short_from_double('-inf'::float8)" {
   expect_output '(null)'
 }
@@ -280,6 +292,18 @@ load ../psql_tests.bash
 
 @test "fn: sparql.cast_as_short_from_double('nan'::float8)" {
   expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_short_from_double('-32768.9'::float8)" {
+  expect_output '-32768'
+}
+
+@test "fn: sparql.cast_as_short_from_double('32767.9'::float8)" {
+  expect_output '32767'
+}
+
+@test "fn: sparql.cast_as_short_from_double('-0.5'::float8)" {
+  expect_output '0'
 }
 
 @test "fn: sparql.cast_as_short_from_string(' -infinity '::varchar)" {
