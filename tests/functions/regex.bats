@@ -152,6 +152,86 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.replace_string('abc'::varchar, '(b)'::varchar, '[\$1]'::varchar)" {
+  expect_output 'a[b]c'
+}
+
+@test "fn: sparql.replace_string('abc'::varchar, '(b)'::varchar, '[\$0]'::varchar)" {
+  expect_output 'a[b]c'
+}
+
+@test "fn: sparql.replace_string('abc'::varchar, '(b)'::varchar, '[\$10]'::varchar)" {
+  expect_output 'a[b0]c'
+}
+
+@test "fn: sparql.replace_string('abc'::varchar, '(b)'::varchar, '[\$2]'::varchar)" {
+  expect_output 'a[]c'
+}
+
+@test "fn: sparql.replace_string('abc'::varchar, '(b)|(x)'::varchar, '[\$2]'::varchar)" {
+  expect_output 'a[]c'
+}
+
+@test "fn: sparql.replace_string('abc'::varchar, 'b'::varchar, '\$\$'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.replace_string('abc'::varchar, 'b'::varchar, '\$'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.replace_string('abc'::varchar, 'b'::varchar, '\\\$'::varchar)" {
+  expect_output 'a$c'
+}
+
+@test "fn: sparql.replace_string('abc'::varchar, 'b'::varchar, '\\\\'::varchar)" {
+  expect_output 'a\c'
+}
+
+@test "fn: sparql.replace_string('abc'::varchar, 'b'::varchar, '\n'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.replace_string('abc'::varchar, 'b'::varchar, '\\'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.replace_string('abc'::varchar, 'x*'::varchar, '-'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.replace_string('abc'::varchar, 'b*'::varchar, '-'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.replace_string('abc'::varchar, '^'::varchar, '-'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.replace_string('abc'::varchar, ''::varchar, '-'::varchar, 'q'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.replace_string('abc'::varchar, 'b+'::varchar, '-'::varchar)" {
+  expect_output 'a-c'
+}
+
+@test "fn: sparql.replace_string('a.c'::varchar, '.'::varchar, '\\\$1'::varchar, 'q'::varchar)" {
+  expect_output 'a\$1c'
+}
+
+@test "fn: sparql.replace_string('abc'::varchar, 'b'::varchar, '\$0'::varchar, 'q'::varchar)" {
+  expect_output 'a$0c'
+}
+
+@test "fn: sparql.replace_rdfbox(sparql.rdfbox_create_from_langstring('abc'::varchar, 'en'::varchar), '(b)'::varchar, '[\$1]'::varchar)" {
+  expect_output '"a[b]c"@en'
+}
+
+@test "fn: sparql.replace_rdfbox(sparql.rdfbox_create_from_string('abc'::varchar), 'x*'::varchar, '-'::varchar)" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.replace_rdfbox(sparql.rdfbox_create_from_string('abcd'::varchar), 'b'::varchar, 'Z'::varchar)" {
   expect_output '"aZcd"^^<http://www.w3.org/2001/XMLSchema#string>'
 }

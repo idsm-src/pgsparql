@@ -3,7 +3,8 @@
  * The SPARQL functions REGEX and REPLACE, evaluated by PCRE2.
  *
  * The pattern is compiled for each call in the UTF mode of PCRE2, so it is read in the syntax of PCRE2 rather than
- * in that of XPath regular expressions, and the replacement string of REPLACE in the substitution syntax of PCRE2.
+ * in that of XPath regular expressions; the replacement string of REPLACE, on the other hand, is read in the syntax
+ * of fn:replace and translated into the substitution syntax of PCRE2.
  * PCRE2 allocates its memory by palloc() in the current memory context.
  *
  * @see https://www.w3.org/TR/sparql12-query/#func-regex
@@ -12,6 +13,7 @@
 #include <postgres.h>
 #include <fmgr.h>
 #include <pcre2.h>
+#include <lib/stringinfo.h>
 #include <utils/datum.h>
 #include <utils/memutils.h>
 #include "call.h"
@@ -266,13 +268,179 @@ Datum regex_rdfbox(PG_FUNCTION_ARGS)
 
 
 /**
- * The SPARQL function REPLACE of a simple literal: replaces every match of the pattern by the replacement, in which
- * `$n` and `${n}` stand for a captured group and a group that did not take part in the match is empty.
+ * Translates a replacement string of the XPath function fn:replace, by which SPARQL defines REPLACE, into the
+ * substitution syntax of PCRE2.
+ *
+ * In the replacement, `$` followed by digits refers to a capture group: the digits are read as a number N, `$0`
+ * stands for the whole match, an N between 1 and the number of groups for that group (empty if it did not take part
+ * in the match), a greater N of at most 9 for the empty string, and otherwise the last digit is a literal character
+ * and the rest is read again. `\$` is a literal `$` and `\\` a literal `\`; any other `\` or `$` is an error. With
+ * the flag `q`, the whole replacement is literal.
+ *
+ * @param replacement the replacement in the syntax of fn:replace
+ * @param size the length of the replacement in bytes
+ * @param groups the number of capture groups of the pattern
+ * @param literal whether the replacement is literal, as the flag `q` makes it
+ * @param result receives the translated replacement, a group written as `${N}` and a literal `$` as `$$`, so that
+ *               the digits following a group are not taken for a part of its number
+ * @return false if the replacement is invalid: a `\` not followed by `\` or `$`, or a `$` not followed by a digit
+ */
+static bool translate_replacement(const char *replacement, size_t size, uint32_t groups, bool literal, StringInfo result)
+{
+    for(size_t i = 0; i < size; i++)
+    {
+        char c = replacement[i];
+
+        if(literal)
+        {
+            appendStringInfoChar(result, c);
+
+            if(c == '$')
+                appendStringInfoChar(result, '$');
+        }
+        else if(c == '\\')
+        {
+            if(i + 1 < size && replacement[i + 1] == '\\')
+                appendStringInfoChar(result, '\\');
+            else if(i + 1 < size && replacement[i + 1] == '$')
+                appendStringInfoString(result, "$$");
+            else
+                return false;
+
+            i++;
+        }
+        else if(c == '$')
+        {
+            size_t start = i + 1;
+            size_t end = start;
+
+            while(end < size && replacement[end] >= '0' && replacement[end] <= '9')
+                end++;
+
+            if(end == start)
+                return false;
+
+            /*
+             * As long as the number names no group and is greater than nine, its last digit is a literal character
+             * and the rest is read again; the number saturates far above any count of groups, so that a long run of
+             * digits cannot overflow it.
+             */
+            size_t count = end - start;
+            uint32_t number;
+
+            for(;;)
+            {
+                number = 0;
+
+                for(size_t j = 0; j < count; j++)
+                    number = Min(number * 10 + (replacement[start + j] - '0'), (uint32_t) 1000000);
+
+                if(number <= 9 || number <= groups)
+                    break;
+
+                count--;
+            }
+
+            if(number <= groups)
+                appendStringInfo(result, "${%u}", number);
+
+            appendBinaryStringInfo(result, replacement + start + count, end - start - count);
+            i = end - 1;
+        }
+        else
+        {
+            appendStringInfoChar(result, c);
+        }
+    }
+
+    return true;
+}
+
+
+/**
+ * Replaces every match of a pattern in a text by a replacement, the SPARQL function REPLACE behind replace_string()
+ * and replace_rdfbox().
+ *
+ * @param text the text in UTF-8
+ * @param size the length of the text in bytes
+ * @param pattern the pattern, in the syntax of PCRE2
+ * @param replacement the replacement, in the syntax of fn:replace (see translate_replacement())
+ * @param flags the flags (see parse_flags())
+ * @return the palloc'd result; NULL if the flags are invalid, the pattern does not compile or matches the empty
+ *         string, which fn:replace takes for an error, the replacement is invalid or the substitution fails
+ */
+static VarChar *replace(const char *text, size_t size, VarChar *pattern, VarChar *replacement, VarChar *flags)
+{
+    uint32_t options;
+
+    if(!parse_flags(flags, &options))
+        return NULL;
+
+    int errornumber;
+    PCRE2_SIZE erroroffset;
+    pcre2_code *re = pcre2_compile((unsigned char *) VARDATA_ANY(pattern), VARSIZE_ANY_EXHDR(pattern), options, &errornumber, &erroroffset, get_compile_context());
+
+    if(re == NULL)
+        return NULL;
+
+    VarChar *result = NULL;
+    pcre2_match_data *match_data = pcre2_match_data_create(1, get_general_context());
+
+    if(match_data != NULL)
+    {
+        int rc = pcre2_match(re, (const unsigned char *) "", 0, 0, 0, match_data, get_match_context());
+        uint32_t groups;
+
+        if(rc == PCRE2_ERROR_NOMATCH && pcre2_pattern_info(re, PCRE2_INFO_CAPTURECOUNT, &groups) == 0)
+        {
+            StringInfoData translated;
+            initStringInfo(&translated);
+
+            if(translate_replacement(VARDATA_ANY(replacement), VARSIZE_ANY_EXHDR(replacement), groups, (options & PCRE2_LITERAL) != 0, &translated))
+            {
+                uint32_t suboptions = PCRE2_SUBSTITUTE_GLOBAL | PCRE2_SUBSTITUTE_UNSET_EMPTY;
+                PCRE2_SIZE length = 4 * 1024 - VARHDRSZ;
+                result = palloc(VARHDRSZ + length);
+
+                rc = pcre2_substitute(re, (const unsigned char *) text, size, 0, suboptions | PCRE2_SUBSTITUTE_OVERFLOW_LENGTH, NULL, get_match_context(), (const unsigned char *) translated.data, translated.len, (unsigned char *) VARDATA(result), &length);
+
+                if(rc == PCRE2_ERROR_NOMEMORY)
+                {
+                    result = repalloc(result, VARHDRSZ + length);
+                    rc = pcre2_substitute(re, (const unsigned char *) text, size, 0, suboptions, NULL, get_match_context(), (const unsigned char *) translated.data, translated.len, (unsigned char *) VARDATA(result), &length);
+                }
+
+                if(rc < 0)
+                {
+                    pfree(result);
+                    result = NULL;
+                }
+                else
+                {
+                    SET_VARSIZE(result, VARHDRSZ + length);
+                }
+            }
+
+            pfree(translated.data);
+        }
+
+        pcre2_match_data_free(match_data);
+    }
+
+    pcre2_code_free(re);
+
+    return result;
+}
+
+
+/**
+ * The SPARQL function REPLACE of a simple literal: replaces every match of the pattern by the replacement, which is
+ * read in the syntax of fn:replace (see translate_replacement()).
  *
  * @param fcinfo the varchar text, the varchar pattern, the varchar replacement and the varchar flags, empty by
  *               default
- * @return the varchar result; NULL if the flags are invalid, the pattern does not compile or the substitution fails,
- *         for example on an invalid replacement
+ * @return the varchar result; NULL if the flags are invalid, the pattern does not compile or matches the empty
+ *         string, the replacement is invalid or the substitution fails
  */
 PG_FUNCTION_INFO_V1(replace_string);
 Datum replace_string(PG_FUNCTION_ARGS)
@@ -282,41 +450,9 @@ Datum replace_string(PG_FUNCTION_ARGS)
     VarChar *replacement = PG_GETARG_VARCHAR_PP(2);
     VarChar *flags = PG_GETARG_VARCHAR_PP(3);
 
-    VarChar *result = NULL;
-    bool isnull = true;
-    uint32_t options;
+    VarChar *result = replace(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value), pattern, replacement, flags);
 
-    if(parse_flags(flags, &options))
-    {
-        int errornumber;
-        PCRE2_SIZE erroroffset;
-        pcre2_code *re = pcre2_compile((unsigned char *) VARDATA_ANY(pattern), VARSIZE_ANY_EXHDR(pattern), options, &errornumber, &erroroffset, get_compile_context());
-
-        if(re != NULL)
-        {
-            uint32_t suboptions = PCRE2_SUBSTITUTE_GLOBAL | PCRE2_SUBSTITUTE_UNSET_EMPTY;
-            PCRE2_SIZE size = (4 * 1024 - VARHDRSZ);
-            result = palloc(size + VARHDRSZ);
-
-            int rc = pcre2_substitute(re, (unsigned char *) VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value),  0, suboptions | PCRE2_SUBSTITUTE_OVERFLOW_LENGTH,
-                    NULL, get_match_context(), (unsigned char *) VARDATA_ANY(replacement), VARSIZE_ANY_EXHDR(replacement), (unsigned char *) VARDATA(result), &size);
-
-            if(rc == PCRE2_ERROR_NOMEMORY)
-            {
-                result = palloc(size + VARHDRSZ);
-
-                rc = pcre2_substitute(re, (unsigned char *) VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value),  0, suboptions,
-                        NULL, get_match_context(), (unsigned char *) VARDATA_ANY(replacement), VARSIZE_ANY_EXHDR(replacement), (unsigned char *) VARDATA(result), &size);
-            }
-
-            SET_VARSIZE(result, size + VARHDRSZ);
-            isnull = rc < 0;
-
-            pcre2_code_free(re);
-        }
-    }
-
-    if(isnull)
+    if(result == NULL)
         PG_RETURN_NULL();
 
     PG_RETURN_VARCHAR_P(result);
@@ -329,7 +465,7 @@ Datum replace_string(PG_FUNCTION_ARGS)
  * @param fcinfo the rdfbox text, the varchar pattern, the varchar replacement and the varchar flags, empty by
  *               default
  * @return the rdfbox result, a string literal of the same kind as the text; NULL if the text is not a string
- *         literal, the flags are invalid, the pattern does not compile or the substitution fails
+ *         literal or if replace_string() would give NULL
  */
 PG_FUNCTION_INFO_V1(replace_rdfbox);
 Datum replace_rdfbox(PG_FUNCTION_ARGS)
@@ -339,41 +475,14 @@ Datum replace_rdfbox(PG_FUNCTION_ARGS)
     VarChar *replacement = PG_GETARG_VARCHAR_PP(2);
     VarChar *flags = PG_GETARG_VARCHAR_PP(3);
 
-    uint32_t options;
+    if(!rdfbox_is_string_literal(box))
+        PG_RETURN_NULL();
 
-    if(rdfbox_is_string_literal(box) && parse_flags(flags, &options))
-    {
-        int errornumber;
-        PCRE2_SIZE erroroffset;
-        pcre2_code *re = pcre2_compile((unsigned char *) VARDATA_ANY(pattern), VARSIZE_ANY_EXHDR(pattern), options, &errornumber, &erroroffset, get_compile_context());
+    VarChar *value = RdfBoxGetVarChar(box);
+    VarChar *result = replace(VARDATA(value), VARSIZE(value) - VARHDRSZ, pattern, replacement, flags);
 
-        if(re != NULL)
-        {
-            VarChar *value = RdfBoxGetVarChar(box);
+    if(result == NULL)
+        PG_RETURN_NULL();
 
-            uint32_t suboptions = PCRE2_SUBSTITUTE_GLOBAL | PCRE2_SUBSTITUTE_UNSET_EMPTY;
-            PCRE2_SIZE size = 4 * 1024;
-            char *buffer = palloc(size);
-
-            int rc = pcre2_substitute(re, (unsigned char *) VARDATA(value), VARSIZE(value) - VARHDRSZ,  0, suboptions | PCRE2_SUBSTITUTE_OVERFLOW_LENGTH,
-                    NULL, get_match_context(), (unsigned char *) VARDATA_ANY(replacement), VARSIZE_ANY_EXHDR(replacement), (unsigned char *) buffer, &size);
-
-            if(rc == PCRE2_ERROR_NOMEMORY)
-            {
-                buffer = repalloc(buffer, size);
-
-                rc = pcre2_substitute(re, (unsigned char *) VARDATA(value), VARSIZE(value) - VARHDRSZ,  0, suboptions,
-                        NULL, get_match_context(), (unsigned char *) VARDATA_ANY(replacement), VARSIZE_ANY_EXHDR(replacement), (unsigned char *) buffer, &size);
-            }
-
-            pcre2_code_free(re);
-
-            if(rc < 0)
-                PG_RETURN_NULL();
-
-            PG_RETURN_RDFBOX_P(GetDerivedStringLiteralRdfBox(box, buffer, size));
-        }
-    }
-
-    PG_RETURN_NULL();
+    PG_RETURN_RDFBOX_P(GetDerivedStringLiteralRdfBox(box, VARDATA(result), VARSIZE(result) - VARHDRSZ));
 }
