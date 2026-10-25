@@ -1,3 +1,9 @@
+/**
+ * @file
+ * The integer blank nodes, an int8 whose upper 32 bits hold the segment and whose lower 32 bits hold the value within
+ * it. Segments keep apart the blank nodes that come from different sources, so equal values in different segments
+ * are different blank nodes.
+ */
 #ifndef TYPES_IBLANKNODE_H_
 #define TYPES_IBLANKNODE_H_
 

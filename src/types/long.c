@@ -1,3 +1,7 @@
+/**
+ * @file
+ * Parsing and printing of the lexical forms of xsd:long.
+ */
 #include <postgres.h>
 #include <utils/builtins.h>
 #include <common/int.h>
@@ -6,6 +10,14 @@
 #include "types/long.h"
 
 
+/**
+ * Parses a lexical form of xsd:long, an optionally signed sequence of decimal digits surrounded by optional XML
+ * Schema whitespace.
+ *
+ * @param data the lexical form, not necessarily terminated by a zero byte
+ * @param size the length of the lexical form in bytes
+ * @return the value; a malformed form or a value out of the range of xsd:long raises an error
+ */
 int64 long_parse(char *data, int size)
 {
     int pos = 0;
@@ -69,6 +81,13 @@ int64 long_parse(char *data, int size)
 }
 
 
+/**
+ * Prints the canonical lexical form of an xsd:long.
+ *
+ * @param value the value
+ * @param buffer the buffer, with room for at least #LONG_MAXLEN bytes; no terminating zero byte is written
+ * @return the number of bytes written
+ */
 int long_print(int64 value, char *buffer)
 {
     uint64 uvalue = value;

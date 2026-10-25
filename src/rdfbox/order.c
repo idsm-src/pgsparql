@@ -1,3 +1,41 @@
+/**
+ * @file
+ * The total order of RDF terms, which the operators `@=`, `@<>`, `@<`, `@>`, `@<=` and `@>=` and
+ * rdfbox_order_compare() implement.
+ *
+ * The order is used by the default B-tree operator class of rdfbox (ORDER BY, DISTINCT, GROUP BY, merge joins,
+ * indexes) and by the min/max aggregates. It has the following properties:
+ *
+ *   - blank nodes precede IRIs, IRIs precede literals and literals precede triple terms,
+ *
+ *   - the order extends the operator `<`: whenever `x < y` holds, `x @< y` holds as well,
+ *
+ *   - `@=` is the identity of terms: the types, the values and the stored lexical forms must all be the same;
+ *     in particular, numbers of different types are never `@=` even if they are `=`.
+ *
+ * Numbers of different types are compared by their exact mathematical values, not by values promoted to a
+ * common type as the operator `<` does. The promoted comparison depends on the pair of types involved and is not
+ * transitive (for example, integer 16777217 = float 16777216 < double 16777216.5 < integer 16777217), so it
+ * cannot be a part of a total order. Because all promotions are monotonic, the exact comparison agrees with `<`
+ * and `>` whenever they hold. Only if the exact values are equal, the types are compared in the order of the ::RdfType
+ * enumeration (byte < unsignedByte < short < unsignedShort < int < unsignedInt < long < unsignedLong < integer <
+ * nonPositiveInteger < negativeInteger < nonNegativeInteger < positiveInteger < decimal < float < double). NaN is
+ * greater than any other number and equal to another NaN.
+ *
+ * User literals are compared by their boxed values with the total order of ubox (which orders values of
+ * different PostgreSQL types by the OID of the type) and then by the IRIs of their datatypes. The operator `@<`
+ * therefore extends `<` here as well, as far as `<` is defined at all: `<` only compares user literals of the same
+ * datatype IRI and is based on the same comparison function of the boxed type.
+ *
+ * Terms of the same type are compared by their values first, then by the presence of a stored lexical form
+ * (the terms in the canonical form come first) and finally by the lexical forms themselves. The values are
+ * compared as they are presented by the canonical lexical forms: xsd:decimal values 1.0 and 1.00 are equal,
+ * while xsd:double values -0.0 and 0.0 are not.
+ *
+ * Triple terms are compared by their subjects, then by their predicates and then by their objects, each with
+ * this very order. SPARQL leaves the relative order of two triple terms undefined and allows an implementation to
+ * define it, which is what the operator class needs anyway.
+ */
 #include <postgres.h>
 #include <utils/builtins.h>
 #include <utils/numeric.h>
@@ -10,79 +48,78 @@
 #include "types/unsignedlong.h"
 
 
-/*
- * The operators @=, @<>, @<, @>, @<= and @>= together with rdfbox_order_compare() define a total order of RDF
- * terms, which is used by the default B-tree operator class (ORDER BY, DISTINCT, GROUP BY, merge joins, indexes)
- * and by the min/max aggregates. The order has the following properties:
- *
- *   - blank nodes precede IRIs, IRIs precede literals and literals precede triple terms,
- *
- *   - the order extends the operator <: whenever x < y holds, x @< y holds as well,
- *
- *   - @= is the identity of terms: the types, the values and the stored lexical forms must all be the same;
- *     in particular, numbers of different types are never @= even if they are =.
- *
- * Numbers of different types are compared by their exact mathematical values, not by values promoted to a
- * common type as the operator < does. The promoted comparison depends on the pair of types involved and is not
- * transitive (for example, integer 16777217 = float 16777216 < double 16777216.5 < integer 16777217), so it
- * cannot be a part of a total order. Because all promotions are monotonic, the exact comparison agrees with <
- * and > whenever they hold. Only if the exact values are equal, the types are compared in the order of the RdfType
- * enumeration (byte < unsignedByte < short < unsignedShort < int < unsignedInt < long < unsignedLong < integer <
- * nonPositiveInteger < negativeInteger < nonNegativeInteger < positiveInteger < decimal < float < double). NaN is
- * greater than any other number and equal to another NaN.
- *
- * User literals are compared by their boxed values with the total order of ubox (which orders values of
- * different PostgreSQL types by the OID of the type) and then by the IRIs of their datatypes. The operator @<
- * therefore extends < here as well, as far as < is defined at all: < only compares user literals of the same
- * datatype IRI and is based on the same comparison function of the boxed type.
- *
- * Terms of the same type are compared by their values first, then by the presence of a stored lexical form
- * (the terms in the canonical form come first) and finally by the lexical forms themselves. The values are
- * compared as they are presented by the canonical lexical forms: xsd:decimal values 1.0 and 1.00 are equal,
- * while xsd:double values -0.0 and 0.0 are not.
- *
- * Triple terms are compared by their subjects, then by their predicates and then by their objects, each with
- * this very order. SPARQL leaves the relative order of two triple terms undefined and allows an implementation to
- * define it, which is what the operator class needs anyway.
- */
-
-
 /* the numbers held in an int64, in a uint64 and in a double; the others are held in a numeric */
 
+
+/**
+ * Tests whether a numeric box holds its value in an integer of at most 64 bits.
+ *
+ * @param box the numeric box
+ * @return true for the types from #XSD_BYTE to #XSD_LONG
+ */
 static inline bool rdfbox_is_integral(RdfBox *box)
 {
     return box->type >= XSD_BYTE && box->type <= XSD_LONG;
 }
 
 
+/**
+ * Tests whether a numeric box is an xsd:unsignedLong, whose value is held in a uint64.
+ *
+ * @param box the numeric box
+ * @return true for #XSD_UNSIGNEDLONG
+ */
 static inline bool rdfbox_is_unsigned_long(RdfBox *box)
 {
     return box->type == XSD_UNSIGNEDLONG;
 }
 
 
+/**
+ * Tests whether a numeric box is an xsd:float or an xsd:double.
+ *
+ * @param box the numeric box
+ * @return true for #XSD_FLOAT and #XSD_DOUBLE
+ */
 static inline bool rdfbox_is_floating(RdfBox *box)
 {
     return box->type == XSD_FLOAT || box->type == XSD_DOUBLE;
 }
 
 
+/**
+ * Returns the value of an xsd:float or an xsd:double box as a double, which holds both exactly.
+ *
+ * @param box the box of type #XSD_FLOAT or #XSD_DOUBLE
+ * @return the value
+ */
 static inline float8 rdfbox_get_floating_as_double(RdfBox *box)
 {
     return box->type == XSD_FLOAT ? (float8) RdfBoxGetFloat4(box) : RdfBoxGetFloat8(box);
 }
 
 
+/**
+ * Compares two numerics by their values, regardless of their scales.
+ *
+ * @param left the left numeric
+ * @param right the right numeric
+ * @return a negative number, zero or a positive number if @a left is less than, equal to or greater than @a right
+ */
 static inline int numeric_compare(Numeric left, Numeric right)
 {
     return DatumGetInt32(DirectFunctionCall2(numeric_cmp, NumericGetDatum(left), NumericGetDatum(right)));
 }
 
 
-/*
+/**
  * Exact comparison of a finite double with a numeric value. The double is decomposed into mantissa * 2^exponent;
  * for a negative exponent, mantissa * 5^(-exponent) is compared with right * 10^(-exponent), so that no numeric
  * value with a huge scale has to be constructed.
+ *
+ * @param left the finite double
+ * @param right the finite numeric
+ * @return a negative number, zero or a positive number if @a left is less than, equal to or greater than @a right
  */
 static int compare_double_with_numeric_exactly(float8 left, Numeric right)
 {
@@ -139,6 +176,14 @@ static int compare_double_with_numeric_exactly(float8 left, Numeric right)
 }
 
 
+/**
+ * Compares two doubles by their values: NaN is greater than any other value and equal to NaN, -0.0 and 0.0 are
+ * equal.
+ *
+ * @param left the left double
+ * @param right the right double
+ * @return -1, 0 or 1 if @a left is less than, equal to or greater than @a right
+ */
 static int compare_double_values(float8 left, float8 right)
 {
     /* NaN is greater than any other value and equal to NaN, -0.0 and 0.0 are equal */
@@ -153,6 +198,13 @@ static int compare_double_values(float8 left, float8 right)
 }
 
 
+/**
+ * Compares a double with an int64 exactly; NaN is greater than any integer.
+ *
+ * @param left the double
+ * @param right the integer
+ * @return -1, 0 or 1 if @a left is less than, equal to or greater than @a right
+ */
 static int compare_double_with_integral(float8 left, int64 right)
 {
     if(isnan(left) || left >= 9223372036854775808.0)
@@ -171,6 +223,13 @@ static int compare_double_with_integral(float8 left, int64 right)
 }
 
 
+/**
+ * Compares a double with a uint64 exactly; NaN is greater than any integer.
+ *
+ * @param left the double
+ * @param right the unsigned integer
+ * @return -1, 0 or 1 if @a left is less than, equal to or greater than @a right
+ */
 static int compare_double_with_unsigned_long(float8 left, uint64 right)
 {
     if(isnan(left) || left >= 18446744073709551616.0)
@@ -189,6 +248,15 @@ static int compare_double_with_unsigned_long(float8 left, uint64 right)
 }
 
 
+/**
+ * Compares a double with a numeric exactly. The double nearest to the numeric decides if it differs from @a left,
+ * an infinity is equal only to the infinity of the same sign, and otherwise the values are compared exactly by
+ * compare_double_with_numeric_exactly(). NaN is greater than any other value and equal to a numeric NaN.
+ *
+ * @param left the double
+ * @param right the numeric
+ * @return a negative number, zero or a positive number if @a left is less than, equal to or greater than @a right
+ */
 static int compare_double_with_numeric(float8 left, Numeric right)
 {
     float8 approx = numeric_get_as_double(right);
@@ -210,6 +278,13 @@ static int compare_double_with_numeric(float8 left, Numeric right)
 }
 
 
+/**
+ * Compares an int64 with a uint64 exactly.
+ *
+ * @param left the signed integer
+ * @param right the unsigned integer
+ * @return -1, 0 or 1 if @a left is less than, equal to or greater than @a right
+ */
 static int compare_integral_with_unsigned_long(int64 left, uint64 right)
 {
     if(left < 0)
@@ -219,6 +294,13 @@ static int compare_integral_with_unsigned_long(int64 left, uint64 right)
 }
 
 
+/**
+ * Compares an int64 with a numeric exactly.
+ *
+ * @param left the integer
+ * @param right the numeric
+ * @return a negative number, zero or a positive number if @a left is less than, equal to or greater than @a right
+ */
 static int compare_integral_with_numeric(int64 left, Numeric right)
 {
     Numeric value = numeric_from_int64(left);
@@ -229,6 +311,13 @@ static int compare_integral_with_numeric(int64 left, Numeric right)
 }
 
 
+/**
+ * Compares a uint64 with a numeric exactly.
+ *
+ * @param left the unsigned integer
+ * @param right the numeric
+ * @return a negative number, zero or a positive number if @a left is less than, equal to or greater than @a right
+ */
 static int compare_unsigned_long_with_numeric(uint64 left, Numeric right)
 {
     Numeric value = unsignedlong_as_numeric(left);
@@ -239,6 +328,14 @@ static int compare_unsigned_long_with_numeric(uint64 left, Numeric right)
 }
 
 
+/**
+ * Compares the exact mathematical values of two numeric boxes of any numeric types; NaN is greater than any other
+ * number and equal to another NaN, -0.0 and 0.0 are equal.
+ *
+ * @param left the left numeric box
+ * @param right the right numeric box
+ * @return a negative number, zero or a positive number if @a left is less than, equal to or greater than @a right
+ */
 static int compare_numeric_values(RdfBox *left, RdfBox *right)
 {
     if(rdfbox_is_floating(left))
@@ -293,6 +390,14 @@ static int compare_numeric_values(RdfBox *left, RdfBox *right)
 }
 
 
+/**
+ * Compares two doubles as the values of two terms of the same type: as compare_double_values() does, but -0.0
+ * precedes 0.0.
+ *
+ * @param left the left double
+ * @param right the right double
+ * @return -1, 0 or 1 if @a left precedes, is equal to or follows @a right
+ */
 static int compare_double_terms(float8 left, float8 right)
 {
     /* the same as compare_double_values(), but -0.0 precedes 0.0 */
@@ -306,6 +411,19 @@ static int compare_double_terms(float8 left, float8 right)
 }
 
 
+/**
+ * Compares the values of two terms of the same type, ignoring their stored lexical forms.
+ *
+ * Booleans, numbers, durations and integer blank nodes are compared by their values (-0.0 preceding 0.0), dates
+ * and dateTimes by date_order_compare() and datetime_order_compare(), strings, IRIs and string blank nodes
+ * byte-wise, language-tagged strings and literals of unknown datatypes by the value and then by the language tag
+ * or the datatype IRI, user literals by ubox_order() and then by the datatype IRI, and triple terms by
+ * rdfbox_compare_terms() of the subjects, the predicates and the objects.
+ *
+ * @param left the left term
+ * @param right the right term of the same type
+ * @return a negative number, zero or a positive number if @a left precedes, is equal to or follows @a right
+ */
 static int compare_values_of_same_type(RdfBox *left, RdfBox *right)
 {
     switch(left->type)
@@ -402,6 +520,14 @@ static int compare_values_of_same_type(RdfBox *left, RdfBox *right)
 }
 
 
+/**
+ * Compares the stored lexical forms of two terms: a term without one precedes a term with one, and two stored
+ * lexical forms are compared byte-wise.
+ *
+ * @param left the left term
+ * @param right the right term of the same type
+ * @return a negative number, zero or a positive number if @a left precedes, is equal to or follows @a right
+ */
 static int compare_lexicals(RdfBox *left, RdfBox *right)
 {
     /* terms without a stored lexical form precede terms with one */
@@ -416,6 +542,13 @@ static int compare_lexicals(RdfBox *left, RdfBox *right)
 }
 
 
+/**
+ * Compares two terms of the same type by their values and then by their stored lexical forms.
+ *
+ * @param left the left term
+ * @param right the right term of the same type
+ * @return a negative number, zero or a positive number if @a left precedes, is equal to or follows @a right
+ */
 static int compare_terms_of_same_type(RdfBox *left, RdfBox *right)
 {
     int result = compare_values_of_same_type(left, right);
@@ -427,6 +560,19 @@ static int compare_terms_of_same_type(RdfBox *left, RdfBox *right)
 }
 
 
+/**
+ * Compares two RDF terms in the total order of rdfbox.
+ *
+ * Terms of the same type are compared by compare_terms_of_same_type(), two numbers of different types by their
+ * exact values and then by their types, and the other terms by the reversed order of their types: string blank
+ * nodes, integer blank nodes, IRIs, literals of unknown datatypes or with invalid lexical forms, user literals,
+ * language-tagged strings with the base direction rtl, those with ltr, those without a base direction, strings,
+ * dayTimeDurations, dates, dateTimes, numbers, booleans and triple terms.
+ *
+ * @param left the left term
+ * @param right the right term
+ * @return a negative number, zero or a positive number if @a left precedes, is equal to or follows @a right
+ */
 int rdfbox_compare_terms(RdfBox *left, RdfBox *right)
 {
     if(left->type == right->type)
@@ -447,6 +593,14 @@ int rdfbox_compare_terms(RdfBox *left, RdfBox *right)
 }
 
 
+/**
+ * Tests whether two terms are identical, that is, whether rdfbox_compare_terms() gives 0 for them, without
+ * converting their values: the terms must have the same type, the same values and the same stored lexical forms.
+ *
+ * @param left the left term
+ * @param right the right term
+ * @return true if the terms are identical
+ */
 bool rdfbox_same_terms(RdfBox *left, RdfBox *right)
 {
     /* the same as rdfbox_compare_terms(...) == 0, but without any conversion of the values */
@@ -461,6 +615,13 @@ bool rdfbox_same_terms(RdfBox *left, RdfBox *right)
 }
 
 
+/**
+ * Compares two RDF terms in the total order of rdfbox; the B-tree support function 1 of the default operator class
+ * of rdfbox.
+ *
+ * @param fcinfo the two rdfboxes
+ * @return the int4 -1, 0 or 1 if the first term precedes, is equal to or follows the second one
+ */
 PG_FUNCTION_INFO_V1(rdfbox_order_compare);
 Datum rdfbox_order_compare(PG_FUNCTION_ARGS)
 {
@@ -476,6 +637,13 @@ Datum rdfbox_order_compare(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Tests whether two RDF terms are identical in the total order, the operator `@=` of the B-tree and hash operator
+ * classes of rdfbox.
+ *
+ * @param fcinfo the two rdfboxes
+ * @return the bool true if the terms have the same type, value and stored lexical form
+ */
 PG_FUNCTION_INFO_V1(rdfbox_order_is_equal_to);
 Datum rdfbox_order_is_equal_to(PG_FUNCTION_ARGS)
 {
@@ -491,6 +659,12 @@ Datum rdfbox_order_is_equal_to(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Tests whether two RDF terms are not identical in the total order, the operator `@<>`.
+ *
+ * @param fcinfo the two rdfboxes
+ * @return the bool true if the terms differ in the type, the value or the stored lexical form
+ */
 PG_FUNCTION_INFO_V1(rdfbox_order_is_not_equal_to);
 Datum rdfbox_order_is_not_equal_to(PG_FUNCTION_ARGS)
 {
@@ -506,6 +680,12 @@ Datum rdfbox_order_is_not_equal_to(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Tests whether an RDF term precedes another one in the total order, the operator `@<`.
+ *
+ * @param fcinfo the two rdfboxes
+ * @return the bool true if the first term precedes the second one
+ */
 PG_FUNCTION_INFO_V1(rdfbox_order_is_less_than);
 Datum rdfbox_order_is_less_than(PG_FUNCTION_ARGS)
 {
@@ -521,6 +701,12 @@ Datum rdfbox_order_is_less_than(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Tests whether an RDF term follows another one in the total order, the operator `@>`.
+ *
+ * @param fcinfo the two rdfboxes
+ * @return the bool true if the first term follows the second one
+ */
 PG_FUNCTION_INFO_V1(rdfbox_order_is_greater_than);
 Datum rdfbox_order_is_greater_than(PG_FUNCTION_ARGS)
 {
@@ -536,6 +722,12 @@ Datum rdfbox_order_is_greater_than(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Tests whether an RDF term does not precede another one in the total order, the operator `@>=`.
+ *
+ * @param fcinfo the two rdfboxes
+ * @return the bool true if the first term follows the second one or is identical to it
+ */
 PG_FUNCTION_INFO_V1(rdfbox_order_is_not_less_than);
 Datum rdfbox_order_is_not_less_than(PG_FUNCTION_ARGS)
 {
@@ -551,6 +743,12 @@ Datum rdfbox_order_is_not_less_than(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Tests whether an RDF term does not follow another one in the total order, the operator `@<=`.
+ *
+ * @param fcinfo the two rdfboxes
+ * @return the bool true if the first term precedes the second one or is identical to it
+ */
 PG_FUNCTION_INFO_V1(rdfbox_order_is_not_greater_than);
 Datum rdfbox_order_is_not_greater_than(PG_FUNCTION_ARGS)
 {

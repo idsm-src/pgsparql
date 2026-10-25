@@ -1,3 +1,7 @@
+/**
+ * @file
+ * Parsing and printing of the lexical forms of xsd:unsignedLong.
+ */
 #include <postgres.h>
 #include <utils/builtins.h>
 #include <common/int.h>
@@ -5,6 +9,14 @@
 #include "types/unsignedlong.h"
 
 
+/**
+ * Parses a lexical form of xsd:unsignedLong, an optionally signed sequence of decimal digits surrounded by optional
+ * XML Schema whitespace; the minus sign is allowed only for zero.
+ *
+ * @param data the lexical form, not necessarily terminated by a zero byte
+ * @param size the length of the lexical form in bytes
+ * @return the value; a malformed form or a value out of the range of xsd:unsignedLong raises an error
+ */
 uint64 unsignedlong_parse(char *data, int size)
 {
     int pos = 0;
@@ -57,6 +69,13 @@ uint64 unsignedlong_parse(char *data, int size)
 }
 
 
+/**
+ * Prints the canonical lexical form of an xsd:unsignedLong.
+ *
+ * @param value the value
+ * @param buffer the buffer, with room for at least #UNSIGNEDLONG_MAXLEN bytes; no terminating zero byte is written
+ * @return the number of bytes written
+ */
 int unsignedlong_print(uint64 value, char *buffer)
 {
     return pg_ulltoa_n(value, buffer);

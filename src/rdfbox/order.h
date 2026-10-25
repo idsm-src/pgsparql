@@ -1,3 +1,7 @@
+/**
+ * @file
+ * The total order of RDF terms behind the default B-tree operator class of rdfbox, see rdfbox/order.c.
+ */
 #ifndef RDFBOX_ORDER_H_
 #define RDFBOX_ORDER_H_
 

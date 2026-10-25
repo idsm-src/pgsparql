@@ -1,3 +1,13 @@
+/**
+ * @file
+ * The SPARQL functions on RDF terms: isIRI, isBlank, isLiteral, isNumeric, isTRIPLE, STR, LANG, LANGDIR, hasLANG,
+ * hasLANGDIR, DATATYPE, IRI, BNODE, STRDT, STRLANG and STRLANGDIR.
+ *
+ * The `str_<type>()` functions give the lexical form of a value held by an SQL type, so that STR does not need the
+ * value to be boxed.
+ *
+ * @see https://www.w3.org/TR/sparql12-query/#func-rdfTerms
+ */
 #include <postgres.h>
 #include <pcre2.h>
 #include <utils/datum.h>
@@ -28,17 +38,29 @@
 #include "types/daytimeduration.h"
 
 
+/**
+ * The components of an IRI reference, as section 3 of RFC 3986 splits it.
+ *
+ * Each component is a palloc'd string that keeps its delimiters, so that the components concatenated give the IRI
+ * reference again; a component that is not present is NULL.
+ */
 typedef struct
 {
-    char *scheme;
-    char *authority;
-    char *path;
-    char *query;
-    char *fragment;
+    char *scheme;       /**< the scheme with the terminating `:` */
+    char *authority;    /**< the authority with the leading `//` */
+    char *path;         /**< the path, possibly empty */
+    char *query;        /**< the query with the leading `?` */
+    char *fragment;     /**< the fragment with the leading `#` */
 }
 IriComponents;
 
 
+/**
+ * The datatype IRIs of the literals whose datatype the type of the box determines, indexed by ::RdfType.
+ *
+ * The entry of #TRIPLE_TERM, which is not a literal, is NULL; the table ends with the language-tagged strings, as a
+ * user literal and a typed literal carry their datatype IRI in the box.
+ */
 static const char *rdfbox_types[] =
 {
         NULL,   /* TRIPLE_TERM is not a literal */
@@ -69,6 +91,13 @@ static const char *rdfbox_types[] =
 };
 
 
+/**
+ * Tests two varchars for byte-wise equality.
+ *
+ * @param arg1 the left varchar
+ * @param arg2 the right varchar
+ * @return true if both have the same bytes
+ */
 static bool varchar_equals(VarChar* arg1, VarChar* arg2)
 {
         size_t len1 = VARSIZE_ANY_EXHDR(arg1);
@@ -78,6 +107,12 @@ static bool varchar_equals(VarChar* arg1, VarChar* arg2)
 }
 
 
+/**
+ * Splits an IRI reference into its components, as the regular expression of appendix B of RFC 3986 does.
+ *
+ * @param string the IRI reference, terminated by a zero byte
+ * @return the components; the path is always present, possibly empty
+ */
 static IriComponents iri_parse(char *string)
 {
     IriComponents iri = {.scheme = NULL, .authority = NULL, .path = NULL, .query = NULL, .fragment = NULL };
@@ -138,6 +173,14 @@ static IriComponents iri_parse(char *string)
 }
 
 
+/**
+ * Merges a relative path with the path of a base IRI, as section 5.2.3 of RFC 3986 does: the relative path replaces
+ * everything after the last `/` of the base path.
+ *
+ * @param base the path of the base IRI; the caller passes `/` for a base IRI with an authority and an empty path
+ * @param relative the relative path
+ * @return the merged path, palloc'd
+ */
 static char *iri_merge_path(char *base, char *relative)
 {
     int length = strlen(base);
@@ -149,6 +192,12 @@ static char *iri_merge_path(char *base, char *relative)
 }
 
 
+/**
+ * Removes the dot segments "." and ".." from a path, by the algorithm of section 5.2.4 of RFC 3986.
+ *
+ * @param path the path, which is not modified
+ * @return the path without dot segments, palloc'd
+ */
 static char *iri_remove_dot_segments(char *path)
 {
     char *data = pstrdup(path);
@@ -222,6 +271,12 @@ static char *iri_remove_dot_segments(char *path)
 }
 
 
+/**
+ * Tests whether an RDF term is an IRI, the SPARQL functions isIRI and isURI; also bound to `isuri_rdfbox(rdfbox)`.
+ *
+ * @param fcinfo the rdfbox term
+ * @return true if the term is an IRI
+ */
 PG_FUNCTION_INFO_V1(isiri_rdfbox);
 Datum isiri_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -231,6 +286,12 @@ Datum isiri_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Tests whether an RDF term is a blank node, the SPARQL function isBlank.
+ *
+ * @param fcinfo the rdfbox term
+ * @return true if the term is a blank node, with a numeric or a string label
+ */
 PG_FUNCTION_INFO_V1(isblank_rdfbox);
 Datum isblank_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -240,6 +301,13 @@ Datum isblank_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Tests whether an RDF term is a literal, the SPARQL function isLiteral.
+ *
+ * @param fcinfo the rdfbox term
+ * @return true if the term is a literal of any datatype, a user literal and a literal with an invalid lexical form
+ *         included
+ */
 PG_FUNCTION_INFO_V1(isliteral_rdfbox);
 Datum isliteral_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -249,6 +317,13 @@ Datum isliteral_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Tests whether an RDF term is a numeric literal, the SPARQL function isNumeric.
+ *
+ * @param fcinfo the rdfbox term
+ * @return true if the term is a literal of a numeric datatype; a literal with an invalid lexical form is held as a
+ *         typed literal and is not numeric
+ */
 PG_FUNCTION_INFO_V1(isnumeric_rdfbox);
 Datum isnumeric_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -258,6 +333,12 @@ Datum isnumeric_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Tests whether an RDF term is a triple term, the SPARQL function isTRIPLE.
+ *
+ * @param fcinfo the rdfbox term
+ * @return true if the term is a triple term
+ */
 PG_FUNCTION_INFO_V1(istriple_rdfbox);
 Datum istriple_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -267,6 +348,12 @@ Datum istriple_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function STR of an xsd:boolean.
+ *
+ * @param fcinfo the bool
+ * @return the canonical lexical form as a varchar
+ */
 PG_FUNCTION_INFO_V1(str_boolean);
 Datum str_boolean(PG_FUNCTION_ARGS)
 {
@@ -274,6 +361,12 @@ Datum str_boolean(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function STR of an xsd:short; also bound to `str_byte(int2)` and `str_unsignedbyte(int2)`.
+ *
+ * @param fcinfo the int2
+ * @return the canonical lexical form as a varchar
+ */
 PG_FUNCTION_INFO_V1(str_short);
 Datum str_short(PG_FUNCTION_ARGS)
 {
@@ -281,6 +374,12 @@ Datum str_short(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function STR of an xsd:int; also bound to `str_unsignedshort(int4)`.
+ *
+ * @param fcinfo the int4
+ * @return the canonical lexical form as a varchar
+ */
 PG_FUNCTION_INFO_V1(str_int);
 Datum str_int(PG_FUNCTION_ARGS)
 {
@@ -288,6 +387,12 @@ Datum str_int(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function STR of an xsd:long; also bound to `str_unsignedint(int8)`.
+ *
+ * @param fcinfo the int8
+ * @return the canonical lexical form as a varchar
+ */
 PG_FUNCTION_INFO_V1(str_long);
 Datum str_long(PG_FUNCTION_ARGS)
 {
@@ -295,6 +400,13 @@ Datum str_long(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function STR of an xsd:integer; also bound to `str_unsignedlong(decimal)` and to the STR functions of
+ * the subtypes of xsd:integer.
+ *
+ * @param fcinfo the numeric
+ * @return the canonical lexical form as a varchar
+ */
 PG_FUNCTION_INFO_V1(str_integer);
 Datum str_integer(PG_FUNCTION_ARGS)
 {
@@ -302,6 +414,12 @@ Datum str_integer(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function STR of an xsd:decimal.
+ *
+ * @param fcinfo the numeric
+ * @return the canonical lexical form as a varchar
+ */
 PG_FUNCTION_INFO_V1(str_decimal);
 Datum str_decimal(PG_FUNCTION_ARGS)
 {
@@ -309,6 +427,12 @@ Datum str_decimal(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function STR of an xsd:float.
+ *
+ * @param fcinfo the float4
+ * @return the canonical lexical form as a varchar
+ */
 PG_FUNCTION_INFO_V1(str_float);
 Datum str_float(PG_FUNCTION_ARGS)
 {
@@ -316,6 +440,12 @@ Datum str_float(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function STR of an xsd:double.
+ *
+ * @param fcinfo the float8
+ * @return the canonical lexical form as a varchar
+ */
 PG_FUNCTION_INFO_V1(str_double);
 Datum str_double(PG_FUNCTION_ARGS)
 {
@@ -323,6 +453,12 @@ Datum str_double(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function STR of an xsd:dateTime.
+ *
+ * @param fcinfo the zoneddatetime, or the timestamptz and the int4 time zone offset
+ * @return the canonical lexical form as a varchar
+ */
 PG_FUNCTION_INFO_V1(str_datetime);
 Datum str_datetime(PG_FUNCTION_ARGS)
 {
@@ -331,6 +467,12 @@ Datum str_datetime(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function STR of an xsd:date.
+ *
+ * @param fcinfo the zoneddate, or the date and the int4 time zone offset
+ * @return the canonical lexical form as a varchar
+ */
 PG_FUNCTION_INFO_V1(str_date);
 Datum str_date(PG_FUNCTION_ARGS)
 {
@@ -339,6 +481,12 @@ Datum str_date(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function STR of an xsd:dayTimeDuration.
+ *
+ * @param fcinfo the int8 duration in microseconds
+ * @return the canonical lexical form as a varchar
+ */
 PG_FUNCTION_INFO_V1(str_daytimeduration);
 Datum str_daytimeduration(PG_FUNCTION_ARGS)
 {
@@ -346,6 +494,16 @@ Datum str_daytimeduration(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function STR: the lexical form of a literal or the text of an IRI.
+ *
+ * A literal that keeps a non-canonical lexical form gives that form, any other one its canonical form; the value of
+ * a user literal is printed by the output function of its SQL type, which is why the SQL function is declared
+ * STABLE.
+ *
+ * @param fcinfo the rdfbox term
+ * @return the varchar, which may point into the box; NULL for a blank node and a triple term
+ */
 PG_FUNCTION_INFO_V1(str_rdfbox);
 Datum str_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -458,6 +616,13 @@ Datum str_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function LANG: the language tag of a literal.
+ *
+ * @param fcinfo the rdfbox term
+ * @return the varchar language tag of a language-tagged string, with or without a base direction, the empty string
+ *         for any other literal, NULL for a term that is not a literal
+ */
 PG_FUNCTION_INFO_V1(lang_rdfbox);
 Datum lang_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -481,6 +646,13 @@ Datum lang_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function LANGDIR: the base direction of a literal.
+ *
+ * @param fcinfo the rdfbox term
+ * @return the varchar #RDF_LTR_DIRECTION or #RDF_RTL_DIRECTION of a directional language-tagged string, the empty
+ *         string for any other literal, NULL for a term that is not a literal
+ */
 PG_FUNCTION_INFO_V1(langdir_rdfbox);
 Datum langdir_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -508,6 +680,12 @@ Datum langdir_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Tests whether an RDF term is a language-tagged string, the SPARQL function hasLANG.
+ *
+ * @param fcinfo the rdfbox term
+ * @return true if the term is a language-tagged string, with or without a base direction
+ */
 PG_FUNCTION_INFO_V1(haslang_rdfbox);
 Datum haslang_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -517,6 +695,12 @@ Datum haslang_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Tests whether an RDF term is a language-tagged string with a base direction, the SPARQL function hasLANGDIR.
+ *
+ * @param fcinfo the rdfbox term
+ * @return true if the term is a directional language-tagged string
+ */
 PG_FUNCTION_INFO_V1(haslangdir_rdfbox);
 Datum haslangdir_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -526,6 +710,13 @@ Datum haslangdir_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function DATATYPE: the datatype IRI of a literal.
+ *
+ * @param fcinfo the rdfbox term
+ * @return the varchar datatype IRI, `rdf:langString` or `rdf:dirLangString` for a language-tagged string; NULL for
+ *         a term that is not a literal
+ */
 PG_FUNCTION_INFO_V1(datatype_rdfbox);
 Datum datatype_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -540,6 +731,15 @@ Datum datatype_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function IRI of a simple literal: resolves an IRI reference against a base IRI, as section 5.2 of
+ * RFC 3986 does; also bound to `uri_string(varchar, varchar)`, the SPARQL function URI.
+ *
+ * The base IRI is taken as it is, without a check; its fragment is not used.
+ *
+ * @param fcinfo the varchar base IRI and the varchar IRI reference
+ * @return the varchar resolved IRI, NULL if the IRI reference is not a valid one
+ */
 PG_FUNCTION_INFO_V1(iri_string);
 Datum iri_string(PG_FUNCTION_ARGS)
 {
@@ -618,6 +818,13 @@ Datum iri_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function IRI of an RDF term; also bound to `uri_rdfbox(varchar, rdfbox)`, the SPARQL function URI.
+ *
+ * @param fcinfo the varchar base IRI and the rdfbox term
+ * @return the varchar IRI: an xsd:string resolved against the base IRI by iri_string(), an IRI unchanged; NULL for
+ *         any other term and for a string that is not a valid IRI reference
+ */
 PG_FUNCTION_INFO_V1(iri_rdfbox);
 Datum iri_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -638,6 +845,15 @@ Datum iri_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Numbers a fresh blank node, for the SPARQL function BNODE without an argument.
+ *
+ * The number comes from a counter of the backend, which is why the SQL function is declared VOLATILE; the translator
+ * makes it the label of a blank node of its own class.
+ *
+ * @param fcinfo no arguments
+ * @return the int4 number, a different one for each call in the backend
+ */
 PG_FUNCTION_INFO_V1(bnode);
 Datum bnode(PG_FUNCTION_ARGS)
 {
@@ -646,6 +862,16 @@ Datum bnode(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function STRDT: the literal of a lexical form and a datatype IRI.
+ *
+ * A lexical form of a handled XSD datatype is parsed into the value, and it is kept in the box only if it is not the
+ * canonical one; a form that is not valid for its handled datatype or whose value is out of range gives a typed
+ * literal, which holds the form and the datatype IRI as they are, and so does any other datatype.
+ *
+ * @param fcinfo the varchar lexical form and the varchar datatype IRI
+ * @return the rdfbox literal, NULL if the datatype is not a handled one and not a valid IRI
+ */
 PG_FUNCTION_INFO_V1(strdt_string);
 Datum strdt_string(PG_FUNCTION_ARGS)
 {
@@ -883,6 +1109,13 @@ Datum strdt_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function STRLANG: the language-tagged string of a lexical form and a language tag.
+ *
+ * @param fcinfo the varchar lexical form and the varchar language tag
+ * @return the rdfbox language-tagged string with the language tag in lower case, NULL if the tag is not a valid
+ *         language tag
+ */
 PG_FUNCTION_INFO_V1(strlang_string);
 Datum strlang_string(PG_FUNCTION_ARGS)
 {
@@ -897,6 +1130,14 @@ Datum strlang_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function STRLANGDIR: the directional language-tagged string of a lexical form, a language tag and a
+ * base direction.
+ *
+ * @param fcinfo the varchar lexical form, the varchar language tag and the varchar base direction
+ * @return the rdfbox directional language-tagged string with the language tag in lower case, NULL if the tag is not
+ *         a valid language tag or the direction is neither #RDF_LTR_DIRECTION nor #RDF_RTL_DIRECTION
+ */
 PG_FUNCTION_INFO_V1(strlangdir_string);
 Datum strlangdir_string(PG_FUNCTION_ARGS)
 {

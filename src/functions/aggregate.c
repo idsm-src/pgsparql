@@ -1,3 +1,13 @@
+/**
+ * @file
+ * The SPARQL aggregates SUM, AVG, MIN, MAX, GROUP_CONCAT and SAMPLE as PostgreSQL aggregates, declared in
+ * `extension/pgsparql/aggregate.sql`, with the support functions for parallel aggregation.
+ *
+ * Except for the serial and deserial functions, max_rdfbox(), group_concat_string() and sample(), the functions are
+ * not STRICT: a NULL state stands for a group without an input so far, and a NULL input for an error of the
+ * aggregated expression, which makes the result of SUM, AVG, MIN and GROUP_CONCAT NULL. The state transition and
+ * combine functions keep their states in the aggregate memory context.
+ */
 #include <postgres.h>
 #include <utils/datum.h>
 #include <utils/lsyscache.h>
@@ -13,71 +23,99 @@
 #include "rdfbox/promotion.h"
 
 
+/**
+ * The state of the aggregates over decimals, sum_integer, sum_decimal, avg_integer and avg_decimal.
+ */
 typedef struct
 {
-    bool error;
-    Datum numeric_state;
+    bool error;             /**< whether an input was NULL, which makes the result NULL */
+    Datum numeric_state;    /**< the state of numeric_avg_accum() with the count and the sum of the inputs */
 }
 DecimalAggState;
 
 
+/**
+ * The state of the aggregates over floats, sum_float and avg_float.
+ */
 typedef struct
 {
-    bool error;
-    int64 count;
-    float4 sum;
+    bool error;             /**< whether an input was NULL, which makes the result NULL */
+    int64 count;            /**< the number of the inputs */
+    float4 sum;             /**< the sum of the inputs, computed in single precision */
 }
 FloatAggState;
 
 
+/**
+ * The state of the aggregates over doubles, sum_double and avg_double.
+ */
 typedef struct
 {
-    bool error;
-    int64 count;
-    float8 sum;
+    bool error;             /**< whether an input was NULL, which makes the result NULL */
+    int64 count;            /**< the number of the inputs */
+    float8 sum;             /**< the sum of the inputs */
 }
 DoubleAggState;
 
 
+/**
+ * The state of the aggregates over RDF terms, sum_rdfbox and avg_rdfbox.
+ *
+ * The inputs are counted and summed per numeric type, so that the final function can give the result the type to
+ * which SPARQL promotes all of the inputs.
+ */
 typedef struct
 {
-    bool error;
-    int64 double_count;
-    int64 float_count;
-    int64 decimal_count;
-    int64 integer_count;
+    bool error;             /**< whether an input was NULL or not a number, which makes the result NULL */
+    int64 double_count;     /**< the number of the xsd:double inputs */
+    int64 float_count;      /**< the number of the xsd:float inputs */
+    int64 decimal_count;    /**< the number of the xsd:decimal inputs */
+    int64 integer_count;    /**< the number of the inputs of xsd:integer and of the datatypes derived from it */
 
-    float8 double_sum;
-    float4 float_sum;
-    Datum numeric_state;
+    float8 double_sum;      /**< the sum of the xsd:double inputs */
+    float4 float_sum;       /**< the sum of the xsd:float inputs, computed in single precision */
+    Datum numeric_state;    /**< the state of numeric_avg_accum() with the exact sum of the other inputs */
 }
 RdfBoxAggState;
 
 
+/**
+ * The state of the aggregate min, the SPARQL MIN of values of any type.
+ */
 typedef struct
 {
-    Oid type;
-    Oid collation;
-    int16 typlen;
-    bool typbyval;
-    FmgrInfo compare;
+    Oid type;               /**< the type of the values */
+    Oid collation;          /**< the collation in which the values are compared */
+    int16 typlen;           /**< the length of the type, as in pg_type */
+    bool typbyval;          /**< whether the type is passed by value */
+    FmgrInfo compare;       /**< the comparison function of the default B-tree operator class of the type */
 
-    bool error;
-    bool has_value;
-    Datum value;
+    bool error;             /**< whether an input was NULL, which makes the result NULL */
+    bool has_value;         /**< whether @c value holds a value */
+    Datum value;            /**< the least value so far, a copy that the state owns */
 }
 MinAggState;
 
 
+/**
+ * The state of the aggregates group_concat_string and group_concat_rdfbox, the SPARQL GROUP_CONCAT.
+ */
 typedef struct
 {
-    bool error;
-    int separator_size;
-    StringInfoData buffer;
+    bool error;             /**< whether an input was NULL or not a string literal, which makes the result NULL */
+    int separator_size;     /**< the length of the separator that follows the last value in @c buffer */
+    StringInfoData buffer;  /**< the values so far, each of them followed by the separator */
 }
 GroupConcatAggState;
 
 
+/**
+ * Creates an empty state of numeric_avg_accum(), which counts and sums numerics.
+ *
+ * @param fcinfo the call information of the calling aggregate support function, whose aggregate memory context
+ *               receives the state
+ * @return the internal state
+ */
 static Datum create_numeric_state(FunctionCallInfo fcinfo)
 {
     NullableDatum state = NullableAggFunctionCall2(fcinfo, numeric_avg_accum, NULL_DATUM, NULL_DATUM);
@@ -89,6 +127,15 @@ static Datum create_numeric_state(FunctionCallInfo fcinfo)
 }
 
 
+/**
+ * Combines two states of numeric_avg_accum() by numeric_avg_combine().
+ *
+ * @param fcinfo the call information of the calling aggregate support function, whose aggregate memory context
+ *               is used
+ * @param state1 the state that receives the other one
+ * @param state2 the state to add
+ * @return the combined state
+ */
 static Datum combine_numeric_states(FunctionCallInfo fcinfo, Datum state1, Datum state2)
 {
     NullableDatum state = NullableAggFunctionCall2(fcinfo, numeric_avg_combine, NULLABLE_DATUM(state1), NULLABLE_DATUM(state2));
@@ -100,6 +147,14 @@ static Datum combine_numeric_states(FunctionCallInfo fcinfo, Datum state1, Datum
 }
 
 
+/**
+ * Appends a state of numeric_avg_accum() to a message, as its length followed by its form serialized by
+ * numeric_avg_serialize().
+ *
+ * @param fcinfo the call information of the calling serial function
+ * @param buf the message
+ * @param numeric_state the state
+ */
 static void send_numeric_state(FunctionCallInfo fcinfo, StringInfo buf, Datum numeric_state)
 {
     NullableDatum result = NullableAggFunctionCall1(fcinfo, numeric_avg_serialize, NULLABLE_DATUM(numeric_state));
@@ -114,6 +169,13 @@ static void send_numeric_state(FunctionCallInfo fcinfo, StringInfo buf, Datum nu
 }
 
 
+/**
+ * Reads a state of numeric_avg_accum() appended by send_numeric_state() from a message.
+ *
+ * @param fcinfo the call information of the calling deserial function
+ * @param buf the message, whose cursor is moved past the state
+ * @return the state, built by numeric_avg_deserialize() in the current memory context
+ */
 static Datum recv_numeric_state(FunctionCallInfo fcinfo, StringInfo buf)
 {
     int32 size = pq_getmsgint(buf, sizeof(uint32));
@@ -130,6 +192,14 @@ static Datum recv_numeric_state(FunctionCallInfo fcinfo, StringInfo buf)
 }
 
 
+/**
+ * Computes the result of a state of numeric_avg_accum() by a final function.
+ *
+ * @param func the final function, numeric_sum() or numeric_avg()
+ * @param numeric_state the state
+ * @param result receives the result of the function, which is null if the state holds no value
+ * @return false if the function reported a value out of range, true otherwise
+ */
 static bool finish_numeric_state(PGFunction func, Datum numeric_state, NullableDatum *result)
 {
     volatile bool succeeded = true;
@@ -153,6 +223,13 @@ static bool finish_numeric_state(PGFunction func, Datum numeric_state, NullableD
 }
 
 
+/**
+ * Creates a state of the aggregate min without a value.
+ *
+ * @param type the type of the values; a type without a default B-tree operator class raises an error
+ * @param collation the collation in which the values are compared
+ * @return the state, palloc'd in the current memory context
+ */
 static MinAggState *create_min_state(Oid type, Oid collation)
 {
     TypeCacheEntry *entry = lookup_type_cache(type, TYPECACHE_CMP_PROC_FINFO);
@@ -172,6 +249,11 @@ static MinAggState *create_min_state(Oid type, Oid collation)
 }
 
 
+/**
+ * Drops the value of a state of the aggregate min and frees its copy.
+ *
+ * @param state the state
+ */
 static void forget_min_value(MinAggState *state)
 {
     if(state->has_value && !state->typbyval)
@@ -182,6 +264,13 @@ static void forget_min_value(MinAggState *state)
 }
 
 
+/**
+ * Replaces the value of a state of the aggregate min by a copy of another one.
+ *
+ * @param state the state
+ * @param value the new value
+ * @param agg_context the aggregate memory context, which receives the copy
+ */
 static void remember_min_value(MinAggState *state, Datum value, MemoryContext agg_context)
 {
     MemoryContext old_context = MemoryContextSwitchTo(agg_context);
@@ -195,12 +284,26 @@ static void remember_min_value(MinAggState *state, Datum value, MemoryContext ag
 }
 
 
+/**
+ * Tests whether a value is to replace the value of a state of the aggregate min.
+ *
+ * @param state the state
+ * @param value the value
+ * @return true if the state has no value or the value is less than it
+ */
 static bool is_less_than_min_value(MinAggState *state, Datum value)
 {
     return !state->has_value || DatumGetInt32(FunctionCall2Coll(&state->compare, state->collation, value, state->value)) < 0;
 }
 
 
+/**
+ * Adds a decimal to the state of an aggregate over decimals; the state transition function of the aggregates
+ * sum_integer, sum_decimal, avg_integer and avg_decimal.
+ *
+ * @param fcinfo the internal ::DecimalAggState, NULL on the first call, and the decimal to add, NULL for an error
+ * @return the state, created in the aggregate memory context on the first call
+ */
 PG_FUNCTION_INFO_V1(agg_decimal_accum);
 Datum agg_decimal_accum(PG_FUNCTION_ARGS)
 {
@@ -229,6 +332,14 @@ Datum agg_decimal_accum(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Combines two states of an aggregate over decimals; the combine function of the aggregates sum_integer, sum_decimal,
+ * avg_integer and avg_decimal.
+ *
+ * @param fcinfo the internal ::DecimalAggState that receives the other one, NULL if it has no input yet, and the
+ *               internal ::DecimalAggState to add, NULL if it has no input
+ * @return the first state with the second one added, created in the aggregate memory context if it was NULL
+ */
 PG_FUNCTION_INFO_V1(agg_decimal_combine);
 Datum agg_decimal_combine(PG_FUNCTION_ARGS)
 {
@@ -259,6 +370,13 @@ Datum agg_decimal_combine(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Serializes a state of an aggregate over decimals; the serial function of the aggregates sum_integer, sum_decimal,
+ * avg_integer and avg_decimal.
+ *
+ * @param fcinfo the internal ::DecimalAggState
+ * @return the bytea with the error flag and the serialized state of numeric_avg_accum()
+ */
 PG_FUNCTION_INFO_V1(agg_decimal_serialize);
 Datum agg_decimal_serialize(PG_FUNCTION_ARGS)
 {
@@ -278,6 +396,14 @@ Datum agg_decimal_serialize(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Deserializes a state of an aggregate over decimals; the deserial function of the aggregates sum_integer, sum_decimal,
+ * avg_integer and avg_decimal.
+ *
+ * @param fcinfo the bytea made by agg_decimal_serialize() and an unused internal argument, which the signature of a
+ *               deserial function requires
+ * @return the internal ::DecimalAggState, palloc'd in the current memory context
+ */
 PG_FUNCTION_INFO_V1(agg_decimal_deserialize);
 Datum agg_decimal_deserialize(PG_FUNCTION_ARGS)
 {
@@ -299,6 +425,12 @@ Datum agg_decimal_deserialize(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Finishes the SPARQL SUM of xsd:integer values; the final function of the aggregate sum_integer.
+ *
+ * @param fcinfo the internal ::DecimalAggState, NULL if there was no input
+ * @return the decimal sum, 0 if there was no input, NULL if an input was NULL or the sum is out of range
+ */
 PG_FUNCTION_INFO_V1(sum_integer_final);
 Datum sum_integer_final(PG_FUNCTION_ARGS)
 {
@@ -322,6 +454,15 @@ Datum sum_integer_final(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Finishes the SPARQL SUM of xsd:decimal values; the final function of the aggregate sum_decimal.
+ *
+ * The result is an rdfbox, because the sum of no values is the xsd:integer 0.
+ *
+ * @param fcinfo the internal ::DecimalAggState, NULL if there was no input
+ * @return the rdfbox with the xsd:decimal sum, the xsd:integer 0 if there was no input, NULL if an input was NULL or
+ *         the sum is out of range
+ */
 PG_FUNCTION_INFO_V1(sum_decimal_final);
 Datum sum_decimal_final(PG_FUNCTION_ARGS)
 {
@@ -345,6 +486,14 @@ Datum sum_decimal_final(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Finishes the SPARQL AVG of xsd:integer or xsd:decimal values; the final function of the aggregates avg_integer
+ * and avg_decimal.
+ *
+ * @param fcinfo the internal ::DecimalAggState, NULL if there was no input
+ * @return the rdfbox with the xsd:decimal average, the xsd:integer 0 if there was no input, NULL if an input was
+ *         NULL or the average is out of range
+ */
 PG_FUNCTION_INFO_V1(avg_decimal_final);
 Datum avg_decimal_final(PG_FUNCTION_ARGS)
 {
@@ -368,6 +517,13 @@ Datum avg_decimal_final(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Adds a float to the state of an aggregate over floats; the state transition function of the aggregates sum_float
+ * and avg_float.
+ *
+ * @param fcinfo the internal ::FloatAggState, NULL on the first call, and the float4 to add, NULL for an error
+ * @return the state, created in the aggregate memory context on the first call
+ */
 PG_FUNCTION_INFO_V1(agg_float_accum);
 Datum agg_float_accum(PG_FUNCTION_ARGS)
 {
@@ -399,6 +555,13 @@ Datum agg_float_accum(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Combines two states of an aggregate over floats; the combine function of the aggregates sum_float and avg_float.
+ *
+ * @param fcinfo the internal ::FloatAggState that receives the other one, NULL if it has no input yet, and the
+ *               internal ::FloatAggState to add, NULL if it has no input
+ * @return the first state with the second one added, created in the aggregate memory context if it was NULL
+ */
 PG_FUNCTION_INFO_V1(agg_float_combine);
 Datum agg_float_combine(PG_FUNCTION_ARGS)
 {
@@ -428,6 +591,12 @@ Datum agg_float_combine(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Serializes a state of an aggregate over floats; the serial function of the aggregates sum_float and avg_float.
+ *
+ * @param fcinfo the internal ::FloatAggState
+ * @return the bytea with the error flag, the count and the sum
+ */
 PG_FUNCTION_INFO_V1(agg_float_serialize);
 Datum agg_float_serialize(PG_FUNCTION_ARGS)
 {
@@ -448,6 +617,14 @@ Datum agg_float_serialize(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Deserializes a state of an aggregate over floats; the deserial function of the aggregates sum_float and
+ * avg_float.
+ *
+ * @param fcinfo the bytea made by agg_float_serialize() and an unused internal argument, which the signature of a
+ *               deserial function requires
+ * @return the internal ::FloatAggState, palloc'd in the current memory context
+ */
 PG_FUNCTION_INFO_V1(agg_float_deserialize);
 Datum agg_float_deserialize(PG_FUNCTION_ARGS)
 {
@@ -470,6 +647,14 @@ Datum agg_float_deserialize(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Finishes the SPARQL SUM of xsd:float values; the final function of the aggregate sum_float.
+ *
+ * The result is an rdfbox, because the sum of no values is the xsd:integer 0.
+ *
+ * @param fcinfo the internal ::FloatAggState, NULL if there was no input
+ * @return the rdfbox with the xsd:float sum, the xsd:integer 0 if there was no input, NULL if an input was NULL
+ */
 PG_FUNCTION_INFO_V1(sum_float_final);
 Datum sum_float_final(PG_FUNCTION_ARGS)
 {
@@ -488,6 +673,12 @@ Datum sum_float_final(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Finishes the SPARQL AVG of xsd:float values; the final function of the aggregate avg_float.
+ *
+ * @param fcinfo the internal ::FloatAggState, NULL if there was no input
+ * @return the rdfbox with the xsd:float average, the xsd:integer 0 if there was no input, NULL if an input was NULL
+ */
 PG_FUNCTION_INFO_V1(avg_float_final);
 Datum avg_float_final(PG_FUNCTION_ARGS)
 {
@@ -506,6 +697,13 @@ Datum avg_float_final(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Adds a double to the state of an aggregate over doubles; the state transition function of the aggregates
+ * sum_double and avg_double.
+ *
+ * @param fcinfo the internal ::DoubleAggState, NULL on the first call, and the float8 to add, NULL for an error
+ * @return the state, created in the aggregate memory context on the first call
+ */
 PG_FUNCTION_INFO_V1(agg_double_accum);
 Datum agg_double_accum(PG_FUNCTION_ARGS)
 {
@@ -537,6 +735,14 @@ Datum agg_double_accum(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Combines two states of an aggregate over doubles; the combine function of the aggregates sum_double and
+ * avg_double.
+ *
+ * @param fcinfo the internal ::DoubleAggState that receives the other one, NULL if it has no input yet, and the
+ *               internal ::DoubleAggState to add, NULL if it has no input
+ * @return the first state with the second one added, created in the aggregate memory context if it was NULL
+ */
 PG_FUNCTION_INFO_V1(agg_double_combine);
 Datum agg_double_combine(PG_FUNCTION_ARGS)
 {
@@ -566,6 +772,12 @@ Datum agg_double_combine(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Serializes a state of an aggregate over doubles; the serial function of the aggregates sum_double and avg_double.
+ *
+ * @param fcinfo the internal ::DoubleAggState
+ * @return the bytea with the error flag, the count and the sum
+ */
 PG_FUNCTION_INFO_V1(agg_double_serialize);
 Datum agg_double_serialize(PG_FUNCTION_ARGS)
 {
@@ -586,6 +798,14 @@ Datum agg_double_serialize(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Deserializes a state of an aggregate over doubles; the deserial function of the aggregates sum_double and
+ * avg_double.
+ *
+ * @param fcinfo the bytea made by agg_double_serialize() and an unused internal argument, which the signature of a
+ *               deserial function requires
+ * @return the internal ::DoubleAggState, palloc'd in the current memory context
+ */
 PG_FUNCTION_INFO_V1(agg_double_deserialize);
 Datum agg_double_deserialize(PG_FUNCTION_ARGS)
 {
@@ -608,6 +828,14 @@ Datum agg_double_deserialize(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Finishes the SPARQL SUM of xsd:double values; the final function of the aggregate sum_double.
+ *
+ * The result is an rdfbox, because the sum of no values is the xsd:integer 0.
+ *
+ * @param fcinfo the internal ::DoubleAggState, NULL if there was no input
+ * @return the rdfbox with the xsd:double sum, the xsd:integer 0 if there was no input, NULL if an input was NULL
+ */
 PG_FUNCTION_INFO_V1(sum_double_final);
 Datum sum_double_final(PG_FUNCTION_ARGS)
 {
@@ -626,6 +854,12 @@ Datum sum_double_final(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Finishes the SPARQL AVG of xsd:double values; the final function of the aggregate avg_double.
+ *
+ * @param fcinfo the internal ::DoubleAggState, NULL if there was no input
+ * @return the rdfbox with the xsd:double average, the xsd:integer 0 if there was no input, NULL if an input was NULL
+ */
 PG_FUNCTION_INFO_V1(avg_double_final);
 Datum avg_double_final(PG_FUNCTION_ARGS)
 {
@@ -644,6 +878,14 @@ Datum avg_double_final(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Adds an RDF term to the state of an aggregate over RDF terms; the state transition function of the aggregates
+ * sum_rdfbox and avg_rdfbox.
+ *
+ * @param fcinfo the internal ::RdfBoxAggState, NULL on the first call, and the rdfbox to add, NULL for an error; a
+ *               term that is not a number makes the result NULL as well
+ * @return the state, created in the aggregate memory context on the first call
+ */
 PG_FUNCTION_INFO_V1(agg_rdfbox_accum);
 Datum agg_rdfbox_accum(PG_FUNCTION_ARGS)
 {
@@ -715,6 +957,14 @@ Datum agg_rdfbox_accum(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Combines two states of an aggregate over RDF terms; the combine function of the aggregates sum_rdfbox and
+ * avg_rdfbox.
+ *
+ * @param fcinfo the internal ::RdfBoxAggState that receives the other one, NULL if it has no input yet, and the
+ *               internal ::RdfBoxAggState to add, NULL if it has no input
+ * @return the first state with the second one added, created in the aggregate memory context if it was NULL
+ */
 PG_FUNCTION_INFO_V1(agg_rdfbox_combine);
 Datum agg_rdfbox_combine(PG_FUNCTION_ARGS)
 {
@@ -751,6 +1001,13 @@ Datum agg_rdfbox_combine(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Serializes a state of an aggregate over RDF terms; the serial function of the aggregates sum_rdfbox and
+ * avg_rdfbox.
+ *
+ * @param fcinfo the internal ::RdfBoxAggState
+ * @return the bytea with the error flag, the counts, the sums and the serialized state of numeric_avg_accum()
+ */
 PG_FUNCTION_INFO_V1(agg_rdfbox_serialize);
 Datum agg_rdfbox_serialize(PG_FUNCTION_ARGS)
 {
@@ -776,6 +1033,14 @@ Datum agg_rdfbox_serialize(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Deserializes a state of an aggregate over RDF terms; the deserial function of the aggregates sum_rdfbox and
+ * avg_rdfbox.
+ *
+ * @param fcinfo the bytea made by agg_rdfbox_serialize() and an unused internal argument, which the signature of a
+ *               deserial function requires
+ * @return the internal ::RdfBoxAggState, palloc'd in the current memory context
+ */
 PG_FUNCTION_INFO_V1(agg_rdfbox_deserialize);
 Datum agg_rdfbox_deserialize(PG_FUNCTION_ARGS)
 {
@@ -803,6 +1068,17 @@ Datum agg_rdfbox_deserialize(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Finishes the SPARQL SUM of RDF terms; the final function of the aggregate sum_rdfbox.
+ *
+ * The sum has the type to which SPARQL promotes all of the inputs: xsd:double if there is a double among them,
+ * xsd:float if there is a float, xsd:decimal if there is a decimal and xsd:integer otherwise. The decimals and the
+ * integers are summed exactly, and their sum is converted to the floating-point type if there is one.
+ *
+ * @param fcinfo the internal ::RdfBoxAggState, NULL if there was no input
+ * @return the rdfbox with the sum, the xsd:integer 0 if there was no input, NULL if an input was NULL or not a number
+ *         or if the exact sum is out of range
+ */
 PG_FUNCTION_INFO_V1(sum_rdfbox_final);
 Datum sum_rdfbox_final(PG_FUNCTION_ARGS)
 {
@@ -864,6 +1140,17 @@ Datum sum_rdfbox_final(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Finishes the SPARQL AVG of RDF terms; the final function of the aggregate avg_rdfbox.
+ *
+ * The average has the type to which SPARQL promotes all of the inputs: xsd:double if there is a double among them,
+ * xsd:float if there is a float and xsd:decimal otherwise. The decimals and the integers are summed exactly; without
+ * a floating-point input, their sum is divided by the count in numeric.
+ *
+ * @param fcinfo the internal ::RdfBoxAggState, NULL if there was no input
+ * @return the rdfbox with the average, the xsd:integer 0 if there was no input, NULL if an input was NULL or not a
+ *         number or if the exact sum or average is out of range
+ */
 PG_FUNCTION_INFO_V1(avg_rdfbox_final);
 Datum avg_rdfbox_final(PG_FUNCTION_ARGS)
 {
@@ -922,6 +1209,17 @@ Datum avg_rdfbox_final(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Adds a value to the state of the SPARQL MIN; the state transition function of the aggregate min.
+ *
+ * The first call takes the type of the values from the call and their collation from the aggregate; the values are
+ * compared by the comparison function of the default B-tree operator class of the type, which for an rdfbox is the
+ * order of ORDER BY.
+ *
+ * @param fcinfo the internal ::MinAggState, NULL on the first call, and the value of any type, NULL for an error,
+ *               after which the further values are ignored
+ * @return the state, created in the aggregate memory context on the first call
+ */
 PG_FUNCTION_INFO_V1(min_accum);
 Datum min_accum(PG_FUNCTION_ARGS)
 {
@@ -958,6 +1256,13 @@ Datum min_accum(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Combines two states of the SPARQL MIN; the combine function of the aggregate min.
+ *
+ * @param fcinfo the internal ::MinAggState that receives the other one, NULL if it has no input yet, and the
+ *               internal ::MinAggState to add, NULL if it has no input
+ * @return the first state with the second one added, created in the aggregate memory context if it was NULL
+ */
 PG_FUNCTION_INFO_V1(min_combine);
 Datum min_combine(PG_FUNCTION_ARGS)
 {
@@ -990,6 +1295,12 @@ Datum min_combine(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Serializes a state of the SPARQL MIN; the serial function of the aggregate min.
+ *
+ * @param fcinfo the internal ::MinAggState
+ * @return the bytea with the type, the collation, the error flag and the least value so far
+ */
 PG_FUNCTION_INFO_V1(min_serialize);
 Datum min_serialize(PG_FUNCTION_ARGS)
 {
@@ -1021,6 +1332,13 @@ Datum min_serialize(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Deserializes a state of the SPARQL MIN; the deserial function of the aggregate min.
+ *
+ * @param fcinfo the bytea made by min_serialize() and an unused internal argument, which the signature of a
+ *               deserial function requires
+ * @return the internal ::MinAggState, palloc'd in the current memory context
+ */
 PG_FUNCTION_INFO_V1(min_deserialize);
 Datum min_deserialize(PG_FUNCTION_ARGS)
 {
@@ -1051,6 +1369,14 @@ Datum min_deserialize(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Finishes the SPARQL MIN; the final function of the aggregate min.
+ *
+ * @param fcinfo the internal ::MinAggState, NULL if there was no input, and the extra argument of the final function
+ *               (the aggregate is declared with @c finalfunc_extra), a NULL of the type of the values that lets the
+ *               result have that type
+ * @return a copy of the least value, NULL if there was no input or an input was NULL
+ */
 PG_FUNCTION_INFO_V1(min_final);
 Datum min_final(PG_FUNCTION_ARGS)
 {
@@ -1063,6 +1389,15 @@ Datum min_final(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Returns the greater of two RDF terms in the order of ORDER BY; the state transition and the combine function of
+ * the aggregate max_rdfbox, the SPARQL MAX.
+ *
+ * As the function is STRICT, the aggregate skips the NULL inputs.
+ *
+ * @param fcinfo the two rdfbox terms
+ * @return the term that rdfbox_order_compare() orders after the other one, the second one if they are equal
+ */
 PG_FUNCTION_INFO_V1(max_rdfbox);
 Datum max_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -1076,6 +1411,12 @@ Datum max_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Appends a separator and a string to a string.
+ *
+ * @param fcinfo the varchar so far, the varchar to append and the varchar separator to put between them
+ * @return the joined varchar
+ */
 PG_FUNCTION_INFO_V1(group_concat_string);
 Datum group_concat_string(PG_FUNCTION_ARGS)
 {
@@ -1098,6 +1439,14 @@ Datum group_concat_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Appends a string to the state of the SPARQL GROUP_CONCAT of strings; the state transition function of both
+ * aggregates group_concat_string.
+ *
+ * @param fcinfo the internal ::GroupConcatAggState, NULL on the first call, the varchar to append, NULL for an
+ *               error, and optionally the varchar separator, a single space if it is missing or NULL
+ * @return the state, created in the aggregate memory context on the first call
+ */
 PG_FUNCTION_INFO_V1(group_concat_string_accum);
 Datum group_concat_string_accum(PG_FUNCTION_ARGS)
 {
@@ -1145,6 +1494,14 @@ Datum group_concat_string_accum(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Finishes the SPARQL GROUP_CONCAT; the final function of the aggregates group_concat_string and
+ * group_concat_rdfbox.
+ *
+ * @param fcinfo the internal ::GroupConcatAggState, NULL if there was no input
+ * @return the varchar with the values joined by the separator, the empty varchar if there was no input, NULL if an
+ *         input was NULL or, for group_concat_rdfbox, not a string literal
+ */
 PG_FUNCTION_INFO_V1(group_concat_final);
 Datum group_concat_final(PG_FUNCTION_ARGS)
 {
@@ -1172,6 +1529,15 @@ Datum group_concat_final(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Appends the lexical form of a string literal to the state of the SPARQL GROUP_CONCAT of RDF terms; the state
+ * transition function of both aggregates group_concat_rdfbox.
+ *
+ * @param fcinfo the internal ::GroupConcatAggState, NULL on the first call, the rdfbox to append, which makes the
+ *               result NULL if it is NULL or not a string literal, and optionally the varchar separator, a single
+ *               space if it is missing or NULL
+ * @return the state, created in the aggregate memory context on the first call
+ */
 PG_FUNCTION_INFO_V1(group_concat_rdfbox_accum);
 Datum group_concat_rdfbox_accum(PG_FUNCTION_ARGS)
 {
@@ -1220,6 +1586,15 @@ Datum group_concat_rdfbox_accum(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Appends the values of one state of the SPARQL GROUP_CONCAT to another one; the combine function of the aggregates
+ * group_concat_string and group_concat_rdfbox.
+ *
+ * @param fcinfo the internal ::GroupConcatAggState that receives the values, NULL if it has no input yet, and the
+ *               internal ::GroupConcatAggState whose values are appended, NULL if it has no input
+ * @return the first state with the values of the second one appended, created in the aggregate memory context if it
+ *         was NULL
+ */
 PG_FUNCTION_INFO_V1(group_concat_combine);
 Datum group_concat_combine(PG_FUNCTION_ARGS)
 {
@@ -1253,6 +1628,13 @@ Datum group_concat_combine(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Serializes a state of the SPARQL GROUP_CONCAT; the serial function of the aggregates group_concat_string and
+ * group_concat_rdfbox.
+ *
+ * @param fcinfo the internal ::GroupConcatAggState
+ * @return the bytea with the error flag, the length of the last separator and the values so far
+ */
 PG_FUNCTION_INFO_V1(group_concat_serialize);
 Datum group_concat_serialize(PG_FUNCTION_ARGS)
 {
@@ -1274,6 +1656,14 @@ Datum group_concat_serialize(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Deserializes a state of the SPARQL GROUP_CONCAT; the deserial function of the aggregates group_concat_string and
+ * group_concat_rdfbox.
+ *
+ * @param fcinfo the bytea made by group_concat_serialize() and an unused internal argument, which the signature of a
+ *               deserial function requires
+ * @return the internal ::GroupConcatAggState, palloc'd in the current memory context
+ */
 PG_FUNCTION_INFO_V1(group_concat_deserialize);
 Datum group_concat_deserialize(PG_FUNCTION_ARGS)
 {
@@ -1298,6 +1688,16 @@ Datum group_concat_deserialize(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Keeps the first of two values; the state transition and the combine function of the aggregate sample, the SPARQL
+ * SAMPLE.
+ *
+ * As the function is STRICT and the aggregate has no initial value, the aggregate yields its first input that is
+ * not NULL, or NULL if there is none.
+ *
+ * @param fcinfo the value kept so far and the next value, both of any type
+ * @return the value kept so far
+ */
 PG_FUNCTION_INFO_V1(sample);
 Datum sample(PG_FUNCTION_ARGS)
 {

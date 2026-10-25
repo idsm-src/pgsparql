@@ -1,3 +1,14 @@
+/**
+ * @file
+ * The layout of the rdfbox type, which holds any RDF term, and the inline functions that build a box and read it.
+ *
+ * A box is a varlena: the 4-byte length word, then the type tag (::RdfType) and the lexical bit (::RdfBox), so that
+ * the value begins at offset 8. The value is a fixed-size scalar for most types (::RdfBoxBool, ::RdfBoxInt16, ...,
+ * ::RdfBoxDate) and a sequence of varlenas for the others (::RdfBoxVarlena). A literal of a handled datatype whose
+ * lexical form is not the canonical form of its value keeps that form after the value as a varchar; the lexical bit
+ * tells whether it is there (the *WithLexical structures). The parts that follow a varlena begin at a 4-byte
+ * boundary, see align_size(), except for the parts of a triple term, which are MAXALIGNed.
+ */
 #ifndef RDFBOX_RDFBOX_H_
 #define RDFBOX_RDFBOX_H_
 
@@ -11,7 +22,9 @@
 #include "types/ubox.h"
 
 
-/*
+/**
+ * The type of the term held by a box, stored in the box as its type tag.
+ *
  * The order of the types is semantic:
  *
  *   - XSD_BOOLEAN .. TYPED_LITERAL are the literals (rdfbox_is_literal), XSD_BYTE .. XSD_DOUBLE the numbers among
@@ -36,240 +49,358 @@
  */
 typedef enum
 {
-    TRIPLE_TERM = 0,
-    XSD_BOOLEAN = 1,
-    XSD_BYTE = 2,
-    XSD_UNSIGNEDBYTE = 3,
-    XSD_SHORT = 4,
-    XSD_UNSIGNEDSHORT = 5,
-    XSD_INT = 6,
-    XSD_UNSIGNEDINT = 7,
-    XSD_LONG = 8,
-    XSD_UNSIGNEDLONG = 9,
-    XSD_INTEGER = 10,
-    XSD_NONPOSITIVEINTEGER = 11,
-    XSD_NEGATIVEINTEGER = 12,
-    XSD_NONNEGATIVEINTEGER = 13,
-    XSD_POSITIVEINTEGER = 14,
-    XSD_DECIMAL = 15,
-    XSD_FLOAT = 16,
-    XSD_DOUBLE = 17,
-    XSD_DATETIME = 18,
-    XSD_DATE = 19,
-    XSD_DAYTIMEDURATION = 20,
-    XSD_STRING = 21,
-    RDF_LANGSTRING = 22,
-    RDF_LTR_LANGSTRING = 23,
-    RDF_RTL_LANGSTRING = 24,
-    USER_LITERAL = 25,
-    TYPED_LITERAL = 26,
-    IRI = 27,
-    IBLANKNODE = 28,
-    SBLANKNODE = 29
+    TRIPLE_TERM = 0,              /**< a triple term `<<( s p o )>>`, held by an ::RdfBoxVarlena */
+    XSD_BOOLEAN = 1,              /**< xsd:boolean, held by an ::RdfBoxBool */
+    XSD_BYTE = 2,                 /**< xsd:byte, held by an ::RdfBoxInt16 */
+    XSD_UNSIGNEDBYTE = 3,         /**< xsd:unsignedByte, held by an ::RdfBoxInt16 */
+    XSD_SHORT = 4,                /**< xsd:short, held by an ::RdfBoxInt16 */
+    XSD_UNSIGNEDSHORT = 5,        /**< xsd:unsignedShort, held by an ::RdfBoxInt32 */
+    XSD_INT = 6,                  /**< xsd:int, held by an ::RdfBoxInt32 */
+    XSD_UNSIGNEDINT = 7,          /**< xsd:unsignedInt, held by an ::RdfBoxUInt32 */
+    XSD_LONG = 8,                 /**< xsd:long, held by an ::RdfBoxInt64 */
+    XSD_UNSIGNEDLONG = 9,         /**< xsd:unsignedLong, held by an ::RdfBoxUInt64 */
+    XSD_INTEGER = 10,             /**< xsd:integer, a numeric held by an ::RdfBoxVarlena */
+    XSD_NONPOSITIVEINTEGER = 11,  /**< xsd:nonPositiveInteger, a numeric held by an ::RdfBoxVarlena */
+    XSD_NEGATIVEINTEGER = 12,     /**< xsd:negativeInteger, a numeric held by an ::RdfBoxVarlena */
+    XSD_NONNEGATIVEINTEGER = 13,  /**< xsd:nonNegativeInteger, a numeric held by an ::RdfBoxVarlena */
+    XSD_POSITIVEINTEGER = 14,     /**< xsd:positiveInteger, a numeric held by an ::RdfBoxVarlena */
+    XSD_DECIMAL = 15,             /**< xsd:decimal, a numeric held by an ::RdfBoxVarlena */
+    XSD_FLOAT = 16,               /**< xsd:float, held by an ::RdfBoxFloat4 */
+    XSD_DOUBLE = 17,              /**< xsd:double, held by an ::RdfBoxFloat8 */
+    XSD_DATETIME = 18,            /**< xsd:dateTime, held by an ::RdfBoxDateTime */
+    XSD_DATE = 19,                /**< xsd:date, held by an ::RdfBoxDate */
+    XSD_DAYTIMEDURATION = 20,     /**< xsd:dayTimeDuration in microseconds, held by an ::RdfBoxInt64 */
+    XSD_STRING = 21,              /**< xsd:string, a varchar held by an ::RdfBoxVarlena */
+    RDF_LANGSTRING = 22,          /**< a language-tagged string without a base direction, `"v"@tag` */
+    RDF_LTR_LANGSTRING = 23,      /**< a language-tagged string with the base direction ltr, `"v"@tag--ltr` */
+    RDF_RTL_LANGSTRING = 24,      /**< a language-tagged string with the base direction rtl, `"v"@tag--rtl` */
+    USER_LITERAL = 25,            /**< a user literal, a ::UBox and the datatype IRI held by an ::RdfBoxVarlena */
+    TYPED_LITERAL = 26,           /**< a literal of another datatype or with an invalid lexical form */
+    IRI = 27,                     /**< an IRI, a varchar held by an ::RdfBoxVarlena */
+    IBLANKNODE = 28,              /**< a blank node identified by an int64, printed as `_:i` and 16 hex digits */
+    SBLANKNODE = 29               /**< a blank node identified by a string, printed as `_:s` and the escaped string */
 }
 RdfType;
 
 
 /* the base directions of the directional language-tagged strings, as LANGDIR() returns them */
-#define RDF_LTR_DIRECTION   "ltr"
-#define RDF_RTL_DIRECTION   "rtl"
+#define RDF_LTR_DIRECTION   "ltr"       /**< the base direction left-to-right */
+#define RDF_RTL_DIRECTION   "rtl"       /**< the base direction right-to-left */
 
 
+/**
+ * The header of a box, which every structure of a box begins with.
+ *
+ * The header takes 8 bytes, so that the value that follows it is aligned for any scalar type, given that the box
+ * itself is MAXALIGNed, as rdfbox is declared with `alignment = double`.
+ */
 typedef struct
 {
-    char vl_len_[4];
-    RdfType type : 31;
-    bool lexical : 1;
+    char vl_len_[4];        /**< the varlena header */
+    RdfType type : 31;      /**< the type of the term */
+    bool lexical : 1;       /**< whether the lexical form of a literal follows its value */
 }
 RdfBox;
 
 
+/**
+ * A box of an xsd:boolean without a lexical form.
+ */
 typedef struct
 {
-    RdfBox header;
-    bool value;
+    RdfBox header;          /**< the header */
+    bool value;             /**< the value */
 }
 RdfBoxBool;
 
 
+/**
+ * A box of an xsd:byte, an xsd:unsignedByte or an xsd:short without a lexical form.
+ */
 typedef struct
 {
-    RdfBox header;
-    int16 value;
+    RdfBox header;          /**< the header */
+    int16 value;            /**< the value */
 }
 RdfBoxInt16;
 
 
+/**
+ * A box of an xsd:unsignedShort or an xsd:int without a lexical form.
+ */
 typedef struct
 {
-    RdfBox header;
-    int32 value;
+    RdfBox header;          /**< the header */
+    int32 value;            /**< the value */
 }
 RdfBoxInt32;
 
 
+/**
+ * A box of an xsd:unsignedInt without a lexical form.
+ */
 typedef struct
 {
-    RdfBox header;
-    uint32 value;
+    RdfBox header;          /**< the header */
+    uint32 value;           /**< the value */
 }
 RdfBoxUInt32;
 
 
+/**
+ * A box of an xsd:long or an xsd:dayTimeDuration without a lexical form, or of a blank node identified by an int64.
+ */
 typedef struct
 {
-    RdfBox header;
-    int64 value;
+    RdfBox header;          /**< the header */
+    int64 value;            /**< the value */
 }
 RdfBoxInt64;
 
 
+/**
+ * A box of an xsd:unsignedLong without a lexical form.
+ */
 typedef struct
 {
-    RdfBox header;
-    uint64 value;
+    RdfBox header;          /**< the header */
+    uint64 value;           /**< the value */
 }
 RdfBoxUInt64;
 
 
+/**
+ * A box of an xsd:float without a lexical form.
+ */
 typedef struct
 {
-    RdfBox header;
-    float4 value;
+    RdfBox header;          /**< the header */
+    float4 value;           /**< the value */
 }
 RdfBoxFloat4;
 
 
+/**
+ * A box of an xsd:double without a lexical form.
+ */
 typedef struct
 {
-    RdfBox header;
-    float8 value;
+    RdfBox header;          /**< the header */
+    float8 value;           /**< the value */
 }
 RdfBoxFloat8;
 
 
+/**
+ * A box of an xsd:dateTime without a lexical form.
+ */
 typedef struct
 {
-    RdfBox header;
-    ZonedDateTime value;
+    RdfBox header;          /**< the header */
+    ZonedDateTime value;    /**< the value */
 }
 RdfBoxDateTime;
 
 
+/**
+ * A box of an xsd:date without a lexical form.
+ */
 typedef struct
 {
-    RdfBox header;
-    ZonedDate value;
+    RdfBox header;          /**< the header */
+    ZonedDate value;        /**< the value */
 }
 RdfBoxDate;
 
 
+/**
+ * A box whose value is a sequence of varlenas, each beginning at a 4-byte boundary (see align_size()):
+ *
+ * - xsd:integer, its subtypes and xsd:decimal: the numeric and, if the box keeps one, the lexical form,
+ * - xsd:string, an IRI and a blank node identified by a string: the varchar,
+ * - a language-tagged string: the lexical form and the language tag,
+ * - a typed literal: the lexical form and the datatype IRI,
+ * - a user literal: the ::UBox, the datatype IRI and, if the box keeps one, the lexical form,
+ * - a triple term: the subject box, the predicate IRI as a varchar and the object box, each MAXALIGNed instead.
+ */
 typedef struct
 {
-    RdfBox header;
-    char value[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);
+    RdfBox header;                                              /**< the header */
+    char value[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);  /**< the first varlena of the value */
 }
 RdfBoxVarlena;
 
 
+/**
+ * A box of an xsd:boolean that keeps its lexical form.
+ */
 typedef struct
 {
-    RdfBoxBool box;
-    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);
+    RdfBoxBool box;                                                /**< the box with the value */
+    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);   /**< the lexical form as a varchar */
 }
 RdfBoxBoolWithLexical;
 
 
+/**
+ * A box of an xsd:byte, an xsd:unsignedByte or an xsd:short that keeps its lexical form.
+ */
 typedef struct
 {
-    RdfBoxInt16 box;
-    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);
+    RdfBoxInt16 box;                                               /**< the box with the value */
+    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);   /**< the lexical form as a varchar */
 }
 RdfBoxInt16WithLexical;
 
 
+/**
+ * A box of an xsd:unsignedShort or an xsd:int that keeps its lexical form.
+ */
 typedef struct
 {
-    RdfBoxInt32 box;
-    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);
+    RdfBoxInt32 box;                                               /**< the box with the value */
+    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);   /**< the lexical form as a varchar */
 }
 RdfBoxInt32WithLexical;
 
 
+/**
+ * A box of an xsd:unsignedInt that keeps its lexical form.
+ */
 typedef struct
 {
-    RdfBoxUInt32 box;
-    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);
+    RdfBoxUInt32 box;                                              /**< the box with the value */
+    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);   /**< the lexical form as a varchar */
 }
 RdfBoxUInt32WithLexical;
 
 
+/**
+ * A box of an xsd:long or an xsd:dayTimeDuration that keeps its lexical form.
+ */
 typedef struct
 {
-    RdfBoxInt64 box;
-    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);
+    RdfBoxInt64 box;                                               /**< the box with the value */
+    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);   /**< the lexical form as a varchar */
 }
 RdfBoxInt64WithLexical;
 
 
+/**
+ * A box of an xsd:unsignedLong that keeps its lexical form.
+ */
 typedef struct
 {
-    RdfBoxUInt64 box;
-    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);
+    RdfBoxUInt64 box;                                              /**< the box with the value */
+    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);   /**< the lexical form as a varchar */
 }
 RdfBoxUInt64WithLexical;
 
 
+/**
+ * A box of an xsd:float that keeps its lexical form.
+ */
 typedef struct
 {
-    RdfBoxFloat4 box;
-    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);
+    RdfBoxFloat4 box;                                              /**< the box with the value */
+    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);   /**< the lexical form as a varchar */
 }
 RdfBoxFloat4WithLexical;
 
 
+/**
+ * A box of an xsd:double that keeps its lexical form.
+ */
 typedef struct
 {
-    RdfBoxFloat8 box;
-    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);
+    RdfBoxFloat8 box;                                              /**< the box with the value */
+    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);   /**< the lexical form as a varchar */
 }
 RdfBoxFloat8WithLexical;
 
 
+/**
+ * A box of an xsd:dateTime that keeps its lexical form.
+ */
 typedef struct
 {
-    RdfBoxDateTime box;
-    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);
+    RdfBoxDateTime box;                                            /**< the box with the value */
+    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);   /**< the lexical form as a varchar */
 }
 RdfBoxDateTimeWithLexical;
 
 
+/**
+ * A box of an xsd:date that keeps its lexical form.
+ */
 typedef struct
 {
-    RdfBoxDate box;
-    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);
+    RdfBoxDate box;                                                /**< the box with the value */
+    char lexical[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);   /**< the lexical form as a varchar */
 }
 RdfBoxDateWithLexical;
 
 
+/**
+ * Converts a Datum to a box, detoasting it.
+ *
+ * @param X the Datum
+ * @return the box, a MAXALIGNed copy with a 4-byte header if the Datum was toasted, compressed or had a short header
+ */
 #define DatumGetRdfBox(X)       ((RdfBox *) PG_DETOAST_DATUM(X))
+
+/**
+ * Converts a box to a Datum.
+ *
+ * @param X the box
+ * @return the Datum
+ */
 #define RdfBoxGetDatum(X)       PointerGetDatum(X)
+
+/**
+ * Fetches an rdfbox argument of a version-1 function, detoasting it.
+ *
+ * @param n the number of the argument
+ * @return the box
+ */
 #define PG_GETARG_RDFBOX_P(n)   DatumGetRdfBox(PG_GETARG_DATUM(n))
+
+/**
+ * Returns a box from a version-1 function.
+ *
+ * @param x the box
+ */
 #define PG_RETURN_RDFBOX_P(x)   return RdfBoxGetDatum(x)
 
 
+/**
+ * The boxes that a getter accepts according to whether they keep a lexical form.
+ */
 typedef enum
 {
-    LEXICAL_BOTH,
-    LEXICAL_TRUE,
-    LEXICAL_FALSE
+    LEXICAL_BOTH,       /**< any box */
+    LEXICAL_TRUE,       /**< only a box that keeps a lexical form */
+    LEXICAL_FALSE       /**< only a box that keeps no lexical form */
 }
 LexicalFlag;
 
 
+/**
+ * Fetches the optional last bool argument of a getter, which restricts the boxes it accepts.
+ *
+ * @param n the number of the argument, which equals PG_NARGS() if the argument is not given
+ * @return #LEXICAL_BOTH if the argument is not given, #LEXICAL_TRUE if it is true and #LEXICAL_FALSE if it is false
+ */
 #define PG_GETARG_LEXICAL_FLAG(n)  ((n) == PG_NARGS() ? LEXICAL_BOTH : (PG_GETARG_BOOL(n) ? LEXICAL_TRUE : LEXICAL_FALSE))
 
 
+/**
+ * Tests whether a box is accepted by a getter according to whether it keeps a lexical form.
+ *
+ * @param box the box
+ * @param flag the restriction of the getter
+ * @return true if @a flag is #LEXICAL_BOTH or the lexical bit of the box agrees with it
+ */
 static inline bool RdfBoxCheckLexicalFlag(RdfBox *box, LexicalFlag flag)
 {
     if(flag == LEXICAL_BOTH)
@@ -279,102 +410,208 @@ static inline bool RdfBoxCheckLexicalFlag(RdfBox *box, LexicalFlag flag)
 }
 
 
+/**
+ * Rounds a size up to a multiple of 4, the offset of the varlena that follows a varlena of that size in a box.
+ *
+ * @param n the size
+ * @return the least multiple of 4 that is not less than @a n
+ */
 static inline uint32 align_size(uint32 n)
 {
     return (n + 3) & 0xFFFFFFFC;
 }
 
 
+/**
+ * Returns the value of an xsd:boolean.
+ *
+ * @param box the box, of the type #XSD_BOOLEAN
+ * @return the value
+ */
 static inline bool RdfBoxGetBool(RdfBox *box)
 {
     return ((RdfBoxBool *) box)->value;
 }
 
 
+/**
+ * Returns the value of an xsd:byte.
+ *
+ * @param box the box, of the type #XSD_BYTE
+ * @return the value
+ */
 static inline int8 RdfBoxGetInt8(RdfBox *box)
 {
     return (int8) ((RdfBoxInt16 *) box)->value;
 }
 
 
+/**
+ * Returns the value of an xsd:unsignedByte.
+ *
+ * @param box the box, of the type #XSD_UNSIGNEDBYTE
+ * @return the value
+ */
 static inline uint8 RdfBoxGetUInt8(RdfBox *box)
 {
     return (uint8) ((RdfBoxInt16 *) box)->value;
 }
 
 
+/**
+ * Returns the int16 that holds the value of an xsd:short, an xsd:byte or an xsd:unsignedByte.
+ *
+ * @param box the box, of the type #XSD_SHORT, #XSD_BYTE or #XSD_UNSIGNEDBYTE
+ * @return the value
+ */
 static inline int16 RdfBoxGetInt16(RdfBox *box)
 {
     return ((RdfBoxInt16 *) box)->value;
 }
 
 
+/**
+ * Returns the value of an xsd:unsignedShort.
+ *
+ * @param box the box, of the type #XSD_UNSIGNEDSHORT
+ * @return the value
+ */
 static inline uint16 RdfBoxGetUInt16(RdfBox *box)
 {
     return (uint16) ((RdfBoxInt32 *) box)->value;
 }
 
 
+/**
+ * Returns the int32 that holds the value of an xsd:int or an xsd:unsignedShort.
+ *
+ * @param box the box, of the type #XSD_INT or #XSD_UNSIGNEDSHORT
+ * @return the value
+ */
 static inline int32 RdfBoxGetInt32(RdfBox *box)
 {
     return ((RdfBoxInt32 *) box)->value;
 }
 
 
+/**
+ * Returns the value of an xsd:unsignedInt.
+ *
+ * @param box the box, of the type #XSD_UNSIGNEDINT
+ * @return the value
+ */
 static inline uint32 RdfBoxGetUInt32(RdfBox *box)
 {
     return ((RdfBoxUInt32 *) box)->value;
 }
 
 
+/**
+ * Returns the int64 that holds the value of an xsd:long, of an xsd:dayTimeDuration (in microseconds) or of a
+ * blank node identified by an int64.
+ *
+ * @param box the box, of the type #XSD_LONG, #XSD_DAYTIMEDURATION or #IBLANKNODE
+ * @return the value
+ */
 static inline int64 RdfBoxGetInt64(RdfBox *box)
 {
     return ((RdfBoxInt64 *) box)->value;
 }
 
 
+/**
+ * Returns the value of an xsd:unsignedLong.
+ *
+ * @param box the box, of the type #XSD_UNSIGNEDLONG
+ * @return the value
+ */
 static inline uint64 RdfBoxGetUInt64(RdfBox *box)
 {
     return ((RdfBoxUInt64 *) box)->value;
 }
 
 
+/**
+ * Returns the value of an xsd:integer, of one of its subtypes or of an xsd:decimal.
+ *
+ * @param box the box, of the type one of #XSD_INTEGER .. #XSD_DECIMAL
+ * @return the numeric, which points into the box
+ */
 static inline Numeric RdfBoxGetNumeric(RdfBox *box)
 {
     return (Numeric) ((RdfBoxVarlena *) box)->value;
 }
 
 
+/**
+ * Returns the value of an xsd:float.
+ *
+ * @param box the box, of the type #XSD_FLOAT
+ * @return the value
+ */
 static inline float4 RdfBoxGetFloat4(RdfBox *box)
 {
     return ((RdfBoxFloat4 *) box)->value;
 }
 
 
+/**
+ * Returns the value of an xsd:double.
+ *
+ * @param box the box, of the type #XSD_DOUBLE
+ * @return the value
+ */
 static inline float8 RdfBoxGetFloat8(RdfBox *box)
 {
     return ((RdfBoxFloat8 *) box)->value;
 }
 
 
+/**
+ * Returns the value of an xsd:dateTime.
+ *
+ * @param box the box, of the type #XSD_DATETIME
+ * @return the value, which points into the box
+ */
 static inline ZonedDateTime *RdfBoxGetZonedDateTime(RdfBox *box)
 {
     return &((RdfBoxDateTime *) box)->value;
 }
 
 
+/**
+ * Returns the value of an xsd:date.
+ *
+ * @param box the box, of the type #XSD_DATE
+ * @return the value
+ */
 static inline ZonedDate RdfBoxGetZonedDate(RdfBox *box)
 {
     return ((RdfBoxDate *) box)->value;
 }
 
 
+/**
+ * Returns the first varchar of a box: the value of an xsd:string, the lexical form of a language-tagged string or of
+ * a typed literal, an IRI or the identifier of a blank node identified by a string.
+ *
+ * @param box the box, of the type one of #XSD_STRING .. #RDF_RTL_LANGSTRING, #TYPED_LITERAL, @c IRI or #SBLANKNODE
+ * @return the varchar, which points into the box
+ */
 static inline VarChar *RdfBoxGetVarChar(RdfBox *box)
 {
     return (VarChar *) ((RdfBoxVarlena *) box)->value;
 }
 
 
+/**
+ * Returns the varchar that follows the first varlena of a box: the language tag of a language-tagged string, the
+ * datatype IRI of a typed literal or the lexical form of a number held by a numeric.
+ *
+ * @param box the box: a language-tagged string, a typed literal or, with the lexical bit set, a box of one of the
+ *            types #XSD_INTEGER .. #XSD_DECIMAL
+ * @return the varchar, which points into the box
+ */
 static inline VarChar *RdfBoxGetAttachment(RdfBox *box)
 {
     VarChar *value = (VarChar *) ((RdfBoxVarlena *) box)->value;
@@ -382,6 +619,12 @@ static inline VarChar *RdfBoxGetAttachment(RdfBox *box)
 }
 
 
+/**
+ * Returns the value of a user literal.
+ *
+ * @param box the box, of the type #USER_LITERAL
+ * @return the ubox, which points into the box
+ */
 static inline UBox *RdfBoxGetUBox(RdfBox *box)
 {
     return (UBox *) ((RdfBoxVarlena *) box)->value;
@@ -394,12 +637,25 @@ static inline UBox *RdfBoxGetUBox(RdfBox *box)
  * in place (an int64, a double, a boxed value of a user literal), so each part is padded to a multiple of MAXALIGN:
  * the value of a box begins at offset 8 and the box itself is MAXALIGNed, see types/ubox.h.
  */
+
+/**
+ * Returns the subject of a triple term.
+ *
+ * @param box the box, of the type #TRIPLE_TERM
+ * @return the subject box, which points into the box
+ */
 static inline RdfBox *RdfBoxGetTripleTermSubject(RdfBox *box)
 {
     return (RdfBox *) ((RdfBoxVarlena *) box)->value;
 }
 
 
+/**
+ * Returns the predicate of a triple term.
+ *
+ * @param box the box, of the type #TRIPLE_TERM
+ * @return the predicate IRI as a varchar, which points into the box
+ */
 static inline VarChar *RdfBoxGetTripleTermPredicate(RdfBox *box)
 {
     char *subject = ((RdfBoxVarlena *) box)->value;
@@ -407,6 +663,12 @@ static inline VarChar *RdfBoxGetTripleTermPredicate(RdfBox *box)
 }
 
 
+/**
+ * Returns the object of a triple term.
+ *
+ * @param box the box, of the type #TRIPLE_TERM
+ * @return the object box, which points into the box
+ */
 static inline RdfBox *RdfBoxGetTripleTermObject(RdfBox *box)
 {
     char *subject = ((RdfBoxVarlena *) box)->value;
@@ -415,66 +677,132 @@ static inline RdfBox *RdfBoxGetTripleTermObject(RdfBox *box)
 }
 
 
+/**
+ * Returns the lexical form kept by an xsd:boolean.
+ *
+ * @param box the box, of the type #XSD_BOOLEAN, with the lexical bit set
+ * @return the lexical form, which points into the box
+ */
 static inline VarChar *RdfBoxGetBoolLexical(RdfBox *box)
 {
     return (VarChar *) ((RdfBoxBoolWithLexical *) box)->lexical;
 }
 
 
+/**
+ * Returns the lexical form kept by an xsd:short, an xsd:byte or an xsd:unsignedByte.
+ *
+ * @param box the box, of the type #XSD_SHORT, #XSD_BYTE or #XSD_UNSIGNEDBYTE, with the lexical bit set
+ * @return the lexical form, which points into the box
+ */
 static inline VarChar *RdfBoxGetInt16Lexical(RdfBox *box)
 {
     return (VarChar *) ((RdfBoxInt16WithLexical *) box)->lexical;
 }
 
 
+/**
+ * Returns the lexical form kept by an xsd:int or an xsd:unsignedShort.
+ *
+ * @param box the box, of the type #XSD_INT or #XSD_UNSIGNEDSHORT, with the lexical bit set
+ * @return the lexical form, which points into the box
+ */
 static inline VarChar *RdfBoxGetInt32Lexical(RdfBox *box)
 {
     return (VarChar *) ((RdfBoxInt32WithLexical *) box)->lexical;
 }
 
 
+/**
+ * Returns the lexical form kept by an xsd:unsignedInt.
+ *
+ * @param box the box, of the type #XSD_UNSIGNEDINT, with the lexical bit set
+ * @return the lexical form, which points into the box
+ */
 static inline VarChar *RdfBoxGetUInt32Lexical(RdfBox *box)
 {
     return (VarChar *) ((RdfBoxUInt32WithLexical *) box)->lexical;
 }
 
 
+/**
+ * Returns the lexical form kept by an xsd:long or an xsd:dayTimeDuration.
+ *
+ * @param box the box, of the type #XSD_LONG or #XSD_DAYTIMEDURATION, with the lexical bit set
+ * @return the lexical form, which points into the box
+ */
 static inline VarChar *RdfBoxGetInt64Lexical(RdfBox *box)
 {
     return (VarChar *) ((RdfBoxInt64WithLexical *) box)->lexical;
 }
 
 
+/**
+ * Returns the lexical form kept by an xsd:unsignedLong.
+ *
+ * @param box the box, of the type #XSD_UNSIGNEDLONG, with the lexical bit set
+ * @return the lexical form, which points into the box
+ */
 static inline VarChar *RdfBoxGetUInt64Lexical(RdfBox *box)
 {
     return (VarChar *) ((RdfBoxUInt64WithLexical *) box)->lexical;
 }
 
 
+/**
+ * Returns the lexical form kept by an xsd:float.
+ *
+ * @param box the box, of the type #XSD_FLOAT, with the lexical bit set
+ * @return the lexical form, which points into the box
+ */
 static inline VarChar *RdfBoxGetFloat4Lexical(RdfBox *box)
 {
     return (VarChar *) ((RdfBoxFloat4WithLexical *) box)->lexical;
 }
 
 
+/**
+ * Returns the lexical form kept by an xsd:double.
+ *
+ * @param box the box, of the type #XSD_DOUBLE, with the lexical bit set
+ * @return the lexical form, which points into the box
+ */
 static inline VarChar *RdfBoxGetFloat8Lexical(RdfBox *box)
 {
     return (VarChar *) ((RdfBoxFloat8WithLexical *) box)->lexical;
 }
 
 
+/**
+ * Returns the lexical form kept by an xsd:dateTime.
+ *
+ * @param box the box, of the type #XSD_DATETIME, with the lexical bit set
+ * @return the lexical form, which points into the box
+ */
 static inline VarChar *RdfBoxGetZonedDateTimeLexical(RdfBox *box)
 {
     return (VarChar *) ((RdfBoxDateTimeWithLexical *) box)->lexical;
 }
 
 
+/**
+ * Returns the lexical form kept by an xsd:date.
+ *
+ * @param box the box, of the type #XSD_DATE, with the lexical bit set
+ * @return the lexical form, which points into the box
+ */
 static inline VarChar *RdfBoxGetZonedDateLexical(RdfBox *box)
 {
     return (VarChar *) ((RdfBoxDateWithLexical *) box)->lexical;
 }
 
 
+/**
+ * Returns the lexical form kept by a user literal.
+ *
+ * @param box the box, of the type #USER_LITERAL, with the lexical bit set
+ * @return the lexical form, which points into the box
+ */
 static inline VarChar *RdfBoxGetUserLiteralLexical(RdfBox *box)
 {
     char *value = ((RdfBoxVarlena *) box)->value;
@@ -484,6 +812,13 @@ static inline VarChar *RdfBoxGetUserLiteralLexical(RdfBox *box)
 }
 
 
+/**
+ * Returns the lexical form kept by a literal of any type that can keep one: a handled datatype other than xsd:string
+ * and the language-tagged strings, or a user literal.
+ *
+ * @param box the box, with the lexical bit set
+ * @return the lexical form, which points into the box; a box of a type that keeps no lexical form raises an error
+ */
 static inline VarChar *RdfBoxGetLexical(RdfBox *box)
 {
     switch(box->type)
@@ -539,6 +874,12 @@ static inline VarChar *RdfBoxGetLexical(RdfBox *box)
 }
 
 
+/**
+ * Builds a box of an xsd:boolean without a lexical form.
+ *
+ * @param value the value
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetBooleanRdfBox(bool value)
 {
     RdfBoxBool *result = (RdfBoxBool *) palloc0(sizeof(RdfBoxBool));
@@ -549,6 +890,12 @@ static inline RdfBox *GetBooleanRdfBox(bool value)
 }
 
 
+/**
+ * Builds a box of an xsd:byte without a lexical form.
+ *
+ * @param value the value
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetByteRdfBox(int8 value)
 {
     RdfBoxInt16 *result = (RdfBoxInt16 *) palloc0(sizeof(RdfBoxInt16));
@@ -559,6 +906,12 @@ static inline RdfBox *GetByteRdfBox(int8 value)
 }
 
 
+/**
+ * Builds a box of an xsd:unsignedByte without a lexical form.
+ *
+ * @param value the value
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetUnsignedByteRdfBox(uint8 value)
 {
     RdfBoxInt16 *result = (RdfBoxInt16 *) palloc0(sizeof(RdfBoxInt16));
@@ -569,6 +922,12 @@ static inline RdfBox *GetUnsignedByteRdfBox(uint8 value)
 }
 
 
+/**
+ * Builds a box of an xsd:short without a lexical form.
+ *
+ * @param value the value
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetShortRdfBox(int16 value)
 {
     RdfBoxInt16 *result = (RdfBoxInt16 *) palloc0(sizeof(RdfBoxInt16));
@@ -579,6 +938,12 @@ static inline RdfBox *GetShortRdfBox(int16 value)
 }
 
 
+/**
+ * Builds a box of an xsd:unsignedShort without a lexical form.
+ *
+ * @param value the value
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetUnsignedShortRdfBox(uint16 value)
 {
     RdfBoxInt32 *result = (RdfBoxInt32 *) palloc0(sizeof(RdfBoxInt32));
@@ -589,6 +954,12 @@ static inline RdfBox *GetUnsignedShortRdfBox(uint16 value)
 }
 
 
+/**
+ * Builds a box of an xsd:int without a lexical form.
+ *
+ * @param value the value
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetIntRdfBox(int32 value)
 {
     RdfBoxInt32 *result = (RdfBoxInt32 *) palloc0(sizeof(RdfBoxInt32));
@@ -599,6 +970,12 @@ static inline RdfBox *GetIntRdfBox(int32 value)
 }
 
 
+/**
+ * Builds a box of an xsd:unsignedInt without a lexical form.
+ *
+ * @param value the value
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetUnsignedIntRdfBox(uint32 value)
 {
     RdfBoxUInt32 *result = (RdfBoxUInt32 *) palloc0(sizeof(RdfBoxUInt32));
@@ -609,6 +986,12 @@ static inline RdfBox *GetUnsignedIntRdfBox(uint32 value)
 }
 
 
+/**
+ * Builds a box of an xsd:long without a lexical form.
+ *
+ * @param value the value
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetLongRdfBox(int64 value)
 {
     RdfBoxInt64 *result = (RdfBoxInt64 *) palloc0(sizeof(RdfBoxInt64));
@@ -619,6 +1002,12 @@ static inline RdfBox *GetLongRdfBox(int64 value)
 }
 
 
+/**
+ * Builds a box of an xsd:unsignedLong without a lexical form.
+ *
+ * @param value the value
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetUnsignedLongRdfBox(uint64 value)
 {
     RdfBoxUInt64 *result = (RdfBoxUInt64 *) palloc0(sizeof(RdfBoxUInt64));
@@ -629,6 +1018,12 @@ static inline RdfBox *GetUnsignedLongRdfBox(uint64 value)
 }
 
 
+/**
+ * Builds a box of an xsd:integer without a lexical form.
+ *
+ * @param value the value, a detoasted integral numeric, which is copied; it is not checked
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetIntegerRdfBox(Numeric value)
 {
     int size = VARSIZE(value);
@@ -640,6 +1035,12 @@ static inline RdfBox *GetIntegerRdfBox(Numeric value)
 }
 
 
+/**
+ * Builds a box of an xsd:nonPositiveInteger without a lexical form.
+ *
+ * @param value the value, a detoasted integral numeric not greater than 0, which is copied; it is not checked
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetNonPositiveIntegerRdfBox(Numeric value)
 {
     int size = VARSIZE(value);
@@ -651,6 +1052,12 @@ static inline RdfBox *GetNonPositiveIntegerRdfBox(Numeric value)
 }
 
 
+/**
+ * Builds a box of an xsd:negativeInteger without a lexical form.
+ *
+ * @param value the value, a detoasted integral numeric less than 0, which is copied; it is not checked
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetNegativeIntegerRdfBox(Numeric value)
 {
     int size = VARSIZE(value);
@@ -662,6 +1069,12 @@ static inline RdfBox *GetNegativeIntegerRdfBox(Numeric value)
 }
 
 
+/**
+ * Builds a box of an xsd:nonNegativeInteger without a lexical form.
+ *
+ * @param value the value, a detoasted integral numeric not less than 0, which is copied; it is not checked
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetNonNegativeIntegerRdfBox(Numeric value)
 {
     int size = VARSIZE(value);
@@ -673,6 +1086,12 @@ static inline RdfBox *GetNonNegativeIntegerRdfBox(Numeric value)
 }
 
 
+/**
+ * Builds a box of an xsd:positiveInteger without a lexical form.
+ *
+ * @param value the value, a detoasted integral numeric greater than 0, which is copied; it is not checked
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetPositiveIntegerRdfBox(Numeric value)
 {
     int size = VARSIZE(value);
@@ -684,6 +1103,12 @@ static inline RdfBox *GetPositiveIntegerRdfBox(Numeric value)
 }
 
 
+/**
+ * Builds a box of an xsd:decimal without a lexical form.
+ *
+ * @param value the value, a detoasted numeric, which is copied
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetDecimalRdfBox(Numeric value)
 {
     int size = VARSIZE(value);
@@ -695,6 +1120,12 @@ static inline RdfBox *GetDecimalRdfBox(Numeric value)
 }
 
 
+/**
+ * Builds a box of an xsd:float without a lexical form.
+ *
+ * @param value the value
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetFloatRdfBox(float4 value)
 {
     RdfBoxFloat4 *result = (RdfBoxFloat4 *) palloc0(sizeof(RdfBoxFloat4));
@@ -705,6 +1136,12 @@ static inline RdfBox *GetFloatRdfBox(float4 value)
 }
 
 
+/**
+ * Builds a box of an xsd:double without a lexical form.
+ *
+ * @param value the value
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetDoubleRdfBox(float8 value)
 {
     RdfBoxFloat8 *result = (RdfBoxFloat8 *) palloc0(sizeof(RdfBoxFloat8));
@@ -715,6 +1152,12 @@ static inline RdfBox *GetDoubleRdfBox(float8 value)
 }
 
 
+/**
+ * Builds a box of an xsd:dateTime without a lexical form.
+ *
+ * @param value the value, which is copied
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetDateTimeRdfBox(ZonedDateTime *value)
 {
     RdfBoxDateTime *result = (RdfBoxDateTime *) palloc0(sizeof(RdfBoxDateTime));
@@ -725,6 +1168,12 @@ static inline RdfBox *GetDateTimeRdfBox(ZonedDateTime *value)
 }
 
 
+/**
+ * Builds a box of an xsd:date without a lexical form.
+ *
+ * @param value the value
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetDateRdfBox(ZonedDate value)
 {
     RdfBoxDate *result = (RdfBoxDate *) palloc0(sizeof(RdfBoxDate));
@@ -735,6 +1184,12 @@ static inline RdfBox *GetDateRdfBox(ZonedDate value)
 }
 
 
+/**
+ * Builds a box of an xsd:dayTimeDuration without a lexical form.
+ *
+ * @param value the value in microseconds
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetDayTimeDurationRdfBox(int64 value)
 {
     RdfBoxInt64 *result = (RdfBoxInt64 *) palloc0(sizeof(RdfBoxInt64));
@@ -745,6 +1200,13 @@ static inline RdfBox *GetDayTimeDurationRdfBox(int64 value)
 }
 
 
+/**
+ * Builds a box of an xsd:string.
+ *
+ * @param data the string, not necessarily terminated by a zero byte
+ * @param size the length of the string in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetStringRdfBox(const char *data, int size)
 {
     RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + VARHDRSZ + size);
@@ -756,6 +1218,15 @@ static inline RdfBox *GetStringRdfBox(const char *data, int size)
 }
 
 
+/**
+ * Builds a box of a language-tagged string without a base direction.
+ *
+ * @param data the lexical form, not necessarily terminated by a zero byte
+ * @param size the length of the lexical form in bytes
+ * @param lang the language tag, not necessarily terminated by a zero byte; it is not checked
+ * @param lang_size the length of the language tag in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetLangStringRdfBox(const char *data, int size, const char *lang, int lang_size)
 {
     RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + align_size(size + VARHDRSZ) + lang_size + VARHDRSZ);
@@ -769,6 +1240,15 @@ static inline RdfBox *GetLangStringRdfBox(const char *data, int size, const char
 }
 
 
+/**
+ * Builds a box of a language-tagged string with the base direction ltr.
+ *
+ * @param data the lexical form, not necessarily terminated by a zero byte
+ * @param size the length of the lexical form in bytes
+ * @param lang the language tag, not necessarily terminated by a zero byte; it is not checked
+ * @param lang_size the length of the language tag in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetLtrLangStringRdfBox(const char *data, int size, const char *lang, int lang_size)
 {
     RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + align_size(size + VARHDRSZ) + lang_size + VARHDRSZ);
@@ -782,6 +1262,15 @@ static inline RdfBox *GetLtrLangStringRdfBox(const char *data, int size, const c
 }
 
 
+/**
+ * Builds a box of a language-tagged string with the base direction rtl.
+ *
+ * @param data the lexical form, not necessarily terminated by a zero byte
+ * @param size the length of the lexical form in bytes
+ * @param lang the language tag, not necessarily terminated by a zero byte; it is not checked
+ * @param lang_size the length of the language tag in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetRtlLangStringRdfBox(const char *data, int size, const char *lang, int lang_size)
 {
     RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + align_size(size + VARHDRSZ) + lang_size + VARHDRSZ);
@@ -795,10 +1284,15 @@ static inline RdfBox *GetRtlLangStringRdfBox(const char *data, int size, const c
 }
 
 
-/*
- * A string literal of the same kind as the given one -- of the same type and, for a language-tagged string, with
- * the same language tag -- but with the given lexical form. The string functions build their results this way,
+/**
+ * Builds a string literal of the same kind as the given one -- of the same type and, for a language-tagged string,
+ * with the same language tag -- but with the given lexical form. The string functions build their results this way,
  * as SPARQL 1.2 has them return a literal of the same kind as their first argument.
+ *
+ * @param box the string literal whose kind the result takes
+ * @param data the lexical form, not necessarily terminated by a zero byte
+ * @param size the length of the lexical form in bytes
+ * @return the palloc'd box; a box that is not a string literal raises an error
  */
 static inline RdfBox *GetDerivedStringLiteralRdfBox(RdfBox *box, const char *data, int size)
 {
@@ -831,6 +1325,14 @@ static inline RdfBox *GetDerivedStringLiteralRdfBox(RdfBox *box, const char *dat
 }
 
 
+/**
+ * Builds a box of a user literal without a lexical form.
+ *
+ * @param value the value, a detoasted ubox, which is copied
+ * @param type the datatype IRI, not necessarily terminated by a zero byte
+ * @param type_size the length of the datatype IRI in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetUserLiteralRdfBox(UBox *value, const char *type, int type_size)
 {
     int size = VARSIZE(value);
@@ -844,6 +1346,15 @@ static inline RdfBox *GetUserLiteralRdfBox(UBox *value, const char *type, int ty
 }
 
 
+/**
+ * Builds a box of a typed literal, a literal of a datatype that is not handled or whose lexical form is not valid.
+ *
+ * @param data the lexical form, not necessarily terminated by a zero byte
+ * @param size the length of the lexical form in bytes
+ * @param type the datatype IRI, not necessarily terminated by a zero byte
+ * @param type_size the length of the datatype IRI in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetTypedLiteralRdfBox(const char *data, int size, const char *type, int type_size)
 {
     RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + align_size(size + VARHDRSZ) + type_size + VARHDRSZ);
@@ -857,6 +1368,14 @@ static inline RdfBox *GetTypedLiteralRdfBox(const char *data, int size, const ch
 }
 
 
+/**
+ * Builds a box of an xsd:boolean that keeps a lexical form.
+ *
+ * @param value the value
+ * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
+ * @param size the length of the lexical form in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetBooleanRdfBoxWithLexical(bool value, const char *data, int size)
 {
     RdfBoxBoolWithLexical *result = (RdfBoxBoolWithLexical *) palloc0(sizeof(RdfBoxBoolWithLexical) + VARHDRSZ + size);
@@ -870,6 +1389,14 @@ static inline RdfBox *GetBooleanRdfBoxWithLexical(bool value, const char *data, 
 }
 
 
+/**
+ * Builds a box of an xsd:byte that keeps a lexical form.
+ *
+ * @param value the value
+ * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
+ * @param size the length of the lexical form in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetByteRdfBoxWithLexical(int8 value, const char *data, int size)
 {
     RdfBoxInt16WithLexical *result = (RdfBoxInt16WithLexical *) palloc0(sizeof(RdfBoxInt16WithLexical) + VARHDRSZ + size);
@@ -883,6 +1410,14 @@ static inline RdfBox *GetByteRdfBoxWithLexical(int8 value, const char *data, int
 }
 
 
+/**
+ * Builds a box of an xsd:unsignedByte that keeps a lexical form.
+ *
+ * @param value the value
+ * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
+ * @param size the length of the lexical form in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetUnsignedByteRdfBoxWithLexical(uint8 value, const char *data, int size)
 {
     RdfBoxInt16WithLexical *result = (RdfBoxInt16WithLexical *) palloc0(sizeof(RdfBoxInt16WithLexical) + VARHDRSZ + size);
@@ -896,6 +1431,14 @@ static inline RdfBox *GetUnsignedByteRdfBoxWithLexical(uint8 value, const char *
 }
 
 
+/**
+ * Builds a box of an xsd:short that keeps a lexical form.
+ *
+ * @param value the value
+ * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
+ * @param size the length of the lexical form in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetShortRdfBoxWithLexical(int16 value, const char *data, int size)
 {
     RdfBoxInt16WithLexical *result = (RdfBoxInt16WithLexical *) palloc0(sizeof(RdfBoxInt16WithLexical) + VARHDRSZ + size);
@@ -909,6 +1452,14 @@ static inline RdfBox *GetShortRdfBoxWithLexical(int16 value, const char *data, i
 }
 
 
+/**
+ * Builds a box of an xsd:unsignedShort that keeps a lexical form.
+ *
+ * @param value the value
+ * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
+ * @param size the length of the lexical form in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetUnsignedShortRdfBoxWithLexical(uint16 value, const char *data, int size)
 {
     RdfBoxInt32WithLexical *result = (RdfBoxInt32WithLexical *) palloc0(sizeof(RdfBoxInt32WithLexical) + VARHDRSZ + size);
@@ -922,6 +1473,14 @@ static inline RdfBox *GetUnsignedShortRdfBoxWithLexical(uint16 value, const char
 }
 
 
+/**
+ * Builds a box of an xsd:int that keeps a lexical form.
+ *
+ * @param value the value
+ * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
+ * @param size the length of the lexical form in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetIntRdfBoxWithLexical(int32 value, const char *data, int size)
 {
     RdfBoxInt32WithLexical *result = (RdfBoxInt32WithLexical *) palloc0(sizeof(RdfBoxInt32WithLexical) + VARHDRSZ + size);
@@ -935,6 +1494,14 @@ static inline RdfBox *GetIntRdfBoxWithLexical(int32 value, const char *data, int
 }
 
 
+/**
+ * Builds a box of an xsd:unsignedInt that keeps a lexical form.
+ *
+ * @param value the value
+ * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
+ * @param size the length of the lexical form in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetUnsignedIntRdfBoxWithLexical(uint32 value, const char *data, int size)
 {
     RdfBoxUInt32WithLexical *result = (RdfBoxUInt32WithLexical *) palloc0(sizeof(RdfBoxUInt32WithLexical) + VARHDRSZ + size);
@@ -948,6 +1515,14 @@ static inline RdfBox *GetUnsignedIntRdfBoxWithLexical(uint32 value, const char *
 }
 
 
+/**
+ * Builds a box of an xsd:long that keeps a lexical form.
+ *
+ * @param value the value
+ * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
+ * @param size the length of the lexical form in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetLongRdfBoxWithLexical(int64 value, const char *data, int size)
 {
     RdfBoxInt64WithLexical *result = (RdfBoxInt64WithLexical *) palloc0(sizeof(RdfBoxInt64WithLexical) + VARHDRSZ + size);
@@ -961,6 +1536,14 @@ static inline RdfBox *GetLongRdfBoxWithLexical(int64 value, const char *data, in
 }
 
 
+/**
+ * Builds a box of an xsd:unsignedLong that keeps a lexical form.
+ *
+ * @param value the value
+ * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
+ * @param size the length of the lexical form in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetUnsignedLongRdfBoxWithLexical(uint64 value, const char *data, int size)
 {
     RdfBoxUInt64WithLexical *result = (RdfBoxUInt64WithLexical *) palloc0(sizeof(RdfBoxUInt64WithLexical) + VARHDRSZ + size);
@@ -974,6 +1557,14 @@ static inline RdfBox *GetUnsignedLongRdfBoxWithLexical(uint64 value, const char 
 }
 
 
+/**
+ * Builds a box of an xsd:integer that keeps a lexical form.
+ *
+ * @param value the value, a detoasted integral numeric, which is copied; it is not checked
+ * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
+ * @param size the length of the lexical form in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetIntegerRdfBoxWithLexical(Numeric value, const char *data, int size)
 {
     int nsize = VARSIZE(value);
@@ -988,6 +1579,14 @@ static inline RdfBox *GetIntegerRdfBoxWithLexical(Numeric value, const char *dat
 }
 
 
+/**
+ * Builds a box of an xsd:nonPositiveInteger that keeps a lexical form.
+ *
+ * @param value the value, a detoasted integral numeric not greater than 0, which is copied; it is not checked
+ * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
+ * @param size the length of the lexical form in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetNonPositiveIntegerRdfBoxWithLexical(Numeric value, const char *data, int size)
 {
     int nsize = VARSIZE(value);
@@ -1002,6 +1601,14 @@ static inline RdfBox *GetNonPositiveIntegerRdfBoxWithLexical(Numeric value, cons
 }
 
 
+/**
+ * Builds a box of an xsd:negativeInteger that keeps a lexical form.
+ *
+ * @param value the value, a detoasted integral numeric less than 0, which is copied; it is not checked
+ * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
+ * @param size the length of the lexical form in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetNegativeIntegerRdfBoxWithLexical(Numeric value, const char *data, int size)
 {
     int nsize = VARSIZE(value);
@@ -1016,6 +1623,14 @@ static inline RdfBox *GetNegativeIntegerRdfBoxWithLexical(Numeric value, const c
 }
 
 
+/**
+ * Builds a box of an xsd:nonNegativeInteger that keeps a lexical form.
+ *
+ * @param value the value, a detoasted integral numeric not less than 0, which is copied; it is not checked
+ * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
+ * @param size the length of the lexical form in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetNonNegativeIntegerRdfBoxWithLexical(Numeric value, const char *data, int size)
 {
     int nsize = VARSIZE(value);
@@ -1030,6 +1645,14 @@ static inline RdfBox *GetNonNegativeIntegerRdfBoxWithLexical(Numeric value, cons
 }
 
 
+/**
+ * Builds a box of an xsd:positiveInteger that keeps a lexical form.
+ *
+ * @param value the value, a detoasted integral numeric greater than 0, which is copied; it is not checked
+ * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
+ * @param size the length of the lexical form in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetPositiveIntegerRdfBoxWithLexical(Numeric value, const char *data, int size)
 {
     int nsize = VARSIZE(value);
@@ -1044,6 +1667,14 @@ static inline RdfBox *GetPositiveIntegerRdfBoxWithLexical(Numeric value, const c
 }
 
 
+/**
+ * Builds a box of an xsd:decimal that keeps a lexical form.
+ *
+ * @param value the value, a detoasted numeric, which is copied
+ * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
+ * @param size the length of the lexical form in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetDecimalRdfBoxWithLexical(Numeric value, const char *data, int size)
 {
     int nsize = VARSIZE(value);
@@ -1058,6 +1689,14 @@ static inline RdfBox *GetDecimalRdfBoxWithLexical(Numeric value, const char *dat
 }
 
 
+/**
+ * Builds a box of an xsd:float that keeps a lexical form.
+ *
+ * @param value the value
+ * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
+ * @param size the length of the lexical form in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetFloatRdfBoxWithLexical(float4 value, const char *data, int size)
 {
     RdfBoxFloat4WithLexical *result = (RdfBoxFloat4WithLexical *) palloc0(sizeof(RdfBoxFloat4WithLexical) + VARHDRSZ + size);
@@ -1071,6 +1710,14 @@ static inline RdfBox *GetFloatRdfBoxWithLexical(float4 value, const char *data, 
 }
 
 
+/**
+ * Builds a box of an xsd:double that keeps a lexical form.
+ *
+ * @param value the value
+ * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
+ * @param size the length of the lexical form in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetDoubleRdfBoxWithLexical(float8 value, const char *data, int size)
 {
     RdfBoxFloat8WithLexical *result = (RdfBoxFloat8WithLexical *) palloc0(sizeof(RdfBoxFloat8WithLexical) + VARHDRSZ + size);
@@ -1084,6 +1731,14 @@ static inline RdfBox *GetDoubleRdfBoxWithLexical(float8 value, const char *data,
 }
 
 
+/**
+ * Builds a box of an xsd:dateTime that keeps a lexical form.
+ *
+ * @param value the value, which is copied
+ * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
+ * @param size the length of the lexical form in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetDateTimeRdfBoxWithLexical(ZonedDateTime *value, const char *data, int size)
 {
     RdfBoxDateTimeWithLexical *result = (RdfBoxDateTimeWithLexical *) palloc0(sizeof(RdfBoxDateTimeWithLexical) + VARHDRSZ + size);
@@ -1097,6 +1752,14 @@ static inline RdfBox *GetDateTimeRdfBoxWithLexical(ZonedDateTime *value, const c
 }
 
 
+/**
+ * Builds a box of an xsd:date that keeps a lexical form.
+ *
+ * @param value the value
+ * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
+ * @param size the length of the lexical form in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetDateRdfBoxWithLexical(ZonedDate value, const char *data, int size)
 {
     RdfBoxDateWithLexical *result = (RdfBoxDateWithLexical *) palloc0(sizeof(RdfBoxDateWithLexical) + VARHDRSZ + size);
@@ -1110,6 +1773,14 @@ static inline RdfBox *GetDateRdfBoxWithLexical(ZonedDate value, const char *data
 }
 
 
+/**
+ * Builds a box of an xsd:dayTimeDuration that keeps a lexical form.
+ *
+ * @param value the value in microseconds
+ * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
+ * @param size the length of the lexical form in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetDayTimeDurationRdfBoxWithLexical(int64 value, const char *data, int size)
 {
     RdfBoxInt64WithLexical *result = (RdfBoxInt64WithLexical *) palloc0(sizeof(RdfBoxInt64WithLexical) + VARHDRSZ + size);
@@ -1123,6 +1794,16 @@ static inline RdfBox *GetDayTimeDurationRdfBoxWithLexical(int64 value, const cha
 }
 
 
+/**
+ * Builds a box of a user literal that keeps a lexical form.
+ *
+ * @param value the value, a detoasted ubox, which is copied
+ * @param type the datatype IRI, not necessarily terminated by a zero byte
+ * @param type_size the length of the datatype IRI in bytes
+ * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
+ * @param size the length of the lexical form in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetUserLiteralRdfBoxWithLexical(UBox *value, const char *type, int type_size, const char *data, int size)
 {
     int vsize = VARSIZE(value);
@@ -1140,6 +1821,13 @@ static inline RdfBox *GetUserLiteralRdfBoxWithLexical(UBox *value, const char *t
 }
 
 
+/**
+ * Builds a box of an IRI.
+ *
+ * @param data the IRI, not necessarily terminated by a zero byte; it is not checked
+ * @param size the length of the IRI in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetIriRdfBox(const char *data, int size)
 {
     RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + VARHDRSZ + size);
@@ -1151,6 +1839,12 @@ static inline RdfBox *GetIriRdfBox(const char *data, int size)
 }
 
 
+/**
+ * Builds a box of a blank node identified by an int64.
+ *
+ * @param value the identifier
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetIBlankNodeRdfBox(int64 value)
 {
     RdfBoxInt64 *result = (RdfBoxInt64 *) palloc0(sizeof(RdfBoxInt64));
@@ -1161,6 +1855,13 @@ static inline RdfBox *GetIBlankNodeRdfBox(int64 value)
 }
 
 
+/**
+ * Builds a box of a blank node identified by a string.
+ *
+ * @param data the identifier, not necessarily terminated by a zero byte; it is not checked
+ * @param size the length of the identifier in bytes
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetSBlankNodeRdfBox(const char *data, int size)
 {
     RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + VARHDRSZ + size);
@@ -1172,6 +1873,15 @@ static inline RdfBox *GetSBlankNodeRdfBox(const char *data, int size)
 }
 
 
+/**
+ * Builds a box of a triple term, which embeds copies of its subject and object boxes.
+ *
+ * @param subject the detoasted subject box, which is copied; it is not checked to be an IRI or a blank node
+ * @param predicate the predicate IRI, not necessarily terminated by a zero byte; it is not checked
+ * @param predicate_size the length of the predicate IRI in bytes
+ * @param object the detoasted object box, which is copied
+ * @return the palloc'd box
+ */
 static inline RdfBox *GetTripleTermRdfBox(RdfBox *subject, const char *predicate, int predicate_size, RdfBox *object)
 {
     int ssize = VARSIZE(subject);
@@ -1188,36 +1898,72 @@ static inline RdfBox *GetTripleTermRdfBox(RdfBox *subject, const char *predicate
 }
 
 
+/**
+ * Tests whether a box holds a literal of a numeric datatype, one of #XSD_BYTE .. #XSD_DOUBLE.
+ *
+ * @param box the box
+ * @return true if it does
+ */
 static inline bool rdfbox_is_numeric(RdfBox *box)
 {
     return box->type >= XSD_BYTE && box->type <= XSD_DOUBLE;
 }
 
 
+/**
+ * Tests whether a box holds a literal, one of #XSD_BOOLEAN .. #TYPED_LITERAL.
+ *
+ * @param box the box
+ * @return true if it does
+ */
 static inline bool rdfbox_is_literal(RdfBox *box)
 {
     return box->type >= XSD_BOOLEAN && box->type <= TYPED_LITERAL;
 }
 
 
+/**
+ * Tests whether a box holds a string literal, an xsd:string or a language-tagged string.
+ *
+ * @param box the box
+ * @return true if it does
+ */
 static inline bool rdfbox_is_string_literal(RdfBox *box)
 {
     return box->type >= XSD_STRING && box->type <= RDF_RTL_LANGSTRING;
 }
 
 
+/**
+ * Tests whether a box holds a language-tagged string, with or without a base direction.
+ *
+ * @param box the box
+ * @return true if it does
+ */
 static inline bool rdfbox_is_langstring(RdfBox *box)
 {
     return box->type >= RDF_LANGSTRING && box->type <= RDF_RTL_LANGSTRING;
 }
 
 
+/**
+ * Tests whether a box holds a language-tagged string with a base direction.
+ *
+ * @param box the box
+ * @return true if it does
+ */
 static inline bool rdfbox_is_dirlangstring(RdfBox *box)
 {
     return box->type >= RDF_LTR_LANGSTRING && box->type <= RDF_RTL_LANGSTRING;
 }
 
 
+/**
+ * Tests whether a box holds a blank node.
+ *
+ * @param box the box
+ * @return true if it does
+ */
 static inline bool rdfbox_is_blanknode(RdfBox *box)
 {
     return box->type >= IBLANKNODE && box->type <= SBLANKNODE;

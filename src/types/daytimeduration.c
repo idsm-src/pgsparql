@@ -1,3 +1,7 @@
+/**
+ * @file
+ * Parsing and printing of the lexical forms of xsd:dayTimeDuration, whose values are numbers of microseconds.
+ */
 #include <postgres.h>
 #include <math.h>
 #include <common/int.h>
@@ -7,6 +11,14 @@
 #include "types/daytimeduration.h"
 
 
+/**
+ * Reads the unsigned decimal number of a part of a duration.
+ *
+ * @param data the lexical form
+ * @param begin the position of the first digit, advanced past the last digit read
+ * @param size the length of the lexical form in bytes
+ * @return the number; a missing number raises an error, as does a number beyond the range of int64
+ */
 static int64 read_integer(char *data, int *begin, int size)
 {
     int pos = *begin;
@@ -38,6 +50,14 @@ static int64 read_integer(char *data, int *begin, int size)
 }
 
 
+/**
+ * Adds a part of a duration to the sum of the parts read before it.
+ *
+ * @param sum the sum of the previous parts in microseconds
+ * @param value the number of units of the part
+ * @param multiplier the number of microseconds of a unit
+ * @return the new sum; an overflow of int64 raises an error
+ */
 static int64 add_duration_part(int64 sum, int64 value, int64 multiplier)
 {
     int64 addition;
@@ -54,6 +74,18 @@ static int64 add_duration_part(int64 sum, int64 value, int64 multiplier)
 }
 
 
+/**
+ * Parses a lexical form of xsd:dayTimeDuration, `-?P(nD)?(T(nH)?(nM)?(n(.n)?S)?)?` surrounded by optional XML Schema
+ * whitespace, where at least one part follows `T`.
+ *
+ * The number of a part may be of any size as long as the whole duration fits into an int64 of microseconds; the
+ * fractional seconds may have more than six digits only if the extra digits are zeros.
+ *
+ * @param data the lexical form, not necessarily terminated by a zero byte
+ * @param size the length of the lexical form in bytes
+ * @return the duration in microseconds; a malformed form, a duration out of range or a non-zero digit beyond the
+ *         microseconds raises an error
+ */
 int64 daytimeduration_parse(char *data, int size)
 {
     bool minus = false;
@@ -166,6 +198,15 @@ int64 daytimeduration_parse(char *data, int size)
 }
 
 
+/**
+ * Prints the canonical lexical form of an xsd:dayTimeDuration: the parts that are not zero, the fractional seconds
+ * without trailing zeros, as in `-P1DT2H0.5S`, and `PT0S` for the zero duration.
+ *
+ * @param value the duration in microseconds
+ * @param buffer the buffer, with room for at least #DAYTIMEDURATION_MAXLEN bytes; no terminating zero byte is
+ *               written
+ * @return the number of bytes written
+ */
 int daytimeduration_print(int64 value, char *buffer)
 {
     if(value == 0)

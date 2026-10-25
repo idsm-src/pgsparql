@@ -1,3 +1,11 @@
+/**
+ * @file
+ * The hash functions of the default hash operator class of rdfbox, whose equality is the operator `@=`.
+ *
+ * The hash covers the type, the value and the stored lexical form of a term, as `@=` compares all three; numeric
+ * values that differ only in their scales (1.0 and 1.00) and all NaNs hash alike, as they are `@=`, while -0.0 and
+ * 0.0 are not `@=` and hash by their bits.
+ */
 #include <postgres.h>
 #include <common/hashfn.h>
 #include <utils/float.h>
@@ -6,12 +14,27 @@
 #include "rdfbox/rdfbox.h"
 
 
+/**
+ * Hashes the bytes of a varchar.
+ *
+ * @param value the varchar
+ * @param seed the seed of the hash
+ * @return the 64-bit hash
+ */
 static inline uint64 hash_varchar(VarChar *value, uint64 seed)
 {
     return hash_bytes_extended((const unsigned char *) VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value), seed);
 }
 
 
+/**
+ * Hashes an RDF term by its type, its value and its stored lexical form; a triple term recursively by the hashes of
+ * its components.
+ *
+ * @param box the term
+ * @param seed the seed of the hash, 0 for the 32-bit hash
+ * @return the 64-bit hash
+ */
 static uint64 hash_term(RdfBox *box, uint64 seed)
 {
     uint64 result = hash_bytes_uint32_extended(box->type, seed);
@@ -136,6 +159,12 @@ static uint64 hash_term(RdfBox *box, uint64 seed)
 }
 
 
+/**
+ * Hashes an RDF term; the hash support function 1 of the default hash operator class of rdfbox.
+ *
+ * @param fcinfo the rdfbox
+ * @return the int4 hash
+ */
 PG_FUNCTION_INFO_V1(rdfbox_hash);
 Datum rdfbox_hash(PG_FUNCTION_ARGS)
 {
@@ -149,6 +178,12 @@ Datum rdfbox_hash(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Hashes an RDF term with a seed; the hash support function 2 of the default hash operator class of rdfbox.
+ *
+ * @param fcinfo the rdfbox and the int8 seed
+ * @return the int8 hash
+ */
 PG_FUNCTION_INFO_V1(rdfbox_hash_extended);
 Datum rdfbox_hash_extended(PG_FUNCTION_ARGS)
 {

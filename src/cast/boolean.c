@@ -1,6 +1,11 @@
-/*
- * https://www.w3.org/TR/xmlschema11-2/#boolean
- * https://www.w3.org/TR/xpath-functions/#casting-boolean
+/**
+ * @file
+ * The casts to xsd:boolean, whose values are held by a bool.
+ *
+ * A value that cannot be cast, such as a malformed lexical form or a term of another datatype, gives NULL.
+ *
+ * @see https://www.w3.org/TR/xmlschema11-2/#boolean
+ * @see https://www.w3.org/TR/xpath-functions/#casting-boolean
  */
 #include <postgres.h>
 #include <utils/builtins.h>
@@ -11,6 +16,13 @@
 #include "rdfbox/rdfbox.h"
 
 
+/**
+ * Casts an xsd:short to xsd:boolean; also bound to @c cast_as_boolean_from_byte(int2) and
+ * @c cast_as_boolean_from_unsignedbyte(int2).
+ *
+ * @param fcinfo the int2 to cast
+ * @return false for 0, true otherwise
+ */
 PG_FUNCTION_INFO_V1(cast_as_boolean_from_short);
 Datum cast_as_boolean_from_short(PG_FUNCTION_ARGS)
 {
@@ -19,6 +31,12 @@ Datum cast_as_boolean_from_short(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:int to xsd:boolean; also bound to @c cast_as_boolean_from_unsignedshort(int4).
+ *
+ * @param fcinfo the int4 to cast
+ * @return false for 0, true otherwise
+ */
 PG_FUNCTION_INFO_V1(cast_as_boolean_from_int);
 Datum cast_as_boolean_from_int(PG_FUNCTION_ARGS)
 {
@@ -27,6 +45,12 @@ Datum cast_as_boolean_from_int(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:long to xsd:boolean; also bound to @c cast_as_boolean_from_unsignedint(int8).
+ *
+ * @param fcinfo the int8 to cast
+ * @return false for 0, true otherwise
+ */
 PG_FUNCTION_INFO_V1(cast_as_boolean_from_long);
 Datum cast_as_boolean_from_long(PG_FUNCTION_ARGS)
 {
@@ -35,6 +59,13 @@ Datum cast_as_boolean_from_long(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:decimal to xsd:boolean; also bound to @c cast_as_boolean_from_unsignedlong(decimal) and to the casts
+ * from xsd:integer and its subtypes.
+ *
+ * @param fcinfo the numeric to cast
+ * @return false for 0, true otherwise
+ */
 PG_FUNCTION_INFO_V1(cast_as_boolean_from_decimal);
 Datum cast_as_boolean_from_decimal(PG_FUNCTION_ARGS)
 {
@@ -44,6 +75,12 @@ Datum cast_as_boolean_from_decimal(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:float to xsd:boolean.
+ *
+ * @param fcinfo the float4 to cast
+ * @return false for 0, -0 and NaN, true otherwise
+ */
 PG_FUNCTION_INFO_V1(cast_as_boolean_from_float);
 Datum cast_as_boolean_from_float(PG_FUNCTION_ARGS)
 {
@@ -52,6 +89,12 @@ Datum cast_as_boolean_from_float(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:double to xsd:boolean.
+ *
+ * @param fcinfo the float8 to cast
+ * @return false for 0, -0 and NaN, true otherwise
+ */
 PG_FUNCTION_INFO_V1(cast_as_boolean_from_double);
 Datum cast_as_boolean_from_double(PG_FUNCTION_ARGS)
 {
@@ -60,6 +103,13 @@ Datum cast_as_boolean_from_double(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:string to xsd:boolean by parsing it as a lexical form of xsd:boolean: `true`, `false`, `1` or `0`,
+ * surrounded by optional whitespace.
+ *
+ * @param fcinfo the varchar to cast
+ * @return the bool, NULL if the string is not a lexical form of xsd:boolean
+ */
 PG_FUNCTION_INFO_V1(cast_as_boolean_from_string);
 Datum cast_as_boolean_from_string(PG_FUNCTION_ARGS)
 {
@@ -83,6 +133,13 @@ Datum cast_as_boolean_from_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an RDF term to xsd:boolean, the SPARQL function `xsd:boolean()`.
+ *
+ * @param fcinfo the rdfbox to cast
+ * @return the bool, NULL if the term is not an xsd:boolean, a numeric literal or an xsd:string, or if the string is
+ *         not a lexical form of xsd:boolean
+ */
 PG_FUNCTION_INFO_V1(cast_as_boolean_from_rdfbox);
 Datum cast_as_boolean_from_rdfbox(PG_FUNCTION_ARGS)
 {

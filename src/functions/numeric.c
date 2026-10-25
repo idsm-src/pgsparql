@@ -1,3 +1,12 @@
+/**
+ * @file
+ * The SPARQL numeric functions ABS, ROUND, CEIL and FLOOR.
+ *
+ * A function of an rdfbox gives NULL for a term that is not a number. As in XPath, the result has the type of the
+ * argument, except that a value of xsd:integer or of a datatype derived from it gives an xsd:integer.
+ *
+ * @see https://www.w3.org/TR/xpath-functions/#numeric-value-functions
+ */
 #include <postgres.h>
 #include <utils/builtins.h>
 #include <utils/numeric.h>
@@ -8,7 +17,9 @@
 #include "rdfbox/promotion.h"
 
 
-/*
+/**
+ * Rounds a double to the nearest integer, a half towards positive infinity.
+ *
  * SPARQL ROUND(), like fn:round(), rounds a half towards positive infinity:
  * ROUND(-2.5) is -2, not -3.  round()/roundf() and numeric_round() round a half
  * away from zero instead, so they cannot be used directly.
@@ -18,6 +29,10 @@
  * looking at the fractional part is exact for every finite value -- the difference
  * of a double and its floor is representable -- and leaves NaN and +-infinity
  * alone, as value - value is NaN and NaN >= 0.5 is false.
+ *
+ * @param value the value
+ * @return the rounded value; NaN and the infinities are returned as they are, and a negative value that rounds to
+ *         zero gives negative zero, as fn:round keeps the sign
  */
 static inline float8 round_half_up(float8 value)
 {
@@ -34,6 +49,13 @@ static inline float8 round_half_up(float8 value)
 }
 
 
+/**
+ * Rounds a float to the nearest integer, a half towards positive infinity, the way round_half_up() rounds a double.
+ *
+ * @param value the value
+ * @return the rounded value; NaN and the infinities are returned as they are, and a negative value that rounds to
+ *         zero gives negative zero
+ */
 static inline float4 round_half_up_float(float4 value)
 {
     float4 result = floorf(value);
@@ -48,7 +70,14 @@ static inline float4 round_half_up_float(float4 value)
 }
 
 
-/* the addition is exact for a numeric, which has no negative zero either */
+/**
+ * Rounds a numeric to the nearest integer, a half towards positive infinity, as the floor of the value plus 0.5.
+ *
+ * The addition is exact for a numeric, which has no negative zero either.
+ *
+ * @param value the value
+ * @return the palloc'd rounded value
+ */
 static inline Numeric round_half_up_numeric(Numeric value)
 {
     Numeric sum = DatumGetNumeric(DirectFunctionCall2(numeric_add, NumericGetDatum(value), NumericGetDatum(get_half())));
@@ -56,6 +85,13 @@ static inline Numeric round_half_up_numeric(Numeric value)
 }
 
 
+/**
+ * Computes the absolute value of a number, the SPARQL function ABS.
+ *
+ * @param fcinfo the rdfbox
+ * @return the rdfbox with the absolute value: an xsd:integer for the integer datatypes and a value of the same type
+ *         for xsd:decimal, xsd:float and xsd:double; NULL if the term is not a number
+ */
 PG_FUNCTION_INFO_V1(abs_rdfbox);
 Datum abs_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -136,6 +172,14 @@ Datum abs_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Rounds a number to the nearest integer, a half towards positive infinity, the SPARQL function ROUND.
+ *
+ * @param fcinfo the rdfbox
+ * @return the rdfbox with the rounded value: the value itself as an xsd:integer for the integer datatypes and a
+ *         value of the same type for xsd:decimal, xsd:float and xsd:double, see round_half_up(); NULL if the term is
+ *         not a number
+ */
 PG_FUNCTION_INFO_V1(round_rdfbox);
 Datum round_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -181,6 +225,14 @@ Datum round_rdfbox(PG_FUNCTION_ARGS)
  * cannot serve there, as it rounds a numeric half away from zero and a double
  * half to even.
  */
+
+/**
+ * Rounds an xsd:decimal held in a numeric to the nearest integer, a half towards positive infinity, the SPARQL
+ * function ROUND.
+ *
+ * @param fcinfo the decimal
+ * @return the rounded decimal
+ */
 PG_FUNCTION_INFO_V1(round_decimal);
 Datum round_decimal(PG_FUNCTION_ARGS)
 {
@@ -188,6 +240,13 @@ Datum round_decimal(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Rounds an xsd:float held in a float4 to the nearest integer, a half towards positive infinity, the SPARQL function
+ * ROUND.
+ *
+ * @param fcinfo the float4
+ * @return the rounded float4, see round_half_up_float()
+ */
 PG_FUNCTION_INFO_V1(round_float);
 Datum round_float(PG_FUNCTION_ARGS)
 {
@@ -195,6 +254,13 @@ Datum round_float(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Rounds an xsd:double held in a float8 to the nearest integer, a half towards positive infinity, the SPARQL function
+ * ROUND.
+ *
+ * @param fcinfo the float8
+ * @return the rounded float8, see round_half_up()
+ */
 PG_FUNCTION_INFO_V1(round_double);
 Datum round_double(PG_FUNCTION_ARGS)
 {
@@ -202,6 +268,14 @@ Datum round_double(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Rounds a number up to an integer, the SPARQL function CEIL.
+ *
+ * @param fcinfo the rdfbox
+ * @return the rdfbox with the least integer not less than the value: the value itself as an xsd:integer for the
+ *         integer datatypes and a value of the same type for xsd:decimal, xsd:float and xsd:double; NULL if the term
+ *         is not a number
+ */
 PG_FUNCTION_INFO_V1(ceil_rdfbox);
 Datum ceil_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -246,6 +320,14 @@ Datum ceil_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Rounds a number down to an integer, the SPARQL function FLOOR.
+ *
+ * @param fcinfo the rdfbox
+ * @return the rdfbox with the greatest integer not greater than the value: the value itself as an xsd:integer for
+ *         the integer datatypes and a value of the same type for xsd:decimal, xsd:float and xsd:double; NULL if the
+ *         term is not a number
+ */
 PG_FUNCTION_INFO_V1(floor_rdfbox);
 Datum floor_rdfbox(PG_FUNCTION_ARGS)
 {

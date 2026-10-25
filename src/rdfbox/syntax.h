@@ -1,3 +1,7 @@
+/**
+ * @file
+ * The syntax checks of IRIs, IRI references and language tags.
+ */
 #ifndef RDFBOX_SYNTAX_H_
 #define RDFBOX_SYNTAX_H_
 

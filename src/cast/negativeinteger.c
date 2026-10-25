@@ -1,6 +1,11 @@
-/*
- * https://www.w3.org/TR/xmlschema11-2/#negativeInteger
- * https://www.w3.org/TR/xpath-functions/#casting-to-integer
+/**
+ * @file
+ * The casts to xsd:negativeInteger, whose values are held by a numeric.
+ *
+ * A value that cannot be cast, such as a value that is not negative or a malformed lexical form, gives NULL.
+ *
+ * @see https://www.w3.org/TR/xmlschema11-2/#negativeInteger
+ * @see https://www.w3.org/TR/xpath-functions/#casting-to-integer
  */
 #include <postgres.h>
 #include <utils/builtins.h>
@@ -14,6 +19,12 @@
 #include "rdfbox/rdfbox.h"
 
 
+/**
+ * Casts an xsd:boolean to xsd:negativeInteger, which never succeeds, as neither 0 nor 1 is negative.
+ *
+ * @param fcinfo the bool to cast
+ * @return always NULL
+ */
 PG_FUNCTION_INFO_V1(cast_as_negativeinteger_from_boolean);
 Datum cast_as_negativeinteger_from_boolean(PG_FUNCTION_ARGS)
 {
@@ -22,6 +33,13 @@ Datum cast_as_negativeinteger_from_boolean(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:short to xsd:negativeInteger; also bound to @c cast_as_negativeinteger_from_byte(int2) and
+ * @c cast_as_negativeinteger_from_unsignedbyte(int2).
+ *
+ * @param fcinfo the int2 to cast
+ * @return the value as a numeric, NULL if it is not negative
+ */
 PG_FUNCTION_INFO_V1(cast_as_negativeinteger_from_short);
 Datum cast_as_negativeinteger_from_short(PG_FUNCTION_ARGS)
 {
@@ -35,6 +53,12 @@ Datum cast_as_negativeinteger_from_short(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:int to xsd:negativeInteger; also bound to @c cast_as_negativeinteger_from_unsignedshort(int4).
+ *
+ * @param fcinfo the int4 to cast
+ * @return the value as a numeric, NULL if it is not negative
+ */
 PG_FUNCTION_INFO_V1(cast_as_negativeinteger_from_int);
 Datum cast_as_negativeinteger_from_int(PG_FUNCTION_ARGS)
 {
@@ -48,6 +72,12 @@ Datum cast_as_negativeinteger_from_int(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:long to xsd:negativeInteger; also bound to @c cast_as_negativeinteger_from_unsignedint(int8).
+ *
+ * @param fcinfo the int8 to cast
+ * @return the value as a numeric, NULL if it is not negative
+ */
 PG_FUNCTION_INFO_V1(cast_as_negativeinteger_from_long);
 Datum cast_as_negativeinteger_from_long(PG_FUNCTION_ARGS)
 {
@@ -61,6 +91,13 @@ Datum cast_as_negativeinteger_from_long(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:integer to xsd:negativeInteger; also bound to @c cast_as_negativeinteger_from_unsignedlong(decimal) and
+ * to the casts from the other subtypes of xsd:integer.
+ *
+ * @param fcinfo the numeric to cast
+ * @return the same numeric, NULL if it is NaN, infinite or not negative
+ */
 PG_FUNCTION_INFO_V1(cast_as_negativeinteger_from_integer);
 Datum cast_as_negativeinteger_from_integer(PG_FUNCTION_ARGS)
 {
@@ -73,6 +110,12 @@ Datum cast_as_negativeinteger_from_integer(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:decimal to xsd:negativeInteger, discarding its fractional part.
+ *
+ * @param fcinfo the numeric to cast
+ * @return the truncated numeric, NULL if it is NaN, infinite or not negative
+ */
 PG_FUNCTION_INFO_V1(cast_as_negativeinteger_from_decimal);
 Datum cast_as_negativeinteger_from_decimal(PG_FUNCTION_ARGS)
 {
@@ -86,6 +129,12 @@ Datum cast_as_negativeinteger_from_decimal(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:float to xsd:negativeInteger, discarding its fractional part.
+ *
+ * @param fcinfo the float4 to cast
+ * @return the truncated value as a numeric, NULL if it is NaN, infinite or not negative
+ */
 PG_FUNCTION_INFO_V1(cast_as_negativeinteger_from_float);
 Datum cast_as_negativeinteger_from_float(PG_FUNCTION_ARGS)
 {
@@ -98,6 +147,12 @@ Datum cast_as_negativeinteger_from_float(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:double to xsd:negativeInteger, discarding its fractional part.
+ *
+ * @param fcinfo the float8 to cast
+ * @return the truncated value as a numeric, NULL if it is NaN, infinite or not negative
+ */
 PG_FUNCTION_INFO_V1(cast_as_negativeinteger_from_double);
 Datum cast_as_negativeinteger_from_double(PG_FUNCTION_ARGS)
 {
@@ -110,6 +165,12 @@ Datum cast_as_negativeinteger_from_double(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:string to xsd:negativeInteger by parsing it as a lexical form of xsd:negativeInteger.
+ *
+ * @param fcinfo the varchar to cast
+ * @return the numeric, NULL if the string is not a lexical form of xsd:integer or its value is not negative
+ */
 PG_FUNCTION_INFO_V1(cast_as_negativeinteger_from_string);
 Datum cast_as_negativeinteger_from_string(PG_FUNCTION_ARGS)
 {
@@ -133,6 +194,13 @@ Datum cast_as_negativeinteger_from_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an RDF term to xsd:negativeInteger, the SPARQL function `xsd:negativeInteger()`.
+ *
+ * @param fcinfo the rdfbox to cast
+ * @return the numeric, NULL if the term is not an xsd:boolean, a literal of a numeric datatype or an xsd:string, or
+ *         if its value cannot be cast
+ */
 PG_FUNCTION_INFO_V1(cast_as_negativeinteger_from_rdfbox);
 Datum cast_as_negativeinteger_from_rdfbox(PG_FUNCTION_ARGS)
 {

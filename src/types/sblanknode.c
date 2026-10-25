@@ -1,3 +1,8 @@
+/**
+ * @file
+ * The SQL functions that build string blank nodes from a value and a segment and take them apart again, and the
+ * encoding of the segment.
+ */
 #include <postgres.h>
 #if PG_VERSION_NUM >= 160000
 #include <varatt.h>
@@ -6,6 +11,12 @@
 #include "types/sblanknode.h"
 
 
+/**
+ * Decodes a lower-case hexadecimal digit.
+ *
+ * @param value the digit
+ * @return its value; a character that is not such a digit raises an error
+ */
 static inline uint32 htoi(char value)
 {
     if(value >= '0' && value <= '9')
@@ -17,6 +28,12 @@ static inline uint32 htoi(char value)
 }
 
 
+/**
+ * Encodes a value as a lower-case hexadecimal digit.
+ *
+ * @param value the value, less than 16
+ * @return the digit
+ */
 static inline char itoh(uint32 value)
 {
     if(value < 10)
@@ -26,6 +43,12 @@ static inline char itoh(uint32 value)
 }
 
 
+/**
+ * Decodes the segment of a string blank node.
+ *
+ * @param buffer the blank node, at least eight characters long
+ * @return the segment; a character that is not a lower-case hexadecimal digit raises an error
+ */
 static inline uint32 read_segment(char *buffer)
 {
     uint32 value = 0;
@@ -40,6 +63,13 @@ static inline uint32 read_segment(char *buffer)
 }
 
 
+/**
+ * Tests whether a string is a valid string blank node, one that begins with eight lower-case hexadecimal digits.
+ *
+ * @param data the string, not necessarily terminated by a zero byte
+ * @param size the length of the string in bytes
+ * @return true if the string begins with a segment
+ */
 bool is_sblanknode_value(const char *data, int32 size)
 {
     if(size < 8)
@@ -53,6 +83,12 @@ bool is_sblanknode_value(const char *data, int32 size)
 }
 
 
+/**
+ * Writes the segment of a string blank node as eight lower-case hexadecimal digits.
+ *
+ * @param buffer the buffer, with room for at least eight bytes; no terminating zero byte is written
+ * @param value the segment
+ */
 void write_sblanknode_segment(char *buffer, uint32 value)
 {
     for(int i = 7; i >= 0; i--)
@@ -63,6 +99,12 @@ void write_sblanknode_segment(char *buffer, uint32 value)
 }
 
 
+/**
+ * Builds a string blank node.
+ *
+ * @param fcinfo the varchar value and the int4 segment
+ * @return the varchar blank node
+ */
 PG_FUNCTION_INFO_V1(sblanknode_create);
 Datum sblanknode_create(PG_FUNCTION_ARGS)
 {
@@ -79,6 +121,12 @@ Datum sblanknode_create(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Extracts the value of a string blank node, whatever its segment is.
+ *
+ * @param fcinfo the varchar blank node
+ * @return the varchar value; a blank node shorter than its segment raises an error
+ */
 PG_FUNCTION_INFO_V1(sblanknode_get_value);
 Datum sblanknode_get_value(PG_FUNCTION_ARGS)
 {
@@ -95,6 +143,13 @@ Datum sblanknode_get_value(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Extracts the value of a string blank node of a given segment.
+ *
+ * @param fcinfo the varchar blank node and the int4 segment
+ * @return the varchar value, NULL if the blank node belongs to another segment; a blank node that does not begin
+ *         with a segment raises an error
+ */
 PG_FUNCTION_INFO_V1(sblanknode_get_value_of_segment);
 Datum sblanknode_get_value_of_segment(PG_FUNCTION_ARGS)
 {
@@ -115,6 +170,12 @@ Datum sblanknode_get_value_of_segment(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Extracts the segment of a string blank node.
+ *
+ * @param fcinfo the varchar blank node
+ * @return the int4 segment; a blank node that does not begin with a segment raises an error
+ */
 PG_FUNCTION_INFO_V1(sblanknode_get_segment);
 Datum sblanknode_get_segment(PG_FUNCTION_ARGS)
 {

@@ -1,9 +1,21 @@
+/**
+ * @file
+ * Parsing and printing of the lexical forms of xsd:unsignedInt.
+ */
 #include <postgres.h>
 #include <utils/builtins.h>
 #include "types/parser.h"
 #include "types/unsignedint.h"
 
 
+/**
+ * Parses a lexical form of xsd:unsignedInt, an optionally signed sequence of decimal digits surrounded by optional
+ * XML Schema whitespace; the minus sign is allowed only for zero.
+ *
+ * @param data the lexical form, not necessarily terminated by a zero byte
+ * @param size the length of the lexical form in bytes
+ * @return the value; a malformed form or a value out of the range of xsd:unsignedInt raises an error
+ */
 uint32 unsignedint_parse(char *data, int size)
 {
     int pos = 0;
@@ -58,6 +70,13 @@ uint32 unsignedint_parse(char *data, int size)
 }
 
 
+/**
+ * Prints the canonical lexical form of an xsd:unsignedInt.
+ *
+ * @param value the value
+ * @param buffer the buffer, with room for at least #UNSIGNEDINT_MAXLEN bytes; no terminating zero byte is written
+ * @return the number of bytes written
+ */
 int unsignedint_print(uint32 value, char *buffer)
 {
     return pg_ultoa_n(value, buffer);

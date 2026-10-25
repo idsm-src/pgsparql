@@ -1,3 +1,9 @@
+/**
+ * @file
+ * The string blank nodes, a varchar whose first eight characters are the segment written as lower-case hexadecimal
+ * digits and whose rest is the value within it. Segments keep apart the blank nodes that come from different
+ * sources, so equal values in different segments are different blank nodes.
+ */
 #ifndef TYPES_SBLANKNODE_H_
 #define TYPES_SBLANKNODE_H_
 

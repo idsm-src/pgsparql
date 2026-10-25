@@ -1,6 +1,12 @@
-/*
- * https://www.w3.org/TR/xmlschema11-2/#float
- * https://www.w3.org/TR/xpath-functions/#casting-to-float
+/**
+ * @file
+ * The casts to xsd:float, whose values are held by a float4.
+ *
+ * A malformed lexical form gives NULL; the other values can always be cast, those beyond the range of xsd:float
+ * becoming infinities.
+ *
+ * @see https://www.w3.org/TR/xmlschema11-2/#float
+ * @see https://www.w3.org/TR/xpath-functions/#casting-to-float
  */
 #include <postgres.h>
 #include <utils/builtins.h>
@@ -11,6 +17,12 @@
 #include "rdfbox/rdfbox.h"
 
 
+/**
+ * Casts an xsd:boolean to xsd:float.
+ *
+ * @param fcinfo the bool to cast
+ * @return the float4 1 for true and 0 for false
+ */
 PG_FUNCTION_INFO_V1(cast_as_float_from_boolean);
 Datum cast_as_float_from_boolean(PG_FUNCTION_ARGS)
 {
@@ -19,6 +31,13 @@ Datum cast_as_float_from_boolean(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:short to xsd:float; also bound to @c cast_as_float_from_byte(int2) and
+ * @c cast_as_float_from_unsignedbyte(int2).
+ *
+ * @param fcinfo the int2 to cast
+ * @return the float4
+ */
 PG_FUNCTION_INFO_V1(cast_as_float_from_short);
 Datum cast_as_float_from_short(PG_FUNCTION_ARGS)
 {
@@ -27,6 +46,12 @@ Datum cast_as_float_from_short(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:int to xsd:float; also bound to @c cast_as_float_from_unsignedshort(int4).
+ *
+ * @param fcinfo the int4 to cast
+ * @return the float4, rounded to the nearest float
+ */
 PG_FUNCTION_INFO_V1(cast_as_float_from_int);
 Datum cast_as_float_from_int(PG_FUNCTION_ARGS)
 {
@@ -35,6 +60,12 @@ Datum cast_as_float_from_int(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:long to xsd:float; also bound to @c cast_as_float_from_unsignedint(int8).
+ *
+ * @param fcinfo the int8 to cast
+ * @return the float4, rounded to the nearest float
+ */
 PG_FUNCTION_INFO_V1(cast_as_float_from_long);
 Datum cast_as_float_from_long(PG_FUNCTION_ARGS)
 {
@@ -43,6 +74,13 @@ Datum cast_as_float_from_long(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:decimal to xsd:float; also bound to @c cast_as_float_from_unsignedlong(decimal) and to the casts from
+ * xsd:integer and its subtypes.
+ *
+ * @param fcinfo the numeric to cast
+ * @return the float4 nearest to the value, an infinity if the value is beyond the range of xsd:float
+ */
 PG_FUNCTION_INFO_V1(cast_as_float_from_decimal);
 Datum cast_as_float_from_decimal(PG_FUNCTION_ARGS)
 {
@@ -53,6 +91,13 @@ Datum cast_as_float_from_decimal(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:double to xsd:float.
+ *
+ * @param fcinfo the float8 to cast
+ * @return the float4 nearest to the value, an infinity if the value is beyond the range of xsd:float; NaN and the
+ *         infinities are kept
+ */
 PG_FUNCTION_INFO_V1(cast_as_float_from_double);
 Datum cast_as_float_from_double(PG_FUNCTION_ARGS)
 {
@@ -61,6 +106,13 @@ Datum cast_as_float_from_double(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:string to xsd:float by parsing it as a lexical form of xsd:float, which includes `NaN`, `INF`, `+INF`
+ * and `-INF`.
+ *
+ * @param fcinfo the varchar to cast
+ * @return the float4, NULL if the string is not a lexical form of xsd:float
+ */
 PG_FUNCTION_INFO_V1(cast_as_float_from_string);
 Datum cast_as_float_from_string(PG_FUNCTION_ARGS)
 {
@@ -84,6 +136,13 @@ Datum cast_as_float_from_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an RDF term to xsd:float, the SPARQL function `xsd:float()`.
+ *
+ * @param fcinfo the rdfbox to cast
+ * @return the float4, NULL if the term is not an xsd:boolean, a numeric literal or an xsd:string, or if the string is
+ *         not a lexical form of xsd:float
+ */
 PG_FUNCTION_INFO_V1(cast_as_float_from_rdfbox);
 Datum cast_as_float_from_rdfbox(PG_FUNCTION_ARGS)
 {

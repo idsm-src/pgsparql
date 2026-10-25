@@ -1,3 +1,11 @@
+/**
+ * @file
+ * The comparison operators of SPARQL 1.2 on rdfbox: sameTerm(), the value comparisons `=`, `!=`, `<`, `<=`, `>=` and
+ * `>` of the operator mapping, and sameValue().
+ *
+ * A NULL result stands for an error of the comparison, a pair of terms that the operator cannot compare. The total
+ * order of ORDER BY and of the operator classes is implemented in rdfbox/order.c.
+ */
 #include <postgres.h>
 #include <utils/builtins.h>
 #include <utils/numeric.h>
@@ -12,19 +20,32 @@
 Datum rdfbox_is_equal_to(PG_FUNCTION_ARGS);
 
 
+/**
+ * Tests whether a box is an xsd:float or xsd:double NaN.
+ *
+ * @param box the box
+ * @return true if the box is a NaN of xsd:float or xsd:double
+ */
 static inline bool rdfbox_is_nan(RdfBox *box)
 {
     return (box->type == XSD_FLOAT && isnan(RdfBoxGetFloat4(box))) || (box->type == XSD_DOUBLE && isnan(RdfBoxGetFloat8(box)));
 }
 
 
-/*
- * The function sameValue() of SPARQL 1.2 (section 17.4.2.2) as the section defines it, behind rdfbox_is_same_value_as()
- * only: the operator = of this file does not use it, because the operator mapping covers every pair of terms the
- * function would decide differently. On IRIs, blank nodes and literals it agrees with the operator = except for NaN:
- * two NaN values, of xsd:float or xsd:double in any combination, are the same value, whereas op:numeric-equal never
- * holds for a NaN. Two triple terms are compared component by component, and an error (NULL) of any component is an
- * error of the whole, whereas the operator = on two triple terms follows the operator mapping, see tripleterm_is_equal_to().
+/**
+ * The function sameValue() of SPARQL 1.2 (section 17.4.2.2) as the section defines it.
+ *
+ * It is behind rdfbox_is_same_value_as() only: the operator `=` of this file does not use it, because the operator
+ * mapping covers every pair of terms the function would decide differently.
+ *
+ * On IRIs, blank nodes and literals it agrees with the operator `=` except for NaN: two NaN values, of xsd:float or
+ * xsd:double in any combination, are the same value, whereas op:numeric-equal never holds for a NaN. Two triple terms
+ * are compared component by component, and an error (NULL) of any component is an error of the whole, whereas the
+ * operator `=` on two triple terms follows the operator mapping, see tripleterm_is_equal_to().
+ *
+ * @param left the left term
+ * @param right the right term
+ * @return true if the terms are the same value, false if they are not, null if they cannot be compared
  */
 static NullableDatum same_value(RdfBox *left, RdfBox *right)
 {
@@ -51,11 +72,18 @@ static NullableDatum same_value(RdfBox *left, RdfBox *right)
 }
 
 
-/*
- * The operator = on two triple terms as the operator mapping of SPARQL 1.2 defines it: (A.subject = B.subject) &&
- * (A.predicate = B.predicate) && (A.object = B.object), with the three-valued && of SPARQL: a component that differs
- * decides even when another one cannot be compared, otherwise an error (NULL) of a component is an error of the whole.
- * The components are compared by the operator = itself, so two NaN objects are not equal, unlike in sameValue().
+/**
+ * The operator `=` on two triple terms as the operator mapping of SPARQL 1.2 defines it:
+ * `(A.subject = B.subject) && (A.predicate = B.predicate) && (A.object = B.object)`, with the three-valued `&&` of
+ * SPARQL.
+ *
+ * A component that differs decides even when another one cannot be compared, otherwise an error (NULL) of a component
+ * is an error of the whole. The components are compared by the operator `=` itself, so two NaN objects are not equal,
+ * unlike in sameValue().
+ *
+ * @param left the left triple term
+ * @param right the right triple term
+ * @return true if the triple terms are equal, false if they are not, null if that cannot be decided
  */
 static NullableDatum tripleterm_is_equal_to(RdfBox *left, RdfBox *right)
 {
@@ -73,6 +101,16 @@ static NullableDatum tripleterm_is_equal_to(RdfBox *left, RdfBox *right)
 }
 
 
+/**
+ * The function sameTerm() of SPARQL: whether two boxes hold the same RDF term; bound to the SQL operator
+ * `rdfbox === rdfbox`.
+ *
+ * A literal that keeps a non-canonical lexical form is another term than the literal of the same value in the canonical
+ * form.
+ *
+ * @param fcinfo the left and the right rdfbox
+ * @return the bool result
+ */
 PG_FUNCTION_INFO_V1(rdfbox_is_same_as);
 Datum rdfbox_is_same_as(PG_FUNCTION_ARGS)
 {
@@ -88,6 +126,14 @@ Datum rdfbox_is_same_as(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The function sameValue() of SPARQL 1.2 on two boxes, see same_value().
+ *
+ * The translator does not use it, the operator `=` covers the comparisons it needs.
+ *
+ * @param fcinfo the left and the right rdfbox
+ * @return the bool result, NULL if the terms cannot be compared
+ */
 PG_FUNCTION_INFO_V1(rdfbox_is_same_value_as);
 Datum rdfbox_is_same_value_as(PG_FUNCTION_ARGS)
 {
@@ -103,12 +149,24 @@ Datum rdfbox_is_same_value_as(PG_FUNCTION_ARGS)
 }
 
 
-/*
- * The operator = of SPARQL 1.2 (and != as its negation): the rows of the operator mapping for the pairs of types they
- * cover, including two triple terms (see tripleterm_is_equal_to()), sameValue() for the other pairs. Two literals of
- * different datatypes handled here are different values, whereas a typed literal, whose datatype is not handled here
- * or whose lexical form is invalid, equals the same term only and cannot be compared (NULL) with any other literal.
- * Unlike sameValue(), op:numeric-equal never holds for a NaN.
+/**
+ * The operator `=` of SPARQL 1.2 on rdfbox; bound to the SQL operator `rdfbox = rdfbox`.
+ *
+ * The operator `=` (and `!=` as its negation) follows the rows of the operator mapping for the pairs of types they
+ * cover, including two triple terms (see tripleterm_is_equal_to()), and sameValue() for the other pairs.
+ *
+ * Two literals of different datatypes handled here are different values, whereas a typed literal, whose datatype is not
+ * handled here or whose lexical form is invalid, equals the same term only and cannot be compared (NULL) with any other
+ * literal. Unlike sameValue(), op:numeric-equal never holds for a NaN.
+ *
+ * Numbers are compared in their promoted type, date-times and dates by their instants (a value without a time zone
+ * taken in the implicit time zone), strings, IRIs and blank nodes by their bytes, language-tagged strings together with
+ * their tags, and user literals of the same datatype IRI by the equality operator of the SQL type of their values.
+ *
+ * @param fcinfo the left and the right rdfbox
+ * @return the bool result, NULL if the terms cannot be compared: a typed literal and another literal, two user literals
+ *         of the same datatype IRI whose values are of different SQL types or of a type without an equality operator,
+ *         or two triple terms whose comparison is an error
  */
 PG_FUNCTION_INFO_V1(rdfbox_is_equal_to);
 Datum rdfbox_is_equal_to(PG_FUNCTION_ARGS)
@@ -240,6 +298,12 @@ Datum rdfbox_is_equal_to(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The operator `!=` of SPARQL 1.2, the negation of rdfbox_is_equal_to(); bound to the SQL operator `rdfbox != rdfbox`.
+ *
+ * @param fcinfo the left and the right rdfbox
+ * @return the bool result, NULL exactly when rdfbox_is_equal_to() is NULL
+ */
 PG_FUNCTION_INFO_V1(rdfbox_is_not_equal_to);
 Datum rdfbox_is_not_equal_to(PG_FUNCTION_ARGS)
 {
@@ -375,6 +439,18 @@ Datum rdfbox_is_not_equal_to(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The operator `<` of SPARQL on rdfbox; bound to the SQL operator `rdfbox < rdfbox`.
+ *
+ * Defined on two booleans, two numbers (compared in their promoted type), two xsd:dateTime, two xsd:date, two
+ * xsd:dayTimeDuration, two xsd:string (compared by code points) and two user literals of the same datatype IRI
+ * (compared by the B-tree comparison of the SQL type of their values); any other pair, language-tagged strings
+ * included, is a type error.
+ *
+ * @param fcinfo the left and the right rdfbox
+ * @return true if the left term is less than the right one, false if not, NULL for a pair of terms the operator is not
+ *         defined on or for two user literals whose values cannot be compared
+ */
 PG_FUNCTION_INFO_V1(rdfbox_is_less_than);
 Datum rdfbox_is_less_than(PG_FUNCTION_ARGS)
 {
@@ -461,6 +537,18 @@ Datum rdfbox_is_less_than(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The operator `<=` of SPARQL on rdfbox; bound to the SQL operator `rdfbox <= rdfbox`.
+ *
+ * Defined on two booleans, two numbers (compared in their promoted type), two xsd:dateTime, two xsd:date, two
+ * xsd:dayTimeDuration, two xsd:string (compared by code points) and two user literals of the same datatype IRI
+ * (compared by the B-tree comparison of the SQL type of their values); any other pair, language-tagged strings
+ * included, is a type error.
+ *
+ * @param fcinfo the left and the right rdfbox
+ * @return true if the left term is less than or equal to the right one, false if not, NULL for a pair of terms the
+ *         operator is not defined on or for two user literals whose values cannot be compared
+ */
 PG_FUNCTION_INFO_V1(rdfbox_is_not_greater_than);
 Datum rdfbox_is_not_greater_than(PG_FUNCTION_ARGS)
 {
@@ -547,6 +635,18 @@ Datum rdfbox_is_not_greater_than(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The operator `>=` of SPARQL on rdfbox; bound to the SQL operator `rdfbox >= rdfbox`.
+ *
+ * Defined on two booleans, two numbers (compared in their promoted type), two xsd:dateTime, two xsd:date, two
+ * xsd:dayTimeDuration, two xsd:string (compared by code points) and two user literals of the same datatype IRI
+ * (compared by the B-tree comparison of the SQL type of their values); any other pair, language-tagged strings
+ * included, is a type error.
+ *
+ * @param fcinfo the left and the right rdfbox
+ * @return true if the left term is greater than or equal to the right one, false if not, NULL for a pair of terms the
+ *         operator is not defined on or for two user literals whose values cannot be compared
+ */
 PG_FUNCTION_INFO_V1(rdfbox_is_not_less_than);
 Datum rdfbox_is_not_less_than(PG_FUNCTION_ARGS)
 {
@@ -633,6 +733,18 @@ Datum rdfbox_is_not_less_than(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The operator `>` of SPARQL on rdfbox; bound to the SQL operator `rdfbox > rdfbox`.
+ *
+ * Defined on two booleans, two numbers (compared in their promoted type), two xsd:dateTime, two xsd:date, two
+ * xsd:dayTimeDuration, two xsd:string (compared by code points) and two user literals of the same datatype IRI
+ * (compared by the B-tree comparison of the SQL type of their values); any other pair, language-tagged strings
+ * included, is a type error.
+ *
+ * @param fcinfo the left and the right rdfbox
+ * @return true if the left term is greater than the right one, false if not, NULL for a pair of terms the operator is
+ *         not defined on or for two user literals whose values cannot be compared
+ */
 PG_FUNCTION_INFO_V1(rdfbox_is_greater_than);
 Datum rdfbox_is_greater_than(PG_FUNCTION_ARGS)
 {

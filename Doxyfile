@@ -1,0 +1,45 @@
+# Doxygen configuration of the programmer documentation of pgsparql.
+#
+# Run "doxygen" in the directory of this file; the HTML documentation is written to doc/html. Only the settings that
+# differ from the defaults are listed here. Every file, function, macro, type, field and enumerator is expected to
+# carry a documentation comment, and any warning makes doxygen exit with an error.
+
+PROJECT_NAME           = pgsparql
+PROJECT_NUMBER         = 2.0.0
+PROJECT_BRIEF          = "Auxiliary functions for the IOCB SPARQL to SQL translator"
+OUTPUT_DIRECTORY       = doc
+
+# The sources of the extension, without the vendored Ryu library.
+INPUT                  = src
+RECURSIVE              = YES
+FILE_PATTERNS          = *.c *.h
+EXCLUDE                = src/ryu
+STRIP_FROM_PATH        = src
+STRIP_FROM_INC_PATH    = src
+INCLUDE_PATH           = src
+
+OPTIMIZE_OUTPUT_FOR_C  = YES
+JAVADOC_AUTOBRIEF      = YES
+EXTRACT_STATIC         = YES
+SORT_MEMBER_DOCS       = NO
+SOURCE_BROWSER         = YES
+
+# The function manager macros of PostgreSQL are expanded, so that an SQL-callable function shows its real parameter
+# fcinfo, and the macros that only mark a declaration are dropped. The documentation is that of the oldest supported
+# server version (the compatibility functions of pgsparql.h are included) built with --enable-extra-checks.
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = YES
+PREDEFINED             = PG_VERSION_NUM=150000 \
+                         PGSPARQL_EXTRA_CHECKS \
+                         "PG_FUNCTION_ARGS=FunctionCallInfo fcinfo" \
+                         "PG_FUNCTION_INFO_V1(funcname)=" \
+                         PG_MODULE_MAGIC= \
+                         "pg_attribute_aligned(a)=" \
+                         FLEXIBLE_ARRAY_MEMBER=
+
+QUIET                  = YES
+WARN_NO_PARAMDOC       = YES
+WARN_AS_ERROR          = FAIL_ON_WARNINGS
+
+GENERATE_LATEX         = NO
+HAVE_DOT               = NO

@@ -1,9 +1,21 @@
+/**
+ * @file
+ * Parsing and printing of the lexical forms of xsd:unsignedByte.
+ */
 #include <postgres.h>
 #include <utils/builtins.h>
 #include "types/parser.h"
 #include "types/unsignedbyte.h"
 
 
+/**
+ * Parses a lexical form of xsd:unsignedByte, an optionally signed sequence of decimal digits surrounded by optional
+ * XML Schema whitespace; the minus sign is allowed only for zero.
+ *
+ * @param data the lexical form, not necessarily terminated by a zero byte
+ * @param size the length of the lexical form in bytes
+ * @return the value; a malformed form or a value out of the range of xsd:unsignedByte raises an error
+ */
 uint8 unsignedbyte_parse(char *data, int size)
 {
     int pos = 0;
@@ -58,6 +70,13 @@ uint8 unsignedbyte_parse(char *data, int size)
 }
 
 
+/**
+ * Prints the canonical lexical form of an xsd:unsignedByte.
+ *
+ * @param value the value
+ * @param buffer the buffer, with room for at least #UNSIGNEDBYTE_MAXLEN bytes; no terminating zero byte is written
+ * @return the number of bytes written
+ */
 int unsignedbyte_print(uint8 value, char *buffer)
 {
     return pg_ultoa_n(value, buffer);

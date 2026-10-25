@@ -1,3 +1,8 @@
+/**
+ * @file
+ * The type ubox, a value of an arbitrary SQL type together with the OID of that type; it is the value of a user
+ * literal.
+ */
 #ifndef TYPES_UBOX_H_
 #define TYPES_UBOX_H_
 
@@ -11,17 +16,17 @@
 #include <utils/typcache.h>
 
 
-/*
+/**
  * A value of an arbitrary type together with the OID of that type.
  *
- * Memory layout:  [varlena header][typeoid][value bytes ...]
+ * Memory layout:  `[varlena header][typeoid][value bytes ...]`
  *
  * The boxed value is stored exactly in its own Datum representation:
  * pass-by-value types and fixed-length by-reference types occupy typlen
  * bytes, varlena types are stored as a detoasted copy with a 4-byte header,
  * cstring is stored NUL-terminated.
  *
- * Because ubox is declared with "alignment = double" and the value starts at
+ * Because ubox is declared with `alignment = double` and the value starts at
  * offset 8, the boxed value is correctly aligned for any type as long as the
  * box itself is properly aligned.  PG_DETOAST_DATUM guarantees this: a box
  * that is stored with a short (1-byte) header, compressed or toasted is
@@ -30,18 +35,47 @@
  */
 typedef struct
 {
-    char vl_len_[4];
-    Oid typeoid;
-    char value[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);
+    char vl_len_[4];                                            /**< the varlena header */
+    Oid typeoid;                                                /**< the OID of the type of the boxed value */
+    char value[FLEXIBLE_ARRAY_MEMBER] pg_attribute_aligned(4);  /**< the boxed value */
 }
 UBox;
 
 
+/**
+ * The size of the header of a box, the offset of the boxed value.
+ */
 #define UBOX_HDRSZ offsetof(UBox, value)
 
+/**
+ * Converts a Datum to a box, detoasting it.
+ *
+ * @param X the Datum
+ * @return the box, a properly aligned copy if the Datum was toasted, compressed or had a short header
+ */
 #define DatumGetUBoxP(X) ((UBox *) PG_DETOAST_DATUM(X))
+
+/**
+ * Converts a box to a Datum.
+ *
+ * @param X the box
+ * @return the Datum
+ */
 #define UBoxPGetDatum(X) PointerGetDatum(X)
+
+/**
+ * Fetches a ubox argument of a version-1 function, detoasting it.
+ *
+ * @param X the number of the argument
+ * @return the box
+ */
 #define PG_GETARG_UBOX_P(X) DatumGetUBoxP(PG_GETARG_DATUM(X))
+
+/**
+ * Returns a box from a version-1 function.
+ *
+ * @param X the box
+ */
 #define PG_RETURN_UBOX_P(X) return UBoxPGetDatum(X)
 
 
@@ -75,9 +109,13 @@ int ubox_order(FmgrInfo *flinfo, UBox *a, UBox *b);
 uint64 ubox_hash_value(FmgrInfo *flinfo, UBox *box, uint64 seed);
 
 
-/*
+/**
  * Extract the boxed value as a Datum.  For by-reference types the result
  * points into the box, so it lives exactly as long as the box does.
+ *
+ * @param box the box
+ * @param typentry the type cache entry of the boxed type, of which only typbyval and typlen are used
+ * @return the boxed value
  */
 static inline Datum ubox_value(UBox *box, TypeCacheEntry *typentry)
 {

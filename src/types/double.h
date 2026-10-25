@@ -1,3 +1,7 @@
+/**
+ * @file
+ * The lexical forms of xsd:double, whose values are held by a float8 in SQL.
+ */
 #ifndef TYPES_DOUBLE_H_
 #define TYPES_DOUBLE_H_
 
@@ -8,6 +12,9 @@
 #include <utils/numeric.h>
 
 
+/**
+ * The size of a buffer that holds any canonical lexical form of an xsd:double, such as `-2.2250738585072014E-308`.
+ */
 #define DOUBLE_MAXLEN 25
 
 
@@ -16,6 +23,12 @@ int double_print(float8 value, char *buffer);
 Numeric double_as_numeric(float8 value);
 
 
+/**
+ * Prints the canonical lexical form of an xsd:double into a new varchar.
+ *
+ * @param value the value
+ * @return the palloc'd varchar
+ */
 static inline VarChar *double_as_varchar(float8 value)
 {
     VarChar *result = (VarChar *) palloc0(VARHDRSZ + DOUBLE_MAXLEN);

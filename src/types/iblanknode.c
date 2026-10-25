@@ -1,7 +1,17 @@
+/**
+ * @file
+ * The SQL functions that build integer blank nodes from a value and a segment and take them apart again.
+ */
 #include <postgres.h>
 #include <fmgr.h>
 
 
+/**
+ * Builds an integer blank node.
+ *
+ * @param fcinfo the int4 value and the int4 segment
+ * @return the int8 blank node
+ */
 PG_FUNCTION_INFO_V1(iblanknode_create);
 Datum iblanknode_create(PG_FUNCTION_ARGS)
 {
@@ -12,6 +22,12 @@ Datum iblanknode_create(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Extracts the value of an integer blank node, whatever its segment is.
+ *
+ * @param fcinfo the int8 blank node
+ * @return the int4 value
+ */
 PG_FUNCTION_INFO_V1(iblanknode_get_value);
 Datum iblanknode_get_value(PG_FUNCTION_ARGS)
 {
@@ -21,6 +37,12 @@ Datum iblanknode_get_value(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Extracts the value of an integer blank node of a given segment.
+ *
+ * @param fcinfo the int8 blank node and the int4 segment
+ * @return the int4 value, NULL if the blank node belongs to another segment
+ */
 PG_FUNCTION_INFO_V1(iblanknode_get_value_of_segment);
 Datum iblanknode_get_value_of_segment(PG_FUNCTION_ARGS)
 {
@@ -35,6 +57,12 @@ Datum iblanknode_get_value_of_segment(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Extracts the segment of an integer blank node.
+ *
+ * @param fcinfo the int8 blank node
+ * @return the int4 segment
+ */
 PG_FUNCTION_INFO_V1(iblanknode_get_segment);
 Datum iblanknode_get_segment(PG_FUNCTION_ARGS)
 {

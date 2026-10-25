@@ -1,3 +1,15 @@
+/**
+ * @file
+ * The SPARQL functions on strings.
+ *
+ * A function with the argument kind `string` takes a varchar, which holds a simple literal, and the kind `rdfbox`
+ * any RDF term: a term that is not a string literal, or two arguments that are not argument-compatible, give NULL.
+ * A string function of a string literal returns a literal of the same kind, with the same type and language tag,
+ * unless stated otherwise. Lengths and positions count characters, the comparisons compare the bytes, and hence the
+ * code points, of the strings.
+ *
+ * @see https://www.w3.org/TR/sparql12-query/#func-strings
+ */
 #include <postgres.h>
 #include <utils/builtins.h>
 #include <utils/numeric.h>
@@ -10,6 +22,15 @@
 #include "rdfbox/rdfbox.h"
 
 
+/**
+ * Tests whether two RDF terms are argument-compatible string literals, as STRSTARTS, STRENDS, CONTAINS, STRBEFORE
+ * and STRAFTER require: either the second one is an xsd:string and the first one any string literal, or both are
+ * language-tagged strings of the same type, i.e. with the same base direction or none, and the same language tag.
+ *
+ * @param left the first argument
+ * @param right the second argument
+ * @return true if the arguments are compatible, false also if either of them is not a string literal
+ */
 static bool are_compatible(RdfBox *left, RdfBox *right)
 {
     if(rdfbox_is_langstring(left) && right->type == left->type)
@@ -19,6 +40,13 @@ static bool are_compatible(RdfBox *left, RdfBox *right)
 }
 
 
+/**
+ * Finds the first occurrence of a varchar in another one, comparing the bytes.
+ *
+ * @param value the varchar to search in
+ * @param searched the varchar to search for
+ * @return the byte offset of the first occurrence, 0 for an empty @a searched, -1 if there is none
+ */
 static int varchar_contains(VarChar *value, VarChar *searched)
 {
     char *value_data = VARDATA_ANY(value);
@@ -45,6 +73,12 @@ static int varchar_contains(VarChar *value, VarChar *searched)
 }
 
 
+/**
+ * Converts a positive numeric to an int4, rounded to the nearest integer and limited to PG_INT32_MAX.
+ *
+ * @param value the numeric, greater than zero
+ * @return the rounded value, PG_INT32_MAX if it does not fit into an int4
+ */
 static int positive_numeric_to_int(Numeric value)
 {
     int result = 0;
@@ -66,6 +100,12 @@ static int positive_numeric_to_int(Numeric value)
 }
 
 
+/**
+ * The SPARQL function STRLEN of a simple literal.
+ *
+ * @param fcinfo the varchar
+ * @return the decimal number of characters
+ */
 PG_FUNCTION_INFO_V1(strlen_string);
 Datum strlen_string(PG_FUNCTION_ARGS)
 {
@@ -76,6 +116,12 @@ Datum strlen_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function STRLEN of an RDF term.
+ *
+ * @param fcinfo the rdfbox term
+ * @return the decimal number of characters, NULL if the term is not a string literal
+ */
 PG_FUNCTION_INFO_V1(strlen_rdfbox);
 Datum strlen_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -91,6 +137,15 @@ Datum strlen_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function SUBSTR of a simple literal without a length; bound to `substr_string(varchar, decimal)`.
+ *
+ * The positions are counted from 1; the result is the rest of the string from the rounded start position on, the
+ * whole string if the start position rounds to one or less.
+ *
+ * @param fcinfo the varchar and the decimal start position
+ * @return the varchar substring
+ */
 PG_FUNCTION_INFO_V1(substr_no_len_string);
 Datum substr_no_len_string(PG_FUNCTION_ARGS)
 {
@@ -108,6 +163,14 @@ Datum substr_no_len_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function SUBSTR of an RDF term without a length, see substr_no_len_string(); bound to
+ * `substr_rdfbox(rdfbox, decimal)`.
+ *
+ * @param fcinfo the rdfbox term and the decimal start position
+ * @return the rdfbox substring, a string literal of the same kind as the term, NULL if the term is not a string
+ *         literal
+ */
 PG_FUNCTION_INFO_V1(substr_no_len_rdfbox);
 Datum substr_no_len_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -126,6 +189,16 @@ Datum substr_no_len_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function SUBSTR of a simple literal with a length.
+ *
+ * The positions are counted from 1; the result consists of the characters from the rounded start position on, as
+ * many as the rounded length says. A start position not greater than zero shortens the length by the positions that
+ * lie before the string, and a length not greater than zero gives the empty string.
+ *
+ * @param fcinfo the varchar, the decimal start position and the decimal length
+ * @return the varchar substring
+ */
 PG_FUNCTION_INFO_V1(substr_string);
 Datum substr_string(PG_FUNCTION_ARGS)
 {
@@ -160,6 +233,13 @@ Datum substr_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function SUBSTR of an RDF term with a length, see substr_string().
+ *
+ * @param fcinfo the rdfbox term, the decimal start position and the decimal length
+ * @return the rdfbox substring, a string literal of the same kind as the term, NULL if the term is not a string
+ *         literal
+ */
 PG_FUNCTION_INFO_V1(substr_rdfbox);
 Datum substr_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -179,6 +259,13 @@ Datum substr_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function UCASE, by the case mapping of the default collation of the database.
+ *
+ * @param fcinfo the rdfbox term
+ * @return the rdfbox string literal in upper case, of the same kind as the term, NULL if the term is not a string
+ *         literal
+ */
 PG_FUNCTION_INFO_V1(ucase_rdfbox);
 Datum ucase_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -196,6 +283,13 @@ Datum ucase_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function LCASE, by the case mapping of the default collation of the database.
+ *
+ * @param fcinfo the rdfbox term
+ * @return the rdfbox string literal in lower case, of the same kind as the term, NULL if the term is not a string
+ *         literal
+ */
 PG_FUNCTION_INFO_V1(lcase_rdfbox);
 Datum lcase_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -213,6 +307,12 @@ Datum lcase_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function STRSTARTS of two simple literals.
+ *
+ * @param fcinfo the varchar string and the varchar prefix
+ * @return true if the string begins with the prefix
+ */
 PG_FUNCTION_INFO_V1(strstarts_string_string);
 Datum strstarts_string_string(PG_FUNCTION_ARGS)
 {
@@ -227,6 +327,12 @@ Datum strstarts_string_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function STRSTARTS of an RDF term and a simple literal, which is compatible with any string literal.
+ *
+ * @param fcinfo the rdfbox string and the varchar prefix
+ * @return true if the string begins with the prefix, NULL if the string is not a string literal
+ */
 PG_FUNCTION_INFO_V1(strstarts_rdfbox_string);
 Datum strstarts_rdfbox_string(PG_FUNCTION_ARGS)
 {
@@ -243,6 +349,12 @@ Datum strstarts_rdfbox_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function STRSTARTS of two RDF terms.
+ *
+ * @param fcinfo the rdfbox string and the rdfbox prefix
+ * @return true if the string begins with the prefix, NULL if the arguments are not compatible string literals
+ */
 PG_FUNCTION_INFO_V1(strstarts_rdfbox_rdfbox);
 Datum strstarts_rdfbox_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -258,6 +370,12 @@ Datum strstarts_rdfbox_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function STRENDS of two simple literals.
+ *
+ * @param fcinfo the varchar string and the varchar suffix
+ * @return true if the string ends with the suffix
+ */
 PG_FUNCTION_INFO_V1(strends_string_string);
 Datum strends_string_string(PG_FUNCTION_ARGS)
 {
@@ -272,6 +390,12 @@ Datum strends_string_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function STRENDS of an RDF term and a simple literal, which is compatible with any string literal.
+ *
+ * @param fcinfo the rdfbox string and the varchar suffix
+ * @return true if the string ends with the suffix, NULL if the string is not a string literal
+ */
 PG_FUNCTION_INFO_V1(strends_rdfbox_string);
 Datum strends_rdfbox_string(PG_FUNCTION_ARGS)
 {
@@ -288,6 +412,12 @@ Datum strends_rdfbox_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function STRENDS of two RDF terms.
+ *
+ * @param fcinfo the rdfbox string and the rdfbox suffix
+ * @return true if the string ends with the suffix, NULL if the arguments are not compatible string literals
+ */
 PG_FUNCTION_INFO_V1(strends_rdfbox_rdfbox);
 Datum strends_rdfbox_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -303,6 +433,12 @@ Datum strends_rdfbox_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function CONTAINS of two simple literals.
+ *
+ * @param fcinfo the varchar string and the varchar searched string
+ * @return true if the string contains the searched one
+ */
 PG_FUNCTION_INFO_V1(contains_string_string);
 Datum contains_string_string(PG_FUNCTION_ARGS)
 {
@@ -313,6 +449,12 @@ Datum contains_string_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function CONTAINS of an RDF term and a simple literal, which is compatible with any string literal.
+ *
+ * @param fcinfo the rdfbox string and the varchar searched string
+ * @return true if the string contains the searched one, NULL if the string is not a string literal
+ */
 PG_FUNCTION_INFO_V1(contains_rdfbox_string);
 Datum contains_rdfbox_string(PG_FUNCTION_ARGS)
 {
@@ -329,6 +471,12 @@ Datum contains_rdfbox_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function CONTAINS of two RDF terms.
+ *
+ * @param fcinfo the rdfbox string and the rdfbox searched string
+ * @return true if the string contains the searched one, NULL if the arguments are not compatible string literals
+ */
 PG_FUNCTION_INFO_V1(contains_rdfbox_rdfbox);
 Datum contains_rdfbox_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -344,6 +492,13 @@ Datum contains_rdfbox_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function STRBEFORE of two simple literals.
+ *
+ * @param fcinfo the varchar string and the varchar searched string
+ * @return the varchar part of the string before the first occurrence of the searched one, the empty string if there
+ *         is none
+ */
 PG_FUNCTION_INFO_V1(strbefore_string_string);
 Datum strbefore_string_string(PG_FUNCTION_ARGS)
 {
@@ -361,6 +516,13 @@ Datum strbefore_string_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function STRBEFORE of an RDF term and a simple literal, which is compatible with any string literal.
+ *
+ * @param fcinfo the rdfbox string and the varchar searched string
+ * @return the rdfbox part of the string before the first occurrence of the searched one, of the same kind as the
+ *         string, or the empty xsd:string if there is no occurrence; NULL if the string is not a string literal
+ */
 PG_FUNCTION_INFO_V1(strbefore_rdfbox_string);
 Datum strbefore_rdfbox_string(PG_FUNCTION_ARGS)
 {
@@ -383,6 +545,13 @@ Datum strbefore_rdfbox_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function STRBEFORE of two RDF terms, see strbefore_rdfbox_string().
+ *
+ * @param fcinfo the rdfbox string and the rdfbox searched string
+ * @return the rdfbox part of the string before the first occurrence of the searched one, or the empty xsd:string if
+ *         there is none; NULL if the arguments are not compatible string literals
+ */
 PG_FUNCTION_INFO_V1(strbefore_rdfbox_rdfbox);
 Datum strbefore_rdfbox_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -397,6 +566,13 @@ Datum strbefore_rdfbox_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function STRAFTER of two simple literals.
+ *
+ * @param fcinfo the varchar string and the varchar searched string
+ * @return the varchar part of the string after the first occurrence of the searched one, the empty string if there
+ *         is none
+ */
 PG_FUNCTION_INFO_V1(strafter_string_string);
 Datum strafter_string_string(PG_FUNCTION_ARGS)
 {
@@ -415,6 +591,13 @@ Datum strafter_string_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function STRAFTER of an RDF term and a simple literal, which is compatible with any string literal.
+ *
+ * @param fcinfo the rdfbox string and the varchar searched string
+ * @return the rdfbox part of the string after the first occurrence of the searched one, of the same kind as the
+ *         string, or the empty xsd:string if there is no occurrence; NULL if the string is not a string literal
+ */
 PG_FUNCTION_INFO_V1(strafter_rdfbox_string);
 Datum strafter_rdfbox_string(PG_FUNCTION_ARGS)
 {
@@ -439,6 +622,13 @@ Datum strafter_rdfbox_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function STRAFTER of two RDF terms, see strafter_rdfbox_string().
+ *
+ * @param fcinfo the rdfbox string and the rdfbox searched string
+ * @return the rdfbox part of the string after the first occurrence of the searched one, or the empty xsd:string if
+ *         there is none; NULL if the arguments are not compatible string literals
+ */
 PG_FUNCTION_INFO_V1(strafter_rdfbox_rdfbox);
 Datum strafter_rdfbox_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -453,6 +643,14 @@ Datum strafter_rdfbox_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function ENCODE_FOR_URI of a simple literal: every byte of the UTF-8 form other than those of the
+ * unreserved characters of RFC 3986 (the ASCII letters and digits and the characters "-", "_", "." and "~") is
+ * percent-encoded with upper-case hexadecimal digits.
+ *
+ * @param fcinfo the varchar
+ * @return the varchar encoded string
+ */
 PG_FUNCTION_INFO_V1(encode_for_uri_string);
 Datum encode_for_uri_string(PG_FUNCTION_ARGS)
 {
@@ -492,6 +690,12 @@ Datum encode_for_uri_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function ENCODE_FOR_URI of an RDF term, see encode_for_uri_string().
+ *
+ * @param fcinfo the rdfbox term
+ * @return the varchar encoded string, which stands for a simple literal, NULL if the term is not a string literal
+ */
 PG_FUNCTION_INFO_V1(encode_for_uri_rdfbox);
 Datum encode_for_uri_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -507,6 +711,13 @@ Datum encode_for_uri_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function CONCAT of two RDF terms.
+ *
+ * @param fcinfo the two rdfbox terms
+ * @return the rdfbox concatenation, a language-tagged string if both terms are language-tagged strings of the same
+ *         type with the same language tag, an xsd:string otherwise; NULL if either term is not a string literal
+ */
 PG_FUNCTION_INFO_V1(concat_rdfbox_rdfbox);
 Datum concat_rdfbox_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -538,6 +749,13 @@ Datum concat_rdfbox_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function langMatches of two simple literals, the basic filtering of RFC 4647: the range `*` matches
+ * every tag, any other range a tag that is equal to it or begins with it followed by `-`, ignoring case.
+ *
+ * @param fcinfo the varchar language tag and the varchar language range
+ * @return true if the language tag matches the range
+ */
 PG_FUNCTION_INFO_V1(langmatches_string_string);
 Datum langmatches_string_string(PG_FUNCTION_ARGS)
 {
@@ -566,6 +784,12 @@ Datum langmatches_string_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function langMatches of two RDF terms, see langmatches_string_string().
+ *
+ * @param fcinfo the rdfbox language tag and the rdfbox language range
+ * @return true if the language tag matches the range, NULL if either of the terms is not an xsd:string
+ */
 PG_FUNCTION_INFO_V1(langmatches_rdfbox_rdfbox);
 Datum langmatches_rdfbox_rdfbox(PG_FUNCTION_ARGS)
 {

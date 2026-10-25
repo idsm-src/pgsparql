@@ -1,3 +1,11 @@
+/**
+ * @file
+ * The text and the binary input and output of the type rdfbox.
+ *
+ * The text, the binary and the stored representation of a triple term embed those of its subject and its object,
+ * so the input, output, receive and send functions recurse into themselves: parse_term(), print_term(),
+ * receive_term() and append_term() do the work, the SQL-visible functions only wrap them.
+ */
 #include <postgres.h>
 #include <inttypes.h>
 #include <utils/builtins.h>
@@ -28,23 +36,30 @@
 #include "rdfbox/xsd.h"
 
 
-#define IRI_BEGIN       "<"
-#define IRI_END         ">"
-#define LANG_DELIM      "@"
-#define DIR_DELIM       "--"
-#define TYPE_DELIM      "^^"
-#define VALUE_DELIM     "\""
-#define UVALUE_DELIM    "'"
-#define VALUE_QUOTE     '"'     // the same character as VALUE_DELIM
-#define UVALUE_QUOTE    '\''    // the same character as UVALUE_DELIM
-#define BLKNODE_IPREFIX "_:i"
-#define BLKNODE_SPREFIX "_:s"
-#define TRIPLE_BEGIN    "<<("
-#define TRIPLE_END      ")>>"
-#define TRIPLE_DELIM    " "
-#define PREFIX          VALUE_DELIM
+#define IRI_BEGIN       "<"              /**< the opening of an IRI */
+#define IRI_END         ">"              /**< the closing of an IRI */
+#define LANG_DELIM      "@"              /**< the delimiter of a language tag */
+#define DIR_DELIM       "--"             /**< the delimiter of a base direction, behind the language tag */
+#define TYPE_DELIM      "^^"             /**< the delimiter of a datatype IRI */
+#define VALUE_DELIM     "\""             /**< the quote of a lexical form */
+#define UVALUE_DELIM    "'"              /**< the quote of a user literal, which encloses the text form of a ubox */
+#define VALUE_QUOTE     '"'              /**< #VALUE_DELIM as a character */
+#define UVALUE_QUOTE    '\''             /**< #UVALUE_DELIM as a character */
+#define BLKNODE_IPREFIX "_:i"            /**< the prefix of an integer blank node, followed by 16 hexadecimal digits */
+#define BLKNODE_SPREFIX "_:s"            /**< the prefix of a string blank node, followed by its label */
+#define TRIPLE_BEGIN    "<<("            /**< the opening of a triple term */
+#define TRIPLE_END      ")>>"            /**< the closing of a triple term */
+#define TRIPLE_DELIM    " "              /**< the separator of the components of a printed triple term */
+#define PREFIX          VALUE_DELIM      /**< the beginning of a printed language-tagged string */
+
+/**
+ * The length of a string constant without its terminating zero byte.
+ *
+ * @param X the string constant
+ * @return the length in bytes
+ */
 #define STRLEN(X)       (sizeof(X) - 1)
-#define PREFIX_SIZE     (STRLEN(PREFIX))
+#define PREFIX_SIZE     (STRLEN(PREFIX)) /**< the length of #PREFIX */
 
 
 /*
@@ -70,6 +85,16 @@
  * that bulk-loads a store.  It is compiled out unless the extension is
  * configured with --enable-extra-checks, the same switch the constructors use.
  */
+
+/**
+ * Reads a string of the given length from a binary message and verifies that it is valid in the server encoding,
+ * which also rules out zero bytes.
+ *
+ * @param buf the message, whose cursor is advanced past the string
+ * @param size the length of the string in bytes
+ * @return the string, which points into the message and is not terminated by a zero byte; a length beyond the end
+ *         of the message or a string invalid in the server encoding raises an error
+ */
 static inline const char *getmsgtext(StringInfo buf, int32 size)
 {
     const char *data = pq_getmsgbytes(buf, size);
@@ -80,6 +105,16 @@ static inline const char *getmsgtext(StringInfo buf, int32 size)
 }
 
 
+/**
+ * Reads an IRI from a binary message like getmsgtext() and checks its syntax by check_iri().
+ *
+ * Without `--enable-extra-checks`, getmsgiri() is a macro for getmsgtext() and the syntax is not checked.
+ *
+ * @param buf the message, whose cursor is advanced past the IRI
+ * @param size the length of the IRI in bytes
+ * @return the IRI, which points into the message and is not terminated by a zero byte; besides the errors of
+ *         getmsgtext(), an invalid IRI raises an error
+ */
 #ifdef PGSPARQL_EXTRA_CHECKS
 static inline const char *getmsgiri(StringInfo buf, int32 size)
 {
@@ -95,6 +130,16 @@ static inline const char *getmsgiri(StringInfo buf, int32 size)
 #endif
 
 
+/**
+ * Reads a language tag from a binary message like getmsgtext() and checks its syntax by check_language_tag().
+ *
+ * Without `--enable-extra-checks`, getmsglang() is a macro for getmsgtext() and the syntax is not checked.
+ *
+ * @param buf the message, whose cursor is advanced past the language tag
+ * @param size the length of the language tag in bytes
+ * @return the language tag, which points into the message and is not terminated by a zero byte; besides the errors
+ *         of getmsgtext(), an invalid language tag raises an error
+ */
 #ifdef PGSPARQL_EXTRA_CHECKS
 static inline const char *getmsglang(StringInfo buf, int32 size)
 {
@@ -110,6 +155,17 @@ static inline const char *getmsglang(StringInfo buf, int32 size)
 #endif
 
 
+/**
+ * Reads the value of a string blank node from a binary message like getmsgtext() and checks it by
+ * is_sblanknode_value().
+ *
+ * Without `--enable-extra-checks`, getmsgsblanknode() is a macro for getmsgtext() and the value is not checked.
+ *
+ * @param buf the message, whose cursor is advanced past the value
+ * @param size the length of the value in bytes
+ * @return the value, which points into the message and is not terminated by a zero byte; besides the errors of
+ *         getmsgtext(), an invalid value raises an error
+ */
 #ifdef PGSPARQL_EXTRA_CHECKS
 static inline const char *getmsgsblanknode(StringInfo buf, int32 size)
 {
@@ -125,6 +181,14 @@ static inline const char *getmsgsblanknode(StringInfo buf, int32 size)
 #endif
 
 
+/**
+ * Checks that the received subject of a triple term is an IRI or a blank node.
+ *
+ * Without `--enable-extra-checks`, checked_subject() is a macro that passes the subject through unchecked.
+ *
+ * @param subject the subject
+ * @return the subject; a subject of another kind raises an error
+ */
 #ifdef PGSPARQL_EXTRA_CHECKS
 static inline RdfBox *checked_subject(RdfBox *subject)
 {
@@ -138,6 +202,14 @@ static inline RdfBox *checked_subject(RdfBox *subject)
 #endif
 
 
+/**
+ * Computes the length of a lexical form with the escapes of memcpy_escaped(): a backslash, a tab, a backspace, a
+ * newline, a carriage return, a form feed, a quotation mark and an apostrophe each take two bytes.
+ *
+ * @param str the lexical form, not necessarily terminated by a zero byte
+ * @param size the length of the lexical form in bytes
+ * @return the length of the escaped lexical form in bytes
+ */
 static inline size_t strlen_escaped(const char *str, size_t size)
 {
     size_t count = 0;
@@ -150,6 +222,14 @@ static inline size_t strlen_escaped(const char *str, size_t size)
 }
 
 
+/**
+ * Copies a lexical form with the characters that need it escaped as `\\`, `\t`, `\b`, `\n`, `\r` and `\f` and with
+ * a backslash before every quotation mark and apostrophe.
+ *
+ * @param buffer the buffer, with room for strlen_escaped() bytes; no terminating zero byte is written
+ * @param str the lexical form, not necessarily terminated by a zero byte
+ * @param size the length of the lexical form in bytes
+ */
 static inline void memcpy_escaped(char *buffer, const char *str, size_t size)
 {
     size_t pos = 0;
@@ -204,6 +284,17 @@ static inline void memcpy_escaped(char *buffer, const char *str, size_t size)
 }
 
 
+/**
+ * Prints a literal with a datatype IRI: the escaped lexical form in quotes followed by `^^` and the IRI in angle
+ * brackets.
+ *
+ * @param quote the quote, #VALUE_QUOTE or #UVALUE_QUOTE
+ * @param data the lexical form, not necessarily terminated by a zero byte
+ * @param size the length of the lexical form in bytes
+ * @param type the datatype IRI, not necessarily terminated by a zero byte
+ * @param type_size the length of the datatype IRI in bytes
+ * @return the palloc'd text, terminated by a zero byte
+ */
 static char *print_literal(char quote, const char *data, size_t size, const char *type, size_t type_size)
 {
     size_t escaped_size = strlen_escaped(data, size);
@@ -226,10 +317,27 @@ static char *print_literal(char quote, const char *data, size_t size, const char
 }
 
 
-/*
- * The text, the binary and the stored representation of a triple term embed those of its subject and its object,
- * so the input, output, receive and send functions recurse into themselves: parse_term(), print_term(),
- * receive_term() and append_term() do the work, the SQL-visible functions only wrap them.
+/**
+ * Parses the text form of an RDF term, the form that print_term() prints.
+ *
+ * The forms are:
+ *   - a literal: the lexical form in quotation marks or apostrophes, single ones or triple ones (which allow line
+ *     breaks), with the escapes of memcpy_escaped(), optionally followed by a language tag (`"v"@tag`,
+ *     `"v"@tag--ltr`, `"v"@tag--rtl`) or by a datatype IRI (`"v"^^<iri>`); the lexical form of a
+ *     handled XSD datatype is parsed into its value and kept along with it unless it is the canonical one, and one
+ *     that is invalid or out of range gives a literal of an unknown datatype like any other datatype IRI does; a
+ *     lexical form in apostrophes followed by a datatype IRI is the text form `value:typename` of a ubox and gives a
+ *     user literal,
+ *   - a triple term `<<( subject <predicate> object )>>`, whose subject is an IRI or a blank node,
+ *   - an IRI `<iri>`,
+ *   - an integer blank node `_:i` followed by 16 hexadecimal digits, or a string blank node `_:s` followed by eight
+ *     hexadecimal digits and a label, in which every byte other than an ASCII letter or digit is written as `-xx`,
+ *   - an unquoted integer, decimal, double or boolean, as Turtle writes them.
+ *
+ * @param str the text, terminated by a zero byte
+ * @param length the length of the text in bytes
+ * @return the palloc'd box; a malformed text, an invalid IRI, language tag or base direction and an unknown escape
+ *         sequence raise an error
  */
 static RdfBox *parse_term(char *str, size_t length)
 {
@@ -805,6 +913,12 @@ static RdfBox *parse_term(char *str, size_t length)
 }
 
 
+/**
+ * The input function of the type rdfbox, which parses the text form of an RDF term by parse_term().
+ *
+ * @param fcinfo the cstring to parse
+ * @return the rdfbox; a malformed text raises an error
+ */
 PG_FUNCTION_INFO_V1(rdfbox_input);
 Datum rdfbox_input(PG_FUNCTION_ARGS)
 {
@@ -814,6 +928,19 @@ Datum rdfbox_input(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Prints the text form of an RDF term, the form that parse_term() parses.
+ *
+ * A literal of a handled XSD datatype, an xsd:string included, is printed as `"lexical"^^<datatype>` with its
+ * stored lexical form or, if it has none, the canonical one; a language-tagged string as `"value"@tag`, followed by
+ * `--ltr` or `--rtl` if it has a base direction; a user literal as `'lexical:typename'^^<datatype>`; a literal of
+ * an unknown datatype as `"value"^^<datatype>`; an IRI as `<iri>`; an integer blank node as `_:i` followed by 16
+ * hexadecimal digits; a string blank node as `_:s` followed by its value, every byte other than an ASCII letter or
+ * digit written as `-xx`; and a triple term as `<<( subject <predicate> object )>>`.
+ *
+ * @param box the term
+ * @return the palloc'd text, terminated by a zero byte
+ */
 static char *print_term(RdfBox *box)
 {
     char *result = NULL;
@@ -1110,6 +1237,12 @@ static char *print_term(RdfBox *box)
 }
 
 
+/**
+ * The output function of the type rdfbox, which prints the text form of an RDF term by print_term().
+ *
+ * @param fcinfo the rdfbox to print
+ * @return the cstring
+ */
 PG_FUNCTION_INFO_V1(rdfbox_output);
 Datum rdfbox_output(PG_FUNCTION_ARGS)
 {
@@ -1119,6 +1252,20 @@ Datum rdfbox_output(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Reads an RDF term in the binary form that append_term() writes.
+ *
+ * The form begins with an int32 that holds the type (::RdfType) in its lower 31 bits and in its highest bit whether
+ * a stored lexical form follows the value. The value comes next in the binary form of its type, the lengths of its
+ * variable parts preceding their bytes; a triple term gives the lengths of its subject, its predicate and its
+ * object, then the subject and the object as binary forms of their own with the predicate between them. A stored
+ * lexical form comes last, as an int32 length and its bytes.
+ *
+ * @param buf the message, whose cursor is advanced past the term
+ * @return the palloc'd box; an unknown type, a lexical form of a type that cannot carry one, a length beyond the end
+ *         of the message, a string invalid in the server encoding, a date or dateTime out of range and a boxed
+ *         value or a component of a triple term that does not consume its bytes exactly raise an error
+ */
 static RdfBox *receive_term(StringInfo buf)
 {
     uint32 header = pq_getmsgint(buf, sizeof(int32));
@@ -1671,6 +1818,12 @@ static RdfBox *receive_term(StringInfo buf)
 }
 
 
+/**
+ * The receive function of the type rdfbox, which reads the binary form of an RDF term by receive_term().
+ *
+ * @param fcinfo the internal StringInfo of the message
+ * @return the rdfbox; a malformed message raises an error
+ */
 PG_FUNCTION_INFO_V1(rdfbox_recv);
 Datum rdfbox_recv(PG_FUNCTION_ARGS)
 {
@@ -1680,6 +1833,12 @@ Datum rdfbox_recv(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Appends the binary form of an RDF term, the form that receive_term() reads.
+ *
+ * @param buf the buffer to append to
+ * @param box the term
+ */
 static void append_term(StringInfo buf, RdfBox *box)
 {
     uint32 header = ((uint32) box->type) | (((uint32) box->lexical) << 31);
@@ -2026,6 +2185,12 @@ static void append_term(StringInfo buf, RdfBox *box)
 }
 
 
+/**
+ * The send function of the type rdfbox, which writes the binary form of an RDF term by append_term().
+ *
+ * @param fcinfo the rdfbox to send
+ * @return the bytea with the binary form
+ */
 PG_FUNCTION_INFO_V1(rdfbox_send);
 Datum rdfbox_send(PG_FUNCTION_ARGS)
 {

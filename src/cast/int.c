@@ -1,6 +1,11 @@
-/*
- * https://www.w3.org/TR/xmlschema11-2/#int
- * https://www.w3.org/TR/xpath-functions/#casting-to-integer
+/**
+ * @file
+ * The casts to xsd:int, whose values are held by an int4.
+ *
+ * A value that cannot be cast, such as a value out of the range of xsd:int or a malformed lexical form, gives NULL.
+ *
+ * @see https://www.w3.org/TR/xmlschema11-2/#int
+ * @see https://www.w3.org/TR/xpath-functions/#casting-to-integer
  */
 #include <postgres.h>
 #include <utils/builtins.h>
@@ -11,6 +16,12 @@
 #include "rdfbox/rdfbox.h"
 
 
+/**
+ * Casts an xsd:boolean to xsd:int.
+ *
+ * @param fcinfo the bool to cast
+ * @return the int4 1 for true and 0 for false
+ */
 PG_FUNCTION_INFO_V1(cast_as_int_from_boolean);
 Datum cast_as_int_from_boolean(PG_FUNCTION_ARGS)
 {
@@ -19,6 +30,13 @@ Datum cast_as_int_from_boolean(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:short to xsd:int; also bound to @c cast_as_int_from_byte(int2) and
+ * @c cast_as_int_from_unsignedbyte(int2).
+ *
+ * @param fcinfo the int2 to cast
+ * @return the int4
+ */
 PG_FUNCTION_INFO_V1(cast_as_int_from_short);
 Datum cast_as_int_from_short(PG_FUNCTION_ARGS)
 {
@@ -27,7 +45,14 @@ Datum cast_as_int_from_short(PG_FUNCTION_ARGS)
 }
 
 
-/* xsd:unsignedShort is represented by int4, so its values are kept as they are */
+/**
+ * Casts an xsd:unsignedShort to xsd:int.
+ *
+ * xsd:unsignedShort is represented by int4, so its values are kept as they are.
+ *
+ * @param fcinfo the int4 to cast
+ * @return the same int4
+ */
 PG_FUNCTION_INFO_V1(cast_as_int_from_unsignedshort);
 Datum cast_as_int_from_unsignedshort(PG_FUNCTION_ARGS)
 {
@@ -36,6 +61,12 @@ Datum cast_as_int_from_unsignedshort(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:long to xsd:int; also bound to @c cast_as_int_from_unsignedint(int8).
+ *
+ * @param fcinfo the int8 to cast
+ * @return the int4, NULL if the value is out of the range of xsd:int
+ */
 PG_FUNCTION_INFO_V1(cast_as_int_from_long);
 Datum cast_as_int_from_long(PG_FUNCTION_ARGS)
 {
@@ -48,6 +79,13 @@ Datum cast_as_int_from_long(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:integer to xsd:int; also bound to @c cast_as_int_from_unsignedlong(decimal) and to the casts from
+ * the subtypes of xsd:integer.
+ *
+ * @param fcinfo the numeric to cast
+ * @return the int4, NULL if the value is out of the range of xsd:int
+ */
 PG_FUNCTION_INFO_V1(cast_as_int_from_integer);
 Datum cast_as_int_from_integer(PG_FUNCTION_ARGS)
 {
@@ -73,6 +111,12 @@ Datum cast_as_int_from_integer(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:decimal to xsd:int, discarding its fractional part.
+ *
+ * @param fcinfo the numeric to cast
+ * @return the truncated value as an int4, NULL if it is out of the range of xsd:int
+ */
 PG_FUNCTION_INFO_V1(cast_as_int_from_decimal);
 Datum cast_as_int_from_decimal(PG_FUNCTION_ARGS)
 {
@@ -100,6 +144,12 @@ Datum cast_as_int_from_decimal(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:float to xsd:int, discarding its fractional part.
+ *
+ * @param fcinfo the float4 to cast
+ * @return the truncated value as an int4, NULL if the value is NaN or out of the range of xsd:int
+ */
 PG_FUNCTION_INFO_V1(cast_as_int_from_float);
 Datum cast_as_int_from_float(PG_FUNCTION_ARGS)
 {
@@ -122,6 +172,12 @@ Datum cast_as_int_from_float(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:double to xsd:int, discarding its fractional part.
+ *
+ * @param fcinfo the float8 to cast
+ * @return the truncated value as an int4, NULL if the value is NaN or out of the range of xsd:int
+ */
 PG_FUNCTION_INFO_V1(cast_as_int_from_double);
 Datum cast_as_int_from_double(PG_FUNCTION_ARGS)
 {
@@ -144,6 +200,12 @@ Datum cast_as_int_from_double(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:string to xsd:int by parsing it as a lexical form of xsd:int.
+ *
+ * @param fcinfo the varchar to cast
+ * @return the int4, NULL if the string is not a lexical form of xsd:int or its value is out of range
+ */
 PG_FUNCTION_INFO_V1(cast_as_int_from_string);
 Datum cast_as_int_from_string(PG_FUNCTION_ARGS)
 {
@@ -167,6 +229,13 @@ Datum cast_as_int_from_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an RDF term to xsd:int, the SPARQL function `xsd:int()`.
+ *
+ * @param fcinfo the rdfbox to cast
+ * @return the int4, NULL if the term is not a literal of a datatype that can be cast to xsd:int or if its value
+ *         cannot be cast
+ */
 PG_FUNCTION_INFO_V1(cast_as_int_from_rdfbox);
 Datum cast_as_int_from_rdfbox(PG_FUNCTION_ARGS)
 {

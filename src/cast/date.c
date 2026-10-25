@@ -1,6 +1,11 @@
-/*
- * https://www.w3.org/TR/xmlschema11-2/#date
- * https://www.w3.org/TR/xpath-functions/#casting-to-datetimes
+/**
+ * @file
+ * The casts to xsd:date, held by a zoneddate, and to a plain date, the date without its time zone.
+ *
+ * A value that cannot be cast, such as a malformed lexical form or a date out of range, gives NULL.
+ *
+ * @see https://www.w3.org/TR/xmlschema11-2/#date
+ * @see https://www.w3.org/TR/xpath-functions/#casting-to-datetimes
  */
 #include <postgres.h>
 #include <utils/datum.h>
@@ -13,6 +18,13 @@
 #include "types/timezone.h"
 
 
+/**
+ * Casts an xsd:dateTime to xsd:date: the date of its local time, with the same time zone.
+ *
+ * @param fcinfo the zoneddatetime to cast, or the timestamptz instant and the int4 time zone offset in seconds
+ *               (#ZONE_UNSPECIFIED for none) of the dateTime
+ * @return the zoneddate, NULL if the local time is out of range
+ */
 PG_FUNCTION_INFO_V1(cast_as_date_from_datetime);
 Datum cast_as_date_from_datetime(PG_FUNCTION_ARGS)
 {
@@ -47,6 +59,12 @@ Datum cast_as_date_from_datetime(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:string to xsd:date by parsing it as a lexical form of xsd:date.
+ *
+ * @param fcinfo the varchar to cast
+ * @return the zoneddate, NULL if the string is not a lexical form of xsd:date or the date is out of range
+ */
 PG_FUNCTION_INFO_V1(cast_as_date_from_string);
 Datum cast_as_date_from_string(PG_FUNCTION_ARGS)
 {
@@ -70,6 +88,13 @@ Datum cast_as_date_from_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an RDF term to xsd:date, the function `xsd:date()`.
+ *
+ * @param fcinfo the rdfbox to cast
+ * @return the zoneddate, NULL if the term is not an xsd:dateTime, an xsd:date or an xsd:string, or if its value
+ *         cannot be cast
+ */
 PG_FUNCTION_INFO_V1(cast_as_date_from_rdfbox);
 Datum cast_as_date_from_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -92,6 +117,13 @@ Datum cast_as_date_from_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:dateTime to the date of its local time, without the time zone.
+ *
+ * @param fcinfo the timestamptz instant and the int4 time zone offset in seconds (#ZONE_UNSPECIFIED for none) of the
+ *               dateTime
+ * @return the date, NULL if the local time is out of range
+ */
 PG_FUNCTION_INFO_V1(cast_as_plain_date_from_datetime);
 Datum cast_as_plain_date_from_datetime(PG_FUNCTION_ARGS)
 {
@@ -125,6 +157,15 @@ Datum cast_as_plain_date_from_datetime(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:dateTime or an xsd:date to its date without the time zone.
+ *
+ * Unlike cast_as_date_from_rdfbox(), it does not parse strings.
+ *
+ * @param fcinfo the rdfbox to cast
+ * @return the date of the local time of an xsd:dateTime or the date of an xsd:date, NULL for another term or if the
+ *         local time is out of range
+ */
 PG_FUNCTION_INFO_V1(cast_as_plain_date_from_rdfbox);
 Datum cast_as_plain_date_from_rdfbox(PG_FUNCTION_ARGS)
 {

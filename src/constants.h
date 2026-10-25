@@ -1,3 +1,7 @@
+/**
+ * @file
+ * Constant values that are built on their first use and kept for the lifetime of the backend.
+ */
 #ifndef CONSTANTS_H_
 #define CONSTANTS_H_
 

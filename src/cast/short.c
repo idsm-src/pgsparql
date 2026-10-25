@@ -1,6 +1,11 @@
-/*
- * https://www.w3.org/TR/xmlschema11-2/#short
- * https://www.w3.org/TR/xpath-functions/#casting-to-integer
+/**
+ * @file
+ * The casts to xsd:short, whose values are held by an int2.
+ *
+ * A value that cannot be cast, such as a value out of the range of xsd:short or a malformed lexical form, gives NULL.
+ *
+ * @see https://www.w3.org/TR/xmlschema11-2/#short
+ * @see https://www.w3.org/TR/xpath-functions/#casting-to-integer
  */
 #include <postgres.h>
 #include <utils/builtins.h>
@@ -11,6 +16,12 @@
 #include "rdfbox/rdfbox.h"
 
 
+/**
+ * Casts an xsd:boolean to xsd:short.
+ *
+ * @param fcinfo the bool to cast
+ * @return the int2 1 for true and 0 for false
+ */
 PG_FUNCTION_INFO_V1(cast_as_short_from_boolean);
 Datum cast_as_short_from_boolean(PG_FUNCTION_ARGS)
 {
@@ -19,7 +30,14 @@ Datum cast_as_short_from_boolean(PG_FUNCTION_ARGS)
 }
 
 
-/* xsd:byte and xsd:unsignedByte are represented by int2, so their values are kept as they are */
+/**
+ * Casts an xsd:byte to xsd:short; also bound to @c cast_as_short_from_unsignedbyte(int2).
+ *
+ * xsd:byte and xsd:unsignedByte are represented by int2, so their values are kept as they are.
+ *
+ * @param fcinfo the int2 to cast
+ * @return the same int2
+ */
 PG_FUNCTION_INFO_V1(cast_as_short_from_byte);
 Datum cast_as_short_from_byte(PG_FUNCTION_ARGS)
 {
@@ -28,6 +46,12 @@ Datum cast_as_short_from_byte(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:int to xsd:short; also bound to @c cast_as_short_from_unsignedshort(int4).
+ *
+ * @param fcinfo the int4 to cast
+ * @return the int2, NULL if the value is out of the range of xsd:short
+ */
 PG_FUNCTION_INFO_V1(cast_as_short_from_int);
 Datum cast_as_short_from_int(PG_FUNCTION_ARGS)
 {
@@ -40,6 +64,12 @@ Datum cast_as_short_from_int(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:long to xsd:short; also bound to @c cast_as_short_from_unsignedint(int8).
+ *
+ * @param fcinfo the int8 to cast
+ * @return the int2, NULL if the value is out of the range of xsd:short
+ */
 PG_FUNCTION_INFO_V1(cast_as_short_from_long);
 Datum cast_as_short_from_long(PG_FUNCTION_ARGS)
 {
@@ -52,6 +82,13 @@ Datum cast_as_short_from_long(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:integer to xsd:short; also bound to @c cast_as_short_from_unsignedlong(decimal) and to the casts from
+ * the subtypes of xsd:integer.
+ *
+ * @param fcinfo the numeric to cast
+ * @return the int2, NULL if the value is out of the range of xsd:short
+ */
 PG_FUNCTION_INFO_V1(cast_as_short_from_integer);
 Datum cast_as_short_from_integer(PG_FUNCTION_ARGS)
 {
@@ -77,6 +114,12 @@ Datum cast_as_short_from_integer(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:decimal to xsd:short, discarding its fractional part.
+ *
+ * @param fcinfo the numeric to cast
+ * @return the truncated value as an int2, NULL if it is out of the range of xsd:short
+ */
 PG_FUNCTION_INFO_V1(cast_as_short_from_decimal);
 Datum cast_as_short_from_decimal(PG_FUNCTION_ARGS)
 {
@@ -104,6 +147,12 @@ Datum cast_as_short_from_decimal(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:float to xsd:short, discarding its fractional part.
+ *
+ * @param fcinfo the float4 to cast
+ * @return the truncated value as an int2, NULL if the value is NaN or out of the range of xsd:short
+ */
 PG_FUNCTION_INFO_V1(cast_as_short_from_float);
 Datum cast_as_short_from_float(PG_FUNCTION_ARGS)
 {
@@ -126,6 +175,12 @@ Datum cast_as_short_from_float(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:double to xsd:short, discarding its fractional part.
+ *
+ * @param fcinfo the float8 to cast
+ * @return the truncated value as an int2, NULL if the value is NaN or out of the range of xsd:short
+ */
 PG_FUNCTION_INFO_V1(cast_as_short_from_double);
 Datum cast_as_short_from_double(PG_FUNCTION_ARGS)
 {
@@ -148,6 +203,12 @@ Datum cast_as_short_from_double(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:string to xsd:short by parsing it as a lexical form of xsd:short.
+ *
+ * @param fcinfo the varchar to cast
+ * @return the int2, NULL if the string is not a lexical form of xsd:short or its value is out of range
+ */
 PG_FUNCTION_INFO_V1(cast_as_short_from_string);
 Datum cast_as_short_from_string(PG_FUNCTION_ARGS)
 {
@@ -171,6 +232,13 @@ Datum cast_as_short_from_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an RDF term to xsd:short, the SPARQL function `xsd:short()`.
+ *
+ * @param fcinfo the rdfbox to cast
+ * @return the int2, NULL if the term is not an xsd:boolean, a literal of a numeric datatype or an xsd:string, or if
+ *         its value cannot be cast
+ */
 PG_FUNCTION_INFO_V1(cast_as_short_from_rdfbox);
 Datum cast_as_short_from_rdfbox(PG_FUNCTION_ARGS)
 {

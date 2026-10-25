@@ -1,3 +1,8 @@
+/**
+ * @file
+ * The lexical forms of xsd:integer and of the types derived from it by a bound (xsd:nonPositiveInteger,
+ * xsd:negativeInteger, xsd:nonNegativeInteger and xsd:positiveInteger), whose values are held by a numeric in SQL.
+ */
 #ifndef TYPES_INTEGER_H_
 #define TYPES_INTEGER_H_
 
@@ -33,6 +38,12 @@ Numeric positiveinteger_parse(char *data, int size);
 int integer_sign(Numeric value);
 
 
+/**
+ * Prints the canonical lexical form of an xsd:integer, or of a type derived from it, into a new varchar.
+ *
+ * @param value the value, an integer
+ * @return the palloc'd varchar
+ */
 static inline VarChar *integer_as_varchar(Numeric value)
 {
     return (VarChar *) cstring_to_text(numeric_normalize(value));

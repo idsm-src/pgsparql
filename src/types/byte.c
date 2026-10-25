@@ -1,9 +1,21 @@
+/**
+ * @file
+ * Parsing and printing of the lexical forms of xsd:byte.
+ */
 #include <postgres.h>
 #include <utils/builtins.h>
 #include "types/parser.h"
 #include "types/byte.h"
 
 
+/**
+ * Parses a lexical form of xsd:byte, an optionally signed sequence of decimal digits surrounded by optional XML
+ * Schema whitespace.
+ *
+ * @param data the lexical form, not necessarily terminated by a zero byte
+ * @param size the length of the lexical form in bytes
+ * @return the value; a malformed form or a value out of the range of xsd:byte raises an error
+ */
 int8 byte_parse(char *data, int size)
 {
     int pos = 0;
@@ -67,6 +79,13 @@ int8 byte_parse(char *data, int size)
 }
 
 
+/**
+ * Prints the canonical lexical form of an xsd:byte.
+ *
+ * @param value the value
+ * @param buffer the buffer, with room for at least #BYTE_MAXLEN bytes; no terminating zero byte is written
+ * @return the number of bytes written
+ */
 int byte_print(int8 value, char *buffer)
 {
     uint8 uvalue = value;

@@ -1,3 +1,14 @@
+/**
+ * @file
+ * The SPARQL functions REGEX and REPLACE, evaluated by PCRE2.
+ *
+ * The pattern is compiled for each call in the UTF mode of PCRE2, so it is read in the syntax of PCRE2 rather than
+ * in that of XPath regular expressions, and the replacement string of REPLACE in the substitution syntax of PCRE2.
+ * PCRE2 allocates its memory by palloc() in the current memory context.
+ *
+ * @see https://www.w3.org/TR/sparql12-query/#func-regex
+ * @see https://www.w3.org/TR/sparql12-query/#func-replace
+ */
 #include <postgres.h>
 #include <fmgr.h>
 #include <pcre2.h>
@@ -11,17 +22,30 @@
  * The constants live in TopMemoryContext for as long as the backend does and
  * are never freed as PostgreSQL never unloads a loadable module.
  */
-static pcre2_general_context *general_context = NULL;
-static pcre2_compile_context *compile_context = NULL;
-static pcre2_match_context *match_context = NULL;
+static pcre2_general_context *general_context = NULL;   /**< the general context of PCRE2, NULL before its first use */
+static pcre2_compile_context *compile_context = NULL;   /**< the compile context of PCRE2, NULL before its first use */
+static pcre2_match_context *match_context = NULL;       /**< the match context of PCRE2, NULL before its first use */
 
 
+/**
+ * Allocates memory for PCRE2 in the current memory context.
+ *
+ * @param size the number of bytes
+ * @param data the memory data of the general context, unused
+ * @return the memory, NULL if it cannot be allocated, as PCRE2 expects instead of an error
+ */
 static void *pcre2_malloc(PCRE2_SIZE size, void *data)
 {
     return palloc_extended(size, MCXT_ALLOC_NO_OOM);
 }
 
 
+/**
+ * Frees memory allocated by pcre2_malloc().
+ *
+ * @param ptr the memory, or NULL
+ * @param data the memory data of the general context, unused
+ */
 static void pcre2_free(void *ptr, void *data)
 {
     if(ptr != NULL)
@@ -29,6 +53,12 @@ static void pcre2_free(void *ptr, void *data)
 }
 
 
+/**
+ * Returns the general context of PCRE2, which makes PCRE2 allocate by pcre2_malloc() and pcre2_free(); it is created
+ * in TopMemoryContext on the first call.
+ *
+ * @return the general context; a failure to create it raises an error
+ */
 static pcre2_general_context *get_general_context()
 {
     if(general_context == NULL)
@@ -45,6 +75,11 @@ static pcre2_general_context *get_general_context()
 }
 
 
+/**
+ * Returns the compile context of PCRE2, created in TopMemoryContext on the first call.
+ *
+ * @return the compile context; a failure to create it raises an error
+ */
 static pcre2_compile_context *get_compile_context()
 {
     if(compile_context == NULL)
@@ -61,6 +96,11 @@ static pcre2_compile_context *get_compile_context()
 }
 
 
+/**
+ * Returns the match context of PCRE2, created in TopMemoryContext on the first call.
+ *
+ * @return the match context; a failure to create it raises an error
+ */
 static pcre2_match_context *get_match_context()
 {
     if(match_context == NULL)
@@ -76,6 +116,15 @@ static pcre2_match_context *get_match_context()
     return match_context;
 }
 
+/**
+ * Translates the flags of a regular expression into the options of PCRE2: `s` into PCRE2_DOTALL, `m` into
+ * PCRE2_MULTILINE, `i` into PCRE2_CASELESS, `x` into PCRE2_EXTENDED and `q` into PCRE2_LITERAL, with which only the
+ * flag `i` stays in effect, as XPath has it.
+ *
+ * @param flags the flags
+ * @param options receives the options, which always include PCRE2_UTF
+ * @return false if the flags contain an unknown character
+ */
 static bool parse_flags(VarChar *flags, uint32_t *options)
 {
     char *data = VARDATA_ANY(flags);
@@ -117,6 +166,13 @@ static bool parse_flags(VarChar *flags, uint32_t *options)
 }
 
 
+/**
+ * The SPARQL function REGEX of a simple literal.
+ *
+ * @param fcinfo the varchar text, the varchar pattern and the varchar flags, empty by default
+ * @return true if the pattern matches a part of the text; NULL if the flags are invalid, the pattern does not
+ *         compile or the matching fails, for example on a limit of PCRE2
+ */
 PG_FUNCTION_INFO_V1(regex_string);
 Datum regex_string(PG_FUNCTION_ARGS)
 {
@@ -159,6 +215,13 @@ Datum regex_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function REGEX of an RDF term.
+ *
+ * @param fcinfo the rdfbox text, the varchar pattern and the varchar flags, empty by default
+ * @return true if the pattern matches a part of the text; NULL if the text is not a string literal, the flags are
+ *         invalid, the pattern does not compile or the matching fails
+ */
 PG_FUNCTION_INFO_V1(regex_rdfbox);
 Datum regex_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -202,6 +265,15 @@ Datum regex_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function REPLACE of a simple literal: replaces every match of the pattern by the replacement, in which
+ * `$n` and `${n}` stand for a captured group and a group that did not take part in the match is empty.
+ *
+ * @param fcinfo the varchar text, the varchar pattern, the varchar replacement and the varchar flags, empty by
+ *               default
+ * @return the varchar result; NULL if the flags are invalid, the pattern does not compile or the substitution fails,
+ *         for example on an invalid replacement
+ */
 PG_FUNCTION_INFO_V1(replace_string);
 Datum replace_string(PG_FUNCTION_ARGS)
 {
@@ -251,6 +323,14 @@ Datum replace_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * The SPARQL function REPLACE of an RDF term, see replace_string().
+ *
+ * @param fcinfo the rdfbox text, the varchar pattern, the varchar replacement and the varchar flags, empty by
+ *               default
+ * @return the rdfbox result, a string literal of the same kind as the text; NULL if the text is not a string
+ *         literal, the flags are invalid, the pattern does not compile or the substitution fails
+ */
 PG_FUNCTION_INFO_V1(replace_rdfbox);
 Datum replace_rdfbox(PG_FUNCTION_ARGS)
 {

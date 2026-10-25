@@ -1,8 +1,20 @@
+/**
+ * @file
+ * Parsing and printing of the lexical forms of xsd:boolean.
+ */
 #include <postgres.h>
 #include "types/parser.h"
 #include "types/boolean.h"
 
 
+/**
+ * Parses a lexical form of xsd:boolean, one of `true`, `false`, `1` and `0` surrounded by optional XML Schema
+ * whitespace.
+ *
+ * @param data the lexical form, not necessarily terminated by a zero byte
+ * @param size the length of the lexical form in bytes
+ * @return the value; a malformed form raises an error
+ */
 bool boolean_parse(char *data, int size)
 {
     bool result;
@@ -46,6 +58,13 @@ bool boolean_parse(char *data, int size)
 }
 
 
+/**
+ * Prints the canonical lexical form of an xsd:boolean, `true` or `false`.
+ *
+ * @param value the value
+ * @param buffer the buffer, with room for at least #BOOLEAN_MAXLEN bytes; no terminating zero byte is written
+ * @return the number of bytes written
+ */
 int boolean_print(bool value, char *buffer)
 {
     if(value)

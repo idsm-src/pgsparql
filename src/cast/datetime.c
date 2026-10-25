@@ -1,6 +1,11 @@
-/*
- * https://www.w3.org/TR/xmlschema11-2/#dateTime
- * https://www.w3.org/TR/xpath-functions/#casting-to-datetimes
+/**
+ * @file
+ * The casts to xsd:dateTime, held by a zoneddatetime, and to a plain dateTime, the instant without its time zone.
+ *
+ * A value that cannot be cast, such as a malformed lexical form or a dateTime out of range, gives NULL.
+ *
+ * @see https://www.w3.org/TR/xmlschema11-2/#dateTime
+ * @see https://www.w3.org/TR/xpath-functions/#casting-to-datetimes
  */
 #include <postgres.h>
 #include <utils/datum.h>
@@ -13,6 +18,15 @@
 #include "types/timezone.h"
 
 
+/**
+ * Casts an xsd:date to xsd:dateTime: the midnight that begins the date in its time zone, with the same time zone.
+ *
+ * The midnight is computed by date_timestamptz(), which takes it in the TimeZone of the session.
+ *
+ * @param fcinfo the zoneddate to cast, or the date and the int4 time zone offset in seconds (#ZONE_UNSPECIFIED for
+ *               none) of the xsd:date
+ * @return the palloc'd zoneddatetime, NULL if the instant is out of range
+ */
 PG_FUNCTION_INFO_V1(cast_as_datetime_from_date);
 Datum cast_as_datetime_from_date(PG_FUNCTION_ARGS)
 {
@@ -50,6 +64,12 @@ Datum cast_as_datetime_from_date(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:string to xsd:dateTime by parsing it as a lexical form of xsd:dateTime.
+ *
+ * @param fcinfo the varchar to cast
+ * @return the zoneddatetime, NULL if the string is not a lexical form of xsd:dateTime or the dateTime is out of range
+ */
 PG_FUNCTION_INFO_V1(cast_as_datetime_from_string);
 Datum cast_as_datetime_from_string(PG_FUNCTION_ARGS)
 {
@@ -73,6 +93,13 @@ Datum cast_as_datetime_from_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an RDF term to xsd:dateTime, the SPARQL function `xsd:dateTime()`.
+ *
+ * @param fcinfo the rdfbox to cast
+ * @return the zoneddatetime, which points into the box for an xsd:dateTime, NULL if the term is not an
+ *         xsd:dateTime, an xsd:date or an xsd:string, or if its value cannot be cast
+ */
 PG_FUNCTION_INFO_V1(cast_as_datetime_from_rdfbox);
 Datum cast_as_datetime_from_rdfbox(PG_FUNCTION_ARGS)
 {
@@ -95,6 +122,14 @@ Datum cast_as_datetime_from_rdfbox(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:date to the instant of the midnight that begins the date in its time zone, without the time zone.
+ *
+ * The midnight is computed by date_timestamptz(), which takes it in the TimeZone of the session.
+ *
+ * @param fcinfo the date and the int4 time zone offset in seconds (#ZONE_UNSPECIFIED for none) of the xsd:date
+ * @return the timestamptz, NULL if the instant is out of range
+ */
 PG_FUNCTION_INFO_V1(cast_as_plain_datetime_from_date);
 Datum cast_as_plain_datetime_from_date(PG_FUNCTION_ARGS)
 {
@@ -130,6 +165,15 @@ Datum cast_as_plain_datetime_from_date(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:dateTime or an xsd:date to its instant without the time zone.
+ *
+ * Unlike cast_as_datetime_from_rdfbox(), it does not parse strings.
+ *
+ * @param fcinfo the rdfbox to cast
+ * @return the timestamptz instant of an xsd:dateTime or of the midnight that begins an xsd:date, NULL for another
+ *         term or if the instant is out of range
+ */
 PG_FUNCTION_INFO_V1(cast_as_plain_datetime_from_rdfbox);
 Datum cast_as_plain_datetime_from_rdfbox(PG_FUNCTION_ARGS)
 {

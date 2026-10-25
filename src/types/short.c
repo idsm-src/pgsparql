@@ -1,3 +1,7 @@
+/**
+ * @file
+ * Parsing and printing of the lexical forms of xsd:short.
+ */
 #include <postgres.h>
 #include <utils/builtins.h>
 #include <common/int.h>
@@ -6,6 +10,14 @@
 #include "types/short.h"
 
 
+/**
+ * Parses a lexical form of xsd:short, an optionally signed sequence of decimal digits surrounded by optional XML
+ * Schema whitespace.
+ *
+ * @param data the lexical form, not necessarily terminated by a zero byte
+ * @param size the length of the lexical form in bytes
+ * @return the value; a malformed form or a value out of the range of xsd:short raises an error
+ */
 int16 short_parse(char *data, int size)
 {
     int pos = 0;
@@ -69,6 +81,13 @@ int16 short_parse(char *data, int size)
 }
 
 
+/**
+ * Prints the canonical lexical form of an xsd:short.
+ *
+ * @param value the value
+ * @param buffer the buffer, with room for at least #SHORT_MAXLEN bytes; no terminating zero byte is written
+ * @return the number of bytes written
+ */
 int short_print(int16 value, char *buffer)
 {
     uint16 uvalue = value;

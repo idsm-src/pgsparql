@@ -1,3 +1,10 @@
+/**
+ * @file
+ * Parsing and printing of the lexical forms of xsd:float and the arithmetic operators of xsd:float.
+ *
+ * The operators follow IEEE 754: an overflow gives an infinity, an underflow zero and a division by zero an infinity
+ * or NaN, where the operators of PostgreSQL raise an error.
+ */
 #include <postgres.h>
 #include <fmgr.h>
 #include <utils/float.h>
@@ -6,6 +13,18 @@
 #include "types/float.h"
 
 
+/**
+ * Parses a lexical form of xsd:float: `NaN`, `INF`, `+INF`, `-INF` or an optionally signed decimal number with an
+ * optional decimal point and an optional exponent introduced by `e` or `E`, surrounded by optional XML Schema
+ * whitespace.
+ *
+ * The number is rounded to the nearest float4 by strtof(); a number beyond the range of float4 becomes an infinity
+ * and a number too close to zero becomes a subnormal number or zero.
+ *
+ * @param data the lexical form, not necessarily terminated by a zero byte
+ * @param size the length of the lexical form in bytes
+ * @return the value; a malformed form raises an error
+ */
 float4 float_parse(char *data, int size)
 {
     float4 result;
@@ -92,12 +111,29 @@ float4 float_parse(char *data, int size)
 }
 
 
+/**
+ * Prints the canonical lexical form of an xsd:float, the shortest one that reads back as the same value, by Ryu.
+ *
+ * The form is the mantissa with one digit before the decimal point and at least one after it, followed by `E` and
+ * the exponent, as in `1.0E0` or `-1.25E-7`; NaN, the infinities and the zeros are printed as `NaN`, `INF`, `-INF`,
+ * `0.0E0` and `-0.0E0`.
+ *
+ * @param value the value
+ * @param buffer the buffer, with room for at least #FLOAT_MAXLEN bytes; no terminating zero byte is written
+ * @return the number of bytes written
+ */
 int float_print(float4 value, char *buffer)
 {
     return f2s_buffered_n(value, buffer, true);
 }
 
 
+/**
+ * Negates an xsd:float, the unary operator `-` on float4 in the schema sparql.
+ *
+ * @param fcinfo the float4 operand
+ * @return the negated float4
+ */
 PG_FUNCTION_INFO_V1(float_uminus);
 Datum float_uminus(PG_FUNCTION_ARGS)
 {
@@ -105,6 +141,12 @@ Datum float_uminus(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Adds two xsd:float values, the operator `+` on float4 in the schema sparql.
+ *
+ * @param fcinfo the two float4 operands
+ * @return the float4 sum
+ */
 PG_FUNCTION_INFO_V1(float_add);
 Datum float_add(PG_FUNCTION_ARGS)
 {
@@ -112,6 +154,12 @@ Datum float_add(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Subtracts two xsd:float values, the operator `-` on float4 in the schema sparql.
+ *
+ * @param fcinfo the float4 minuend and subtrahend
+ * @return the float4 difference
+ */
 PG_FUNCTION_INFO_V1(float_sub);
 Datum float_sub(PG_FUNCTION_ARGS)
 {
@@ -119,6 +167,12 @@ Datum float_sub(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Multiplies two xsd:float values, the operator `*` on float4 in the schema sparql.
+ *
+ * @param fcinfo the two float4 factors
+ * @return the float4 product
+ */
 PG_FUNCTION_INFO_V1(float_mul);
 Datum float_mul(PG_FUNCTION_ARGS)
 {
@@ -126,6 +180,12 @@ Datum float_mul(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Divides two xsd:float values, the operator `/` on float4 in the schema sparql.
+ *
+ * @param fcinfo the float4 dividend and divisor
+ * @return the float4 quotient, an infinity or NaN for a division by zero
+ */
 PG_FUNCTION_INFO_V1(float_div);
 Datum float_div(PG_FUNCTION_ARGS)
 {

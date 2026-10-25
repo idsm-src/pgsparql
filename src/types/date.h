@@ -1,3 +1,7 @@
+/**
+ * @file
+ * The type zoneddate, an xsd:date with an optional time zone, and the lexical forms of xsd:date.
+ */
 #ifndef TYPES_DATE_H_
 #define TYPES_DATE_H_
 
@@ -9,14 +13,25 @@
 #include <utils/date.h>
 
 
+/**
+ * An xsd:date with an optional time zone, the value of the type zoneddate.
+ *
+ * It is eight bytes long and passed by value, packed into an int64 Datum.
+ */
 typedef struct
 {
-    DateADT value;
-    int32 zone;
+    DateADT value;  /**< the date as written, in days since 2000-01-01 */
+    int32 zone;     /**< the time zone offset in seconds east of UTC, or #ZONE_UNSPECIFIED */
 }
 ZonedDate;
 
 
+/**
+ * Converts a Datum to a zoneddate.
+ *
+ * @param val the Datum
+ * @return the zoneddate
+ */
 static inline ZonedDate DatumGetZonedDate(Datum val)
 {
 #ifdef USE_FLOAT8_BYVAL
@@ -34,6 +49,12 @@ static inline ZonedDate DatumGetZonedDate(Datum val)
 }
 
 
+/**
+ * Converts a zoneddate to a Datum.
+ *
+ * @param val the zoneddate
+ * @return the Datum
+ */
 static inline Datum ZonedDateGetDatum(ZonedDate val)
 {
 #ifdef USE_FLOAT8_BYVAL
@@ -54,11 +75,32 @@ static inline Datum ZonedDateGetDatum(ZonedDate val)
 }
 
 
+/**
+ * The length of the longest canonical lexical form of an xsd:date, such as `5874897-12-31+14:00`.
+ */
 #define DATE_MAXLEN 19
 
+/**
+ * Fetches a zoneddate argument of a version-1 function.
+ *
+ * @param X the number of the argument
+ * @return the zoneddate
+ */
 #define PG_GETARG_ZONEDDATE(X) DatumGetZonedDate(PG_GETARG_DATUM(X))
+
+/**
+ * Returns a zoneddate from a version-1 function.
+ *
+ * @param X the zoneddate
+ */
 #define PG_RETURN_ZONEDDATE(X) return ZonedDateGetDatum(X)
 
+/**
+ * Fetches the date argument of a version-1 function that is called either with a single zoneddate or with a date and
+ * an int4 time zone.
+ *
+ * @return the zoneddate
+ */
 #define PG_GETARG_DATE() (PG_NARGS() == 1 ? PG_GETARG_ZONEDDATE(0) : (ZonedDate) { .value = PG_GETARG_DATEADT(0), .zone = PG_GETARG_INT32(1) })
 
 
@@ -67,6 +109,12 @@ int date_print(ZonedDate value, char *buffer);
 int date_order_compare(ZonedDate left, ZonedDate right);
 
 
+/**
+ * Prints the canonical lexical form of an xsd:date into a new varchar.
+ *
+ * @param value the value
+ * @return the palloc'd varchar
+ */
 static inline VarChar *date_as_varchar(ZonedDate value)
 {
     VarChar *result = (VarChar *) palloc0(VARHDRSZ + DATE_MAXLEN);

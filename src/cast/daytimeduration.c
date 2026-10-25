@@ -1,6 +1,11 @@
-/*
- * https://www.w3.org/TR/xmlschema11-2/#dayTimeDuration
- * https://www.w3.org/TR/xpath-functions/#casting-to-durations
+/**
+ * @file
+ * The casts to xsd:dayTimeDuration, whose values are held by an int8 of microseconds.
+ *
+ * A value that cannot be cast, such as a malformed lexical form or a duration out of range, gives NULL.
+ *
+ * @see https://www.w3.org/TR/xmlschema11-2/#dayTimeDuration
+ * @see https://www.w3.org/TR/xpath-functions/#casting-to-durations
  */
 #include <postgres.h>
 #include <utils/builtins.h>
@@ -10,6 +15,13 @@
 #include "rdfbox/rdfbox.h"
 
 
+/**
+ * Casts an xsd:string to xsd:dayTimeDuration by parsing it as a lexical form of xsd:dayTimeDuration.
+ *
+ * @param fcinfo the varchar to cast
+ * @return the int8 number of microseconds, NULL if the string is not a lexical form of xsd:dayTimeDuration or its
+ *         value is out of range or more precise than a microsecond
+ */
 PG_FUNCTION_INFO_V1(cast_as_daytimeduration_from_string);
 Datum cast_as_daytimeduration_from_string(PG_FUNCTION_ARGS)
 {
@@ -33,6 +45,13 @@ Datum cast_as_daytimeduration_from_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an RDF term to xsd:dayTimeDuration, the function `xsd:dayTimeDuration()`.
+ *
+ * @param fcinfo the rdfbox to cast
+ * @return the int8 number of microseconds, NULL if the term is neither an xsd:dayTimeDuration nor an xsd:string
+ *         holding a valid lexical form of xsd:dayTimeDuration
+ */
 PG_FUNCTION_INFO_V1(cast_as_daytimeduration_from_rdfbox);
 Datum cast_as_daytimeduration_from_rdfbox(PG_FUNCTION_ARGS)
 {

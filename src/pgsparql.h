@@ -1,3 +1,7 @@
+/**
+ * @file
+ * The functions of newer server versions that pgsparql uses, for the older versions that lack them.
+ */
 #ifndef PGSPARQL_H_
 #define PGSPARQL_H_
 
@@ -8,6 +12,12 @@
 #if PG_VERSION_NUM < 150000
 #include <utils/int8.h>
 
+/**
+ * Converts a string to an int64, as pg_strtoint64() of PostgreSQL 15 does.
+ *
+ * @param s the string
+ * @return the value of the string; an invalid string or a value out of range raises an error
+ */
 static inline int64 pg_strtoint64(const char *s)
 {
     int64 result;
@@ -18,6 +28,13 @@ static inline int64 pg_strtoint64(const char *s)
 
 
 #if PG_VERSION_NUM < 180000
+/**
+ * Negates an unsigned 16-bit integer into a signed one, as pg_neg_u16_overflow() of PostgreSQL 18 does.
+ *
+ * @param a the value to negate
+ * @param result receives -a if it fits into an int16
+ * @return true if -a does not fit into an int16
+ */
 static inline bool
 pg_neg_u16_overflow(uint16 a, int16 *result)
 {
@@ -36,6 +53,13 @@ pg_neg_u16_overflow(uint16 a, int16 *result)
 #endif
 }
 
+/**
+ * Negates an unsigned 32-bit integer into a signed one, as pg_neg_u32_overflow() of PostgreSQL 18 does.
+ *
+ * @param a the value to negate
+ * @param result receives -a if it fits into an int32
+ * @return true if -a does not fit into an int32
+ */
 static inline bool
 pg_neg_u32_overflow(uint32 a, int32 *result)
 {
@@ -54,6 +78,13 @@ pg_neg_u32_overflow(uint32 a, int32 *result)
 #endif
 }
 
+/**
+ * Negates an unsigned 64-bit integer into a signed one, as pg_neg_u64_overflow() of PostgreSQL 18 does.
+ *
+ * @param a the value to negate
+ * @param result receives -a if it fits into an int64
+ * @return true if -a does not fit into an int64
+ */
 static inline bool
 pg_neg_u64_overflow(uint64 a, int64 *result)
 {

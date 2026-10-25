@@ -1,6 +1,12 @@
-/*
- * https://www.w3.org/TR/xmlschema11-2/#unsignedInt
- * https://www.w3.org/TR/xpath-functions/#casting-to-integer
+/**
+ * @file
+ * The casts to xsd:unsignedInt, whose values are held by an int8.
+ *
+ * A value that cannot be cast, such as a value out of the range of xsd:unsignedInt or a malformed lexical form, gives
+ * NULL.
+ *
+ * @see https://www.w3.org/TR/xmlschema11-2/#unsignedInt
+ * @see https://www.w3.org/TR/xpath-functions/#casting-to-integer
  */
 #include <postgres.h>
 #include <utils/builtins.h>
@@ -11,6 +17,12 @@
 #include "rdfbox/rdfbox.h"
 
 
+/**
+ * Casts an xsd:boolean to xsd:unsignedInt.
+ *
+ * @param fcinfo the bool to cast
+ * @return the int8 1 for true and 0 for false
+ */
 PG_FUNCTION_INFO_V1(cast_as_unsignedint_from_boolean);
 Datum cast_as_unsignedint_from_boolean(PG_FUNCTION_ARGS)
 {
@@ -19,6 +31,13 @@ Datum cast_as_unsignedint_from_boolean(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:short to xsd:unsignedInt; also bound to @c cast_as_unsignedint_from_byte(int2) and
+ * @c cast_as_unsignedint_from_unsignedbyte(int2).
+ *
+ * @param fcinfo the int2 to cast
+ * @return the value as an int8, NULL if it is negative
+ */
 PG_FUNCTION_INFO_V1(cast_as_unsignedint_from_short);
 Datum cast_as_unsignedint_from_short(PG_FUNCTION_ARGS)
 {
@@ -31,6 +50,12 @@ Datum cast_as_unsignedint_from_short(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:int to xsd:unsignedInt; also bound to @c cast_as_unsignedint_from_unsignedshort(int4).
+ *
+ * @param fcinfo the int4 to cast
+ * @return the value as an int8, NULL if it is negative
+ */
 PG_FUNCTION_INFO_V1(cast_as_unsignedint_from_int);
 Datum cast_as_unsignedint_from_int(PG_FUNCTION_ARGS)
 {
@@ -43,6 +68,12 @@ Datum cast_as_unsignedint_from_int(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:long to xsd:unsignedInt.
+ *
+ * @param fcinfo the int8 to cast
+ * @return the value as an int8, NULL if it is negative or greater than 4294967295
+ */
 PG_FUNCTION_INFO_V1(cast_as_unsignedint_from_long);
 Datum cast_as_unsignedint_from_long(PG_FUNCTION_ARGS)
 {
@@ -55,6 +86,13 @@ Datum cast_as_unsignedint_from_long(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:integer to xsd:unsignedInt; also bound to @c cast_as_unsignedint_from_unsignedlong(decimal) and to the
+ * casts from the subtypes of xsd:integer.
+ *
+ * @param fcinfo the numeric to cast
+ * @return the int8, NULL if the value is out of the range of xsd:unsignedInt
+ */
 PG_FUNCTION_INFO_V1(cast_as_unsignedint_from_integer);
 Datum cast_as_unsignedint_from_integer(PG_FUNCTION_ARGS)
 {
@@ -83,6 +121,12 @@ Datum cast_as_unsignedint_from_integer(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:decimal to xsd:unsignedInt, discarding its fractional part.
+ *
+ * @param fcinfo the numeric to cast
+ * @return the truncated value as an int8, NULL if it is out of the range of xsd:unsignedInt
+ */
 PG_FUNCTION_INFO_V1(cast_as_unsignedint_from_decimal);
 Datum cast_as_unsignedint_from_decimal(PG_FUNCTION_ARGS)
 {
@@ -113,6 +157,12 @@ Datum cast_as_unsignedint_from_decimal(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:float to xsd:unsignedInt, discarding its fractional part.
+ *
+ * @param fcinfo the float4 to cast
+ * @return the truncated value as an int8, NULL if the value is NaN or out of the range of xsd:unsignedInt
+ */
 PG_FUNCTION_INFO_V1(cast_as_unsignedint_from_float);
 Datum cast_as_unsignedint_from_float(PG_FUNCTION_ARGS)
 {
@@ -135,6 +185,12 @@ Datum cast_as_unsignedint_from_float(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:double to xsd:unsignedInt, discarding its fractional part.
+ *
+ * @param fcinfo the float8 to cast
+ * @return the truncated value as an int8, NULL if the value is NaN or out of the range of xsd:unsignedInt
+ */
 PG_FUNCTION_INFO_V1(cast_as_unsignedint_from_double);
 Datum cast_as_unsignedint_from_double(PG_FUNCTION_ARGS)
 {
@@ -157,6 +213,12 @@ Datum cast_as_unsignedint_from_double(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an xsd:string to xsd:unsignedInt by parsing it as a lexical form of xsd:unsignedInt.
+ *
+ * @param fcinfo the varchar to cast
+ * @return the int8, NULL if the string is not a lexical form of xsd:unsignedInt or its value is out of range
+ */
 PG_FUNCTION_INFO_V1(cast_as_unsignedint_from_string);
 Datum cast_as_unsignedint_from_string(PG_FUNCTION_ARGS)
 {
@@ -180,6 +242,13 @@ Datum cast_as_unsignedint_from_string(PG_FUNCTION_ARGS)
 }
 
 
+/**
+ * Casts an RDF term to xsd:unsignedInt, the SPARQL function `xsd:unsignedInt()`.
+ *
+ * @param fcinfo the rdfbox to cast
+ * @return the int8, NULL if the term is not an xsd:boolean, a literal of a numeric datatype or an xsd:string, or if
+ *         its value cannot be cast
+ */
 PG_FUNCTION_INFO_V1(cast_as_unsignedint_from_rdfbox);
 Datum cast_as_unsignedint_from_rdfbox(PG_FUNCTION_ARGS)
 {

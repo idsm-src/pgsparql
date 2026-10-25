@@ -1,3 +1,9 @@
+/**
+ * @file
+ * The effective boolean value of an RDF term.
+ *
+ * @see https://www.w3.org/TR/sparql12-query/#ebv
+ */
 #include <postgres.h>
 #include <fmgr.h>
 #include <utils/builtins.h>
@@ -5,6 +11,15 @@
 #include "rdfbox/rdfbox.h"
 
 
+/**
+ * Computes the effective boolean value of an RDF term, which SPARQL takes of the operands of the logical operators
+ * and of the expression of a FILTER.
+ *
+ * @param fcinfo the rdfbox
+ * @return the bool value of an xsd:boolean, whether a number is neither zero nor NaN and whether an xsd:string is not
+ *         empty; NULL for any other term, including a language-tagged string and a literal of an unknown datatype
+ *         or with an invalid lexical form
+ */
 PG_FUNCTION_INFO_V1(ebv_rdfbox);
 Datum ebv_rdfbox(PG_FUNCTION_ARGS)
 {

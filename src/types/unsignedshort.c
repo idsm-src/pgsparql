@@ -1,9 +1,21 @@
+/**
+ * @file
+ * Parsing and printing of the lexical forms of xsd:unsignedShort.
+ */
 #include <postgres.h>
 #include <utils/builtins.h>
 #include "types/parser.h"
 #include "types/unsignedshort.h"
 
 
+/**
+ * Parses a lexical form of xsd:unsignedShort, an optionally signed sequence of decimal digits surrounded by optional
+ * XML Schema whitespace; the minus sign is allowed only for zero.
+ *
+ * @param data the lexical form, not necessarily terminated by a zero byte
+ * @param size the length of the lexical form in bytes
+ * @return the value; a malformed form or a value out of the range of xsd:unsignedShort raises an error
+ */
 uint16 unsignedshort_parse(char *data, int size)
 {
     int pos = 0;
@@ -58,6 +70,13 @@ uint16 unsignedshort_parse(char *data, int size)
 }
 
 
+/**
+ * Prints the canonical lexical form of an xsd:unsignedShort.
+ *
+ * @param value the value
+ * @param buffer the buffer, with room for at least #UNSIGNEDSHORT_MAXLEN bytes; no terminating zero byte is written
+ * @return the number of bytes written
+ */
 int unsignedshort_print(uint16 value, char *buffer)
 {
     return pg_ultoa_n(value, buffer);

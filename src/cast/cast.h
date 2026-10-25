@@ -1,3 +1,8 @@
+/**
+ * @file
+ * The casts from xsd:string to the other datatypes and from the other datatypes to xsd:string, for the code that
+ * calls them directly.
+ */
 #ifndef CAST_CAST_H_
 #define CAST_CAST_H_
 
