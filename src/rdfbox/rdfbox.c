@@ -939,7 +939,8 @@ Datum rdfbox_input(PG_FUNCTION_ARGS)
  * digit written as `-xx`; and a triple term as `<<( subject <predicate> object )>>`.
  *
  * @param box the term
- * @return the palloc'd text, terminated by a zero byte
+ * @return the palloc'd text, terminated by a zero byte; a box of an unknown type, such as one stored by a version of
+ *         the extension that numbered the types differently, raises an error
  */
 static char *print_term(RdfBox *box)
 {
@@ -1232,6 +1233,10 @@ static char *print_term(RdfBox *box)
             break;
         }
     }
+
+    /* every type of the enumeration is handled above, which the compiler checks, so only a stray tag gets here */
+    if(result == NULL)
+        ereport(ERROR, (errcode(ERRCODE_DATA_CORRUPTED), errmsg("invalid type of rdfbox: %u", box->type)));
 
     return result;
 }
