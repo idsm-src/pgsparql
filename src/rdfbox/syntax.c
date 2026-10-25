@@ -3,8 +3,9 @@
  * The syntax checks of IRIs, IRI references and language tags by regular expressions.
  *
  * The expressions of IRIs are built from macros that follow the grammar of RFC 3987, which extends that of RFC 3986;
- * the expression of language tags follows BCP 47. Each expression is compiled on its first use and kept, together
- * with its match data, for the lifetime of the backend.
+ * the expression of language tags follows BCP 47. Each expression is anchored by `^` and `\z` to the whole string,
+ * so that a trailing newline, which `$` would let through, is rejected like any other character. Each expression is
+ * compiled on its first use and kept, together with its match data, for the lifetime of the backend.
  *
  * @see https://www.rfc-editor.org/rfc/rfc3987#section-2.2
  * @see https://www.rfc-editor.org/rfc/rfc3986#appendix-A
@@ -19,8 +20,8 @@
 #define ALPHA           "[a-zA-Z]"
 /** RFC 3986 `DIGIT`: a decimal digit. */
 #define DIGIT           "[0-9]"
-/** RFC 3986 `HEXDIG`, restricted to the upper-case hexadecimal digits. */
-#define HEXDIG          "[0-9A-F]"
+/** RFC 3986 `HEXDIG`: a hexadecimal digit in either case, as the strings of the ABNF of RFC 5234 are. */
+#define HEXDIG          "[0-9A-Fa-f]"
 
 /** RFC 3986 `sub-delims`. */
 #define SUB_DELIMS      "[!$&'()*+,;=]"
@@ -50,14 +51,14 @@
                             "|" "(" "(" H16 ":" "){0,4}" H16 ")?" "::"                    LS32 \
                             "|" "(" "(" H16 ":" "){0,5}" H16 ")?" "::"                    H16  \
                             "|" "(" "(" H16 ":" "){0,6}" H16 ")?" "::" ")"
-/** RFC 3986 `IPvFuture`. */
-#define IPV_FUTURE      "(" "v" HEXDIG "+" "\\." "(" UNRESERVED "|" SUB_DELIMS "|" ":" ")+" ")"
+/** RFC 3986 `IPvFuture`; its version flag `v` matches in either case like the other ABNF strings. */
+#define IPV_FUTURE      "(" "[vV]" HEXDIG "+" "\\." "(" UNRESERVED "|" SUB_DELIMS "|" ":" ")+" ")"
 /** RFC 3986 `IP-literal`: an IPv6 or a future address in square brackets. */
 #define IP_LITERAL      "(" "\\[" "(" IPV6_ADDRESS "|" IPV_FUTURE  ")" "\\]" ")"
 /** RFC 3986 `port`. */
 #define PORT            "(" DIGIT "*" ")"
 /** RFC 3986 `scheme`. */
-#define SCHEME          "(" ALPHA "(" ALPHA "|" DIGIT "|" "[+-.]" ")*" ")"
+#define SCHEME          "(" ALPHA "(" ALPHA "|" DIGIT "|" "[+.-]" ")*" ")"
 /** RFC 3987 `iprivate`: the private use characters allowed in a query. */
 #define IPRIVATE        "[\\N{U+E000}-\\N{U+F8FF}\\N{U+F0000}-\\N{U+FFFFD}\\N{U+100000}-\\N{U+10FFFD}]"
 /** RFC 3987 `ucschar`: the non-ASCII characters allowed in an IRI. */
@@ -116,11 +117,11 @@
 
 static pcre2_code *iri_regex = NULL;                    /**< the compiled #iri_pattern, NULL before its first use */
 static pcre2_match_data *iri_match_data = NULL;         /**< the match data of #iri_regex */
-static const char *iri_pattern = "^" IRI "$";           /**< the expression of an absolute IRI */
+static const char *iri_pattern = "^" IRI "\\z";         /**< the expression of an absolute IRI */
 
 static pcre2_code *iriref_regex = NULL;                 /**< the compiled #iriref_pattern, NULL before its first use */
 static pcre2_match_data *iriref_match_data = NULL;      /**< the match data of #iriref_regex */
-static const char *iriref_pattern = "^" IRI_REFERENCE "$";  /**< the expression of an IRI reference */
+static const char *iriref_pattern = "^" IRI_REFERENCE "\\z";  /**< the expression of an IRI reference */
 
 static pcre2_code *tag_regex = NULL;                    /**< the compiled #tag_pattern, NULL before its first use */
 static pcre2_match_data *tag_match_data = NULL;         /**< the match data of #tag_regex */
@@ -133,7 +134,7 @@ static const char *tag_pattern = "^(([A-Za-z]{2,3}(-[A-Za-z]{3}){0,3}|[A-Za-z]{4
         "(-[A-Za-z]{4})?(-([A-Za-z]{2}|[0-9]{3}))?(-([A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*"
         "(-[0-9A-WY-Za-wy-z](-[A-Za-z0-9]{2,8})+)*(-x(-[A-Za-z0-9]{1,8})+)?|x(-[A-Za-z0-9]{1,8})+"
         "|i-ami|i-bnn|i-default|i-enochian|i-hak|i-klingon|i-lux|i-mingo|i-navajo|i-pwn"
-        "|i-tao|i-tay|i-tsu|sgn-BE-FR|sgn-BE-NL|sgn-CH-DE)$";
+        "|i-tao|i-tay|i-tsu|sgn-BE-FR|sgn-BE-NL|sgn-CH-DE)\\z";
 
 
 /**

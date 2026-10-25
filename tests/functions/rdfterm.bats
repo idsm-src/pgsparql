@@ -1478,6 +1478,18 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.iri_string('https://base.org/basedir?basequery#basetag'::varchar, 'http://example.org/%e2%82%ac'::varchar)" {
+  expect_output 'http://example.org/%e2%82%ac'
+}
+
+@test "fn: sparql.iri_string('https://base.org/basedir?basequery#basetag'::varchar, 'ht,tp://example.org/'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.iri_string('https://base.org/basedir?basequery#basetag'::varchar, E'http://example.org/\n'::varchar)" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.iri_rdfbox('https://base.org/basedir?basequery#basetag'::varchar, sparql.rdfbox_create_from_string('http://example.org/./dir'::varchar))" {
   expect_output 'http://example.org/dir'
 }
@@ -1632,6 +1644,14 @@ load ../psql_tests.bash
   expect_output '"true"^^<http://www.w3.org/2001/XMLSchema#boolean>'
 }
 
+@test "fn: sparql.strdt_string('1'::varchar, 'http://example.org/%e2'::varchar)" {
+  expect_output '"1"^^<http://example.org/%e2>'
+}
+
+@test "fn: sparql.strdt_string('1'::varchar, E'http://example.org/\n'::varchar)" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.strdt_string(' 1 '::varchar, 'http://www.w3.org/2001/XMLSchema#short'::varchar)" {
   expect_output '" 1 "^^<http://www.w3.org/2001/XMLSchema#short>'
 }
@@ -1699,6 +1719,10 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.strlang_string('value'::varchar, 'e'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.strlang_string('value'::varchar, E'en\n'::varchar)" {
   expect_output '(null)'
 }
 

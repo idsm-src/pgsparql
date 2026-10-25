@@ -42,6 +42,10 @@ load ../psql_tests.bash
   expect_error
 }
 
+@test "io: E'\"chat\"@fr\n'::sparql.rdfbox" {
+  expect_error
+}
+
 @test "io: '\"xyz\"^^<http://example.org/ns/userDatatype>'::sparql.rdfbox" {
   expect_output '"xyz"^^<http://example.org/ns/userDatatype>'
 }
@@ -998,6 +1002,42 @@ load ../psql_tests.bash
 
 @test "io: '<example.org/book/book1>'::sparql.rdfbox" {
   expect_error
+}
+
+@test "io: '<http://example.org/%E2%82%AC>'::sparql.rdfbox" {
+  expect_output '<http://example.org/%E2%82%AC>'
+}
+
+@test "io: '<http://example.org/%e2%82%ac>'::sparql.rdfbox" {
+  expect_output '<http://example.org/%e2%82%ac>'
+}
+
+@test "io: '<http://example.org/%g0>'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "io: '<http://[2001:db8::1]/>'::sparql.rdfbox" {
+  expect_output '<http://[2001:db8::1]/>'
+}
+
+@test "io: '<http://[V1.a]/>'::sparql.rdfbox" {
+  expect_output '<http://[V1.a]/>'
+}
+
+@test "io: '<ht+t.p-s://example.org/>'::sparql.rdfbox" {
+  expect_output '<ht+t.p-s://example.org/>'
+}
+
+@test "io: '<ht,tp://example.org/>'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "io: E'<http://example.org/\n>'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "io: '\"1\"^^<http://example.org/%e2>'::sparql.rdfbox" {
+  expect_output '"1"^^<http://example.org/%e2>'
 }
 
 
