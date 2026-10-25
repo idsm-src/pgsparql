@@ -58,6 +58,26 @@ load ../psql_tests.bash
   expect_output '2010-02-18T00:00:00'
 }
 
+@test "fn: sparql.cast_as_datetime_from_date('-4713-11-24Z'::sparql.zoneddate)" {
+  expect_output '-4713-11-24T00:00:00Z'
+}
+
+@test "fn: sparql.cast_as_datetime_from_date('-4713-11-24+01:00'::sparql.zoneddate)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_datetime_from_date('294276-12-31-14:00'::sparql.zoneddate)" {
+  expect_output '294276-12-31T00:00:00-14:00'
+}
+
+@test "fn: sparql.cast_as_datetime_from_date('294277-01-01Z'::sparql.zoneddate)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_datetime_from_date('infinity'::date, 0::int4)" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.cast_as_datetime_from_string(' 0000-02-18T00:00:00Z '::varchar)" {
   expect_output '0000-02-18T00:00:00Z'
 }
@@ -352,6 +372,26 @@ load ../psql_tests.bash
 
 @test "fn: sparql.cast_as_plain_datetime_from_date('2010-02-18'::date, '-2147483648'::int4)" {
   expect_output '2010-02-18 00:00:00+00'
+}
+
+@test "fn: sparql.cast_as_plain_datetime_from_date('4714-11-24 BC'::date, 0::int4)" {
+  expect_output '4714-11-24 00:00:00+00 BC'
+}
+
+@test "fn: sparql.cast_as_plain_datetime_from_date('4714-11-24 BC'::date, (60*60)::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_plain_datetime_from_date('294276-12-31'::date, (-14*60*60)::int4)" {
+  expect_output '294276-12-31 14:00:00+00'
+}
+
+@test "fn: sparql.cast_as_plain_datetime_from_date('294277-01-01'::date, 0::int4)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.cast_as_plain_datetime_from_date('infinity'::date, 0::int4)" {
+  expect_output '(null)'
 }
 
 @test "fn: sparql.cast_as_plain_datetime_from_rdfbox(sparql.rdfbox_create_from_date('0001-02-18 BC'::date, 0::int4))" {

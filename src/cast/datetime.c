@@ -19,13 +19,38 @@
 
 
 /**
- * Casts an xsd:date to xsd:dateTime: the midnight that begins the date in its time zone, with the same time zone.
+ * Returns the instant of the midnight that begins a date in its time zone; the midnight of a date without one is
+ * taken as UTC, the way a zoneddatetime without a time zone holds its date and time.
  *
- * The midnight is computed by date_timestamptz(), which takes it in the TimeZone of the session.
+ * The instant is computed from the day count of the date alone, so it does not depend on the TimeZone of the
+ * session.
+ *
+ * @param date the date
+ * @return the instant; an infinite date or an instant out of range raises an error with the code
+ *         `ERRCODE_DATETIME_VALUE_OUT_OF_RANGE`
+ */
+static TimestampTz date_begin(ZonedDate date)
+{
+    Timestamp timestamp = DatumGetTimestamp(DirectFunctionCall1(date_timestamp, DateADTGetDatum(date.value)));
+
+    if(TIMESTAMP_NOT_FINITE(timestamp))
+        ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("xsd:date out of range")));
+
+    TimestampTz value = date.zone != ZONE_UNSPECIFIED ? timestamp - date.zone * USECS_PER_SEC : timestamp;
+
+    if(!IS_VALID_TIMESTAMP(value))
+        ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE), errmsg("xsd:dateTime out of range")));
+
+    return value;
+}
+
+
+/**
+ * Casts an xsd:date to xsd:dateTime: the midnight that begins the date in its time zone, with the same time zone.
  *
  * @param fcinfo the zoneddate to cast, or the date and the int4 time zone offset in seconds (#ZONE_UNSPECIFIED for
  *               none) of the xsd:date
- * @return the palloc'd zoneddatetime, NULL if the instant is out of range
+ * @return the palloc'd zoneddatetime, NULL if the date is infinite or the instant is out of range
  */
 PG_FUNCTION_INFO_V1(cast_as_datetime_from_date);
 Datum cast_as_datetime_from_date(PG_FUNCTION_ARGS)
@@ -35,19 +60,9 @@ Datum cast_as_datetime_from_date(PG_FUNCTION_ARGS)
 
     PG_TRY_EX();
     {
-        TimestampTz timestamp = DatumGetTimestampTz(DirectFunctionCall1(date_timestamptz, DateADTGetDatum(date.value)));
-
         ZonedDateTime *datetime = palloc0(sizeof(ZonedDateTime));
-        datetime->value = timestamp;
+        datetime->value = date_begin(date);
         datetime->zone = date.zone;
-
-        if(date.zone != ZONE_UNSPECIFIED)
-        {
-            datetime->value -= date.zone * USECS_PER_SEC;
-
-            if((timestamp > 0 && date.zone < 0 && datetime->value < 0) || (timestamp < 0 && date.zone > 0 && datetime->value > 0))
-                ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE)));
-        }
 
         result = NULLABLE_DATUM(ZonedDateTimeGetDatum(datetime));
     }
@@ -125,10 +140,8 @@ Datum cast_as_datetime_from_rdfbox(PG_FUNCTION_ARGS)
 /**
  * Casts an xsd:date to the instant of the midnight that begins the date in its time zone, without the time zone.
  *
- * The midnight is computed by date_timestamptz(), which takes it in the TimeZone of the session.
- *
  * @param fcinfo the date and the int4 time zone offset in seconds (#ZONE_UNSPECIFIED for none) of the xsd:date
- * @return the timestamptz, NULL if the instant is out of range
+ * @return the timestamptz, NULL if the date is infinite or the instant is out of range
  */
 PG_FUNCTION_INFO_V1(cast_as_plain_datetime_from_date);
 Datum cast_as_plain_datetime_from_date(PG_FUNCTION_ARGS)
@@ -138,19 +151,7 @@ Datum cast_as_plain_datetime_from_date(PG_FUNCTION_ARGS)
 
     PG_TRY_EX();
     {
-        TimestampTz timestamp = DatumGetTimestampTz(DirectFunctionCall1(date_timestamptz, DateADTGetDatum(date.value)));
-
-        TimestampTz datetime = timestamp;
-
-        if(date.zone != ZONE_UNSPECIFIED)
-        {
-            datetime -= date.zone * USECS_PER_SEC;
-
-            if((timestamp > 0 && date.zone < 0 && datetime < 0) || (timestamp < 0 && date.zone > 0 && datetime > 0))
-                ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE)));
-        }
-
-        result = NULLABLE_DATUM(TimestampTzGetDatum(datetime));
+        result = NULLABLE_DATUM(TimestampTzGetDatum(date_begin(date)));
     }
     PG_CATCH_EX();
     {
