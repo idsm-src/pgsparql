@@ -1,12 +1,11 @@
 /**
  * @file
  * The numeric type promotion of a boxed value: the functions `rdfbox_promote_to_<type>()` take the value of a numeric
- * rdfbox in the SQL type of a numeric datatype, if the datatype of the box is that datatype or another one that the
- * translator promotes to it.
- *
- * The targets of type promotion (xsd:short, xsd:int, xsd:long, xsd:integer, xsd:decimal, xsd:float and xsd:double)
- * accept every numeric datatype from #XSD_BYTE up to them, which are exactly the datatypes whose values their SQL types
- * represent (see ::RdfType); the other targets accept only themselves and the datatypes derived from them.
+ * rdfbox in the SQL type of a numeric datatype, if the datatype of the box is that datatype or one that the function
+ * conversion rules of XPath accept for it: a datatype derived from it by restriction, or, for xsd:float and
+ * xsd:double, a datatype XPath promotes to it (xsd:decimal and the datatypes derived from it to both, xsd:float to
+ * xsd:double). The translator calls them for the arguments of extension functions, for arithmetic and for comparisons,
+ * which it evaluates in a common datatype of the operands.
  */
 #include <postgres.h>
 #include <fmgr.h>
@@ -55,17 +54,22 @@ Datum rdfbox_promote_to_unsignedbyte(PG_FUNCTION_ARGS)
  * Promotes a boxed number to xsd:short, held by an int2.
  *
  * @param fcinfo the rdfbox
- * @return the value as an int2 if the datatype of the box is xsd:byte, xsd:unsignedByte or xsd:short, NULL otherwise
+ * @return the value as an int2 if the datatype of the box is xsd:short or xsd:byte, NULL otherwise
  */
 PG_FUNCTION_INFO_V1(rdfbox_promote_to_short);
 Datum rdfbox_promote_to_short(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
 
-    if(box->type < XSD_BYTE || box->type > XSD_SHORT)
-        PG_RETURN_NULL();
+    switch(box->type)
+    {
+        case XSD_BYTE:
+        case XSD_SHORT:
+            PG_RETURN_INT16(RdfBoxGetInt16(box));
 
-    PG_RETURN_INT16(RdfBoxGetInt16(box));
+        default:
+            PG_RETURN_NULL();
+    }
 }
 
 
@@ -96,19 +100,23 @@ Datum rdfbox_promote_to_unsignedshort(PG_FUNCTION_ARGS)
  * Promotes a boxed number to xsd:int, held by an int4.
  *
  * @param fcinfo the rdfbox
- * @return the value as an int4 if the datatype of the box is xsd:byte, xsd:unsignedByte, xsd:short, xsd:unsignedShort
- *         or xsd:int, NULL otherwise
+ * @return the value as an int4 if the datatype of the box is xsd:int, xsd:short or xsd:byte, NULL otherwise
  */
 PG_FUNCTION_INFO_V1(rdfbox_promote_to_int);
 Datum rdfbox_promote_to_int(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
 
-    if(box->type < XSD_BYTE || box->type > XSD_INT)
-        PG_RETURN_NULL();
+    switch(box->type)
+    {
+        case XSD_BYTE:
+        case XSD_SHORT:
+        case XSD_INT:
+            PG_RETURN_INT32(rdfbox_get_numeric_as_int(box));
 
-    int32 result = rdfbox_get_numeric_as_int(box);
-    PG_RETURN_INT32(result);
+        default:
+            PG_RETURN_NULL();
+    }
 }
 
 
@@ -141,19 +149,24 @@ Datum rdfbox_promote_to_unsignedint(PG_FUNCTION_ARGS)
  * Promotes a boxed number to xsd:long, held by an int8.
  *
  * @param fcinfo the rdfbox
- * @return the value as an int8 if the datatype of the box is xsd:byte, xsd:unsignedByte, xsd:short, xsd:unsignedShort,
- *         xsd:int, xsd:unsignedInt or xsd:long, NULL otherwise
+ * @return the value as an int8 if the datatype of the box is xsd:long, xsd:int, xsd:short or xsd:byte, NULL otherwise
  */
 PG_FUNCTION_INFO_V1(rdfbox_promote_to_long);
 Datum rdfbox_promote_to_long(PG_FUNCTION_ARGS)
 {
     RdfBox *box = PG_GETARG_RDFBOX_P(0);
 
-    if(box->type < XSD_BYTE || box->type > XSD_LONG)
-        PG_RETURN_NULL();
+    switch(box->type)
+    {
+        case XSD_BYTE:
+        case XSD_SHORT:
+        case XSD_INT:
+        case XSD_LONG:
+            PG_RETURN_INT64(rdfbox_get_numeric_as_long(box));
 
-    int64 result = rdfbox_get_numeric_as_long(box);
-    PG_RETURN_INT64(result);
+        default:
+            PG_RETURN_NULL();
+    }
 }
 
 

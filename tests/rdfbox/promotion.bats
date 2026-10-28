@@ -473,7 +473,7 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.rdfbox_promote_to_short(sparql.rdfbox_create_from_unsignedbyte('255'::int2))" {
-  expect_output '255'
+  expect_output '(null)'
 }
 
 @test "fn: sparql.rdfbox_promote_to_short(sparql.rdfbox_create_from_unsignedshort('1'::int4))" {
@@ -493,11 +493,11 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.rdfbox_promote_to_int(sparql.rdfbox_create_from_unsignedbyte('255'::int2))" {
-  expect_output '255'
+  expect_output '(null)'
 }
 
 @test "fn: sparql.rdfbox_promote_to_int(sparql.rdfbox_create_from_unsignedshort('65535'::int4))" {
-  expect_output '65535'
+  expect_output '(null)'
 }
 
 @test "fn: sparql.rdfbox_promote_to_int(sparql.rdfbox_create_from_unsignedint('1'::int8))" {
@@ -509,11 +509,11 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.rdfbox_promote_to_long(sparql.rdfbox_create_from_unsignedshort('65535'::int4))" {
-  expect_output '65535'
+  expect_output '(null)'
 }
 
 @test "fn: sparql.rdfbox_promote_to_long(sparql.rdfbox_create_from_unsignedint('4294967295'::int8))" {
-  expect_output '4294967295'
+  expect_output '(null)'
 }
 
 @test "fn: sparql.rdfbox_promote_to_long(sparql.rdfbox_create_from_unsignedlong('1'::decimal))" {
