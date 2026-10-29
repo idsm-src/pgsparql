@@ -16,6 +16,8 @@
 #if PG_VERSION_NUM >= 160000
 #include <varatt.h>
 #endif
+#include <utils/float.h>
+#include <utils/fmgrprotos.h>
 #include <utils/numeric.h>
 #include "types/date.h"
 #include "types/datetime.h"
@@ -1019,18 +1021,39 @@ static inline RdfBox *GetUnsignedLongRdfBox(uint64 value)
 
 
 /**
+ * Copies a numeric with the least scale that holds its value, which is how a box keeps the value of an xsd:integer, of
+ * a type derived from it or of an xsd:decimal.
+ *
+ * A numeric keeps the scale it was written or computed with, such as 1 for 1.0 and 2 for 1.00. The canonical lexical
+ * form of a box does not show the scale and the operator `@=` takes such boxes as identical, so they have to be built
+ * identically: the default B-tree operator class of rdfbox declares that identical boxes have identical
+ * representations, and numeric_div() chooses the scale of a quotient by the scales of its operands.
+ *
+ * @param value the value, a detoasted numeric
+ * @return the palloc'd numeric
+ */
+static inline Numeric canonical_numeric(Numeric value)
+{
+    return DatumGetNumeric(DirectFunctionCall1(numeric_trim_scale, NumericGetDatum(value)));
+}
+
+
+/**
  * Builds a box of an xsd:integer without a lexical form.
  *
- * @param value the value, a detoasted integral numeric, which is copied; it is not checked
+ * @param value the value, a detoasted integral numeric, which is copied with the least scale that holds it; it is not
+ *              checked
  * @return the palloc'd box
  */
 static inline RdfBox *GetIntegerRdfBox(Numeric value)
 {
-    int size = VARSIZE(value);
+    Numeric canonical = canonical_numeric(value);
+    int size = VARSIZE(canonical);
     RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + size);
     SET_VARSIZE(result, sizeof(RdfBoxVarlena) + size);
     result->header.type = XSD_INTEGER;
-    memcpy(result->value, value, size);
+    memcpy(result->value, canonical, size);
+    pfree(canonical);
     return (RdfBox *) result;
 }
 
@@ -1038,16 +1061,19 @@ static inline RdfBox *GetIntegerRdfBox(Numeric value)
 /**
  * Builds a box of an xsd:nonPositiveInteger without a lexical form.
  *
- * @param value the value, a detoasted integral numeric not greater than 0, which is copied; it is not checked
+ * @param value the value, a detoasted integral numeric not greater than 0, which is copied with the least scale that
+ *              holds it; it is not checked
  * @return the palloc'd box
  */
 static inline RdfBox *GetNonPositiveIntegerRdfBox(Numeric value)
 {
-    int size = VARSIZE(value);
+    Numeric canonical = canonical_numeric(value);
+    int size = VARSIZE(canonical);
     RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + size);
     SET_VARSIZE(result, sizeof(RdfBoxVarlena) + size);
     result->header.type = XSD_NONPOSITIVEINTEGER;
-    memcpy(result->value, value, size);
+    memcpy(result->value, canonical, size);
+    pfree(canonical);
     return (RdfBox *) result;
 }
 
@@ -1055,16 +1081,19 @@ static inline RdfBox *GetNonPositiveIntegerRdfBox(Numeric value)
 /**
  * Builds a box of an xsd:negativeInteger without a lexical form.
  *
- * @param value the value, a detoasted integral numeric less than 0, which is copied; it is not checked
+ * @param value the value, a detoasted integral numeric less than 0, which is copied with the least scale that holds it;
+ *              it is not checked
  * @return the palloc'd box
  */
 static inline RdfBox *GetNegativeIntegerRdfBox(Numeric value)
 {
-    int size = VARSIZE(value);
+    Numeric canonical = canonical_numeric(value);
+    int size = VARSIZE(canonical);
     RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + size);
     SET_VARSIZE(result, sizeof(RdfBoxVarlena) + size);
     result->header.type = XSD_NEGATIVEINTEGER;
-    memcpy(result->value, value, size);
+    memcpy(result->value, canonical, size);
+    pfree(canonical);
     return (RdfBox *) result;
 }
 
@@ -1072,16 +1101,19 @@ static inline RdfBox *GetNegativeIntegerRdfBox(Numeric value)
 /**
  * Builds a box of an xsd:nonNegativeInteger without a lexical form.
  *
- * @param value the value, a detoasted integral numeric not less than 0, which is copied; it is not checked
+ * @param value the value, a detoasted integral numeric not less than 0, which is copied with the least scale that holds
+ *              it; it is not checked
  * @return the palloc'd box
  */
 static inline RdfBox *GetNonNegativeIntegerRdfBox(Numeric value)
 {
-    int size = VARSIZE(value);
+    Numeric canonical = canonical_numeric(value);
+    int size = VARSIZE(canonical);
     RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + size);
     SET_VARSIZE(result, sizeof(RdfBoxVarlena) + size);
     result->header.type = XSD_NONNEGATIVEINTEGER;
-    memcpy(result->value, value, size);
+    memcpy(result->value, canonical, size);
+    pfree(canonical);
     return (RdfBox *) result;
 }
 
@@ -1089,16 +1121,19 @@ static inline RdfBox *GetNonNegativeIntegerRdfBox(Numeric value)
 /**
  * Builds a box of an xsd:positiveInteger without a lexical form.
  *
- * @param value the value, a detoasted integral numeric greater than 0, which is copied; it is not checked
+ * @param value the value, a detoasted integral numeric greater than 0, which is copied with the least scale that holds
+ *              it; it is not checked
  * @return the palloc'd box
  */
 static inline RdfBox *GetPositiveIntegerRdfBox(Numeric value)
 {
-    int size = VARSIZE(value);
+    Numeric canonical = canonical_numeric(value);
+    int size = VARSIZE(canonical);
     RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + size);
     SET_VARSIZE(result, sizeof(RdfBoxVarlena) + size);
     result->header.type = XSD_POSITIVEINTEGER;
-    memcpy(result->value, value, size);
+    memcpy(result->value, canonical, size);
+    pfree(canonical);
     return (RdfBox *) result;
 }
 
@@ -1106,16 +1141,18 @@ static inline RdfBox *GetPositiveIntegerRdfBox(Numeric value)
 /**
  * Builds a box of an xsd:decimal without a lexical form.
  *
- * @param value the value, a detoasted numeric, which is copied
+ * @param value the value, a detoasted numeric, which is copied with the least scale that holds it
  * @return the palloc'd box
  */
 static inline RdfBox *GetDecimalRdfBox(Numeric value)
 {
-    int size = VARSIZE(value);
+    Numeric canonical = canonical_numeric(value);
+    int size = VARSIZE(canonical);
     RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + size);
     SET_VARSIZE(result, sizeof(RdfBoxVarlena) + size);
     result->header.type = XSD_DECIMAL;
-    memcpy(result->value, value, size);
+    memcpy(result->value, canonical, size);
+    pfree(canonical);
     return (RdfBox *) result;
 }
 
@@ -1123,7 +1160,7 @@ static inline RdfBox *GetDecimalRdfBox(Numeric value)
 /**
  * Builds a box of an xsd:float without a lexical form.
  *
- * @param value the value
+ * @param value the value; a NaN is stored as the NaN of get_float4_nan(), so that all NaNs are built identically
  * @return the palloc'd box
  */
 static inline RdfBox *GetFloatRdfBox(float4 value)
@@ -1131,7 +1168,7 @@ static inline RdfBox *GetFloatRdfBox(float4 value)
     RdfBoxFloat4 *result = (RdfBoxFloat4 *) palloc0(sizeof(RdfBoxFloat4));
     SET_VARSIZE(result, sizeof(RdfBoxFloat4));
     result->header.type = XSD_FLOAT;
-    result->value = value;
+    result->value = isnan(value) ? get_float4_nan() : value;
     return (RdfBox *) result;
 }
 
@@ -1139,7 +1176,7 @@ static inline RdfBox *GetFloatRdfBox(float4 value)
 /**
  * Builds a box of an xsd:double without a lexical form.
  *
- * @param value the value
+ * @param value the value; a NaN is stored as the NaN of get_float8_nan(), so that all NaNs are built identically
  * @return the palloc'd box
  */
 static inline RdfBox *GetDoubleRdfBox(float8 value)
@@ -1147,7 +1184,7 @@ static inline RdfBox *GetDoubleRdfBox(float8 value)
     RdfBoxFloat8 *result = (RdfBoxFloat8 *) palloc0(sizeof(RdfBoxFloat8));
     SET_VARSIZE(result, sizeof(RdfBoxFloat8));
     result->header.type = XSD_DOUBLE;
-    result->value = value;
+    result->value = isnan(value) ? get_float8_nan() : value;
     return (RdfBox *) result;
 }
 
@@ -1560,19 +1597,22 @@ static inline RdfBox *GetUnsignedLongRdfBoxWithLexical(uint64 value, const char 
 /**
  * Builds a box of an xsd:integer that keeps a lexical form.
  *
- * @param value the value, a detoasted integral numeric, which is copied; it is not checked
+ * @param value the value, a detoasted integral numeric, which is copied with the least scale that holds it; it is not
+ *              checked
  * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
  * @param size the length of the lexical form in bytes
  * @return the palloc'd box
  */
 static inline RdfBox *GetIntegerRdfBoxWithLexical(Numeric value, const char *data, int size)
 {
-    int nsize = VARSIZE(value);
+    Numeric canonical = canonical_numeric(value);
+    int nsize = VARSIZE(canonical);
     RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + align_size(nsize) + VARHDRSZ + size);
     SET_VARSIZE(result, sizeof(RdfBoxVarlena) + align_size(nsize) + VARHDRSZ + size);
     result->header.type = XSD_INTEGER;
     result->header.lexical = true;
-    memcpy(result->value, value, nsize);
+    memcpy(result->value, canonical, nsize);
+    pfree(canonical);
     SET_VARSIZE(result->value + align_size(nsize), size + VARHDRSZ);
     memcpy(VARDATA(result->value + align_size(nsize)), data, size);
     return (RdfBox *) result;
@@ -1582,19 +1622,22 @@ static inline RdfBox *GetIntegerRdfBoxWithLexical(Numeric value, const char *dat
 /**
  * Builds a box of an xsd:nonPositiveInteger that keeps a lexical form.
  *
- * @param value the value, a detoasted integral numeric not greater than 0, which is copied; it is not checked
+ * @param value the value, a detoasted integral numeric not greater than 0, which is copied with the least scale that
+ *              holds it; it is not checked
  * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
  * @param size the length of the lexical form in bytes
  * @return the palloc'd box
  */
 static inline RdfBox *GetNonPositiveIntegerRdfBoxWithLexical(Numeric value, const char *data, int size)
 {
-    int nsize = VARSIZE(value);
+    Numeric canonical = canonical_numeric(value);
+    int nsize = VARSIZE(canonical);
     RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + align_size(nsize) + VARHDRSZ + size);
     SET_VARSIZE(result, sizeof(RdfBoxVarlena) + align_size(nsize) + VARHDRSZ + size);
     result->header.type = XSD_NONPOSITIVEINTEGER;
     result->header.lexical = true;
-    memcpy(result->value, value, nsize);
+    memcpy(result->value, canonical, nsize);
+    pfree(canonical);
     SET_VARSIZE(result->value + align_size(nsize), size + VARHDRSZ);
     memcpy(VARDATA(result->value + align_size(nsize)), data, size);
     return (RdfBox *) result;
@@ -1604,19 +1647,22 @@ static inline RdfBox *GetNonPositiveIntegerRdfBoxWithLexical(Numeric value, cons
 /**
  * Builds a box of an xsd:negativeInteger that keeps a lexical form.
  *
- * @param value the value, a detoasted integral numeric less than 0, which is copied; it is not checked
+ * @param value the value, a detoasted integral numeric less than 0, which is copied with the least scale that holds it;
+ *              it is not checked
  * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
  * @param size the length of the lexical form in bytes
  * @return the palloc'd box
  */
 static inline RdfBox *GetNegativeIntegerRdfBoxWithLexical(Numeric value, const char *data, int size)
 {
-    int nsize = VARSIZE(value);
+    Numeric canonical = canonical_numeric(value);
+    int nsize = VARSIZE(canonical);
     RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + align_size(nsize) + VARHDRSZ + size);
     SET_VARSIZE(result, sizeof(RdfBoxVarlena) + align_size(nsize) + VARHDRSZ + size);
     result->header.type = XSD_NEGATIVEINTEGER;
     result->header.lexical = true;
-    memcpy(result->value, value, nsize);
+    memcpy(result->value, canonical, nsize);
+    pfree(canonical);
     SET_VARSIZE(result->value + align_size(nsize), size + VARHDRSZ);
     memcpy(VARDATA(result->value + align_size(nsize)), data, size);
     return (RdfBox *) result;
@@ -1626,19 +1672,22 @@ static inline RdfBox *GetNegativeIntegerRdfBoxWithLexical(Numeric value, const c
 /**
  * Builds a box of an xsd:nonNegativeInteger that keeps a lexical form.
  *
- * @param value the value, a detoasted integral numeric not less than 0, which is copied; it is not checked
+ * @param value the value, a detoasted integral numeric not less than 0, which is copied with the least scale that holds
+ *              it; it is not checked
  * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
  * @param size the length of the lexical form in bytes
  * @return the palloc'd box
  */
 static inline RdfBox *GetNonNegativeIntegerRdfBoxWithLexical(Numeric value, const char *data, int size)
 {
-    int nsize = VARSIZE(value);
+    Numeric canonical = canonical_numeric(value);
+    int nsize = VARSIZE(canonical);
     RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + align_size(nsize) + VARHDRSZ + size);
     SET_VARSIZE(result, sizeof(RdfBoxVarlena) + align_size(nsize) + VARHDRSZ + size);
     result->header.type = XSD_NONNEGATIVEINTEGER;
     result->header.lexical = true;
-    memcpy(result->value, value, nsize);
+    memcpy(result->value, canonical, nsize);
+    pfree(canonical);
     SET_VARSIZE(result->value + align_size(nsize), size + VARHDRSZ);
     memcpy(VARDATA(result->value + align_size(nsize)), data, size);
     return (RdfBox *) result;
@@ -1648,19 +1697,22 @@ static inline RdfBox *GetNonNegativeIntegerRdfBoxWithLexical(Numeric value, cons
 /**
  * Builds a box of an xsd:positiveInteger that keeps a lexical form.
  *
- * @param value the value, a detoasted integral numeric greater than 0, which is copied; it is not checked
+ * @param value the value, a detoasted integral numeric greater than 0, which is copied with the least scale that holds
+ *              it; it is not checked
  * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
  * @param size the length of the lexical form in bytes
  * @return the palloc'd box
  */
 static inline RdfBox *GetPositiveIntegerRdfBoxWithLexical(Numeric value, const char *data, int size)
 {
-    int nsize = VARSIZE(value);
+    Numeric canonical = canonical_numeric(value);
+    int nsize = VARSIZE(canonical);
     RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + align_size(nsize) + VARHDRSZ + size);
     SET_VARSIZE(result, sizeof(RdfBoxVarlena) + align_size(nsize) + VARHDRSZ + size);
     result->header.type = XSD_POSITIVEINTEGER;
     result->header.lexical = true;
-    memcpy(result->value, value, nsize);
+    memcpy(result->value, canonical, nsize);
+    pfree(canonical);
     SET_VARSIZE(result->value + align_size(nsize), size + VARHDRSZ);
     memcpy(VARDATA(result->value + align_size(nsize)), data, size);
     return (RdfBox *) result;
@@ -1670,19 +1722,21 @@ static inline RdfBox *GetPositiveIntegerRdfBoxWithLexical(Numeric value, const c
 /**
  * Builds a box of an xsd:decimal that keeps a lexical form.
  *
- * @param value the value, a detoasted numeric, which is copied
+ * @param value the value, a detoasted numeric, which is copied with the least scale that holds it
  * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
  * @param size the length of the lexical form in bytes
  * @return the palloc'd box
  */
 static inline RdfBox *GetDecimalRdfBoxWithLexical(Numeric value, const char *data, int size)
 {
-    int nsize = VARSIZE(value);
+    Numeric canonical = canonical_numeric(value);
+    int nsize = VARSIZE(canonical);
     RdfBoxVarlena *result = (RdfBoxVarlena *) palloc0(sizeof(RdfBoxVarlena) + align_size(nsize) + VARHDRSZ + size);
     SET_VARSIZE(result, sizeof(RdfBoxVarlena) + align_size(nsize) + VARHDRSZ + size);
     result->header.type = XSD_DECIMAL;
     result->header.lexical = true;
-    memcpy(result->value, value, nsize);
+    memcpy(result->value, canonical, nsize);
+    pfree(canonical);
     SET_VARSIZE(result->value + align_size(nsize), size + VARHDRSZ);
     memcpy(VARDATA(result->value + align_size(nsize)), data, size);
     return (RdfBox *) result;
@@ -1692,7 +1746,7 @@ static inline RdfBox *GetDecimalRdfBoxWithLexical(Numeric value, const char *dat
 /**
  * Builds a box of an xsd:float that keeps a lexical form.
  *
- * @param value the value
+ * @param value the value; a NaN is stored as the NaN of get_float4_nan(), so that all NaNs are built identically
  * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
  * @param size the length of the lexical form in bytes
  * @return the palloc'd box
@@ -1703,7 +1757,7 @@ static inline RdfBox *GetFloatRdfBoxWithLexical(float4 value, const char *data, 
     SET_VARSIZE(result, sizeof(RdfBoxFloat4WithLexical) + VARHDRSZ + size);
     result->box.header.type = XSD_FLOAT;
     result->box.header.lexical = true;
-    result->box.value = value;
+    result->box.value = isnan(value) ? get_float4_nan() : value;
     SET_VARSIZE(result->lexical, size + VARHDRSZ);
     memcpy(VARDATA(result->lexical), data, size);
     return (RdfBox *) result;
@@ -1713,7 +1767,7 @@ static inline RdfBox *GetFloatRdfBoxWithLexical(float4 value, const char *data, 
 /**
  * Builds a box of an xsd:double that keeps a lexical form.
  *
- * @param value the value
+ * @param value the value; a NaN is stored as the NaN of get_float8_nan(), so that all NaNs are built identically
  * @param data the lexical form, not necessarily terminated by a zero byte; it is not checked to denote the value
  * @param size the length of the lexical form in bytes
  * @return the palloc'd box
@@ -1724,7 +1778,7 @@ static inline RdfBox *GetDoubleRdfBoxWithLexical(float8 value, const char *data,
     SET_VARSIZE(result, sizeof(RdfBoxFloat8WithLexical) + VARHDRSZ + size);
     result->box.header.type = XSD_DOUBLE;
     result->box.header.lexical = true;
-    result->box.value = value;
+    result->box.value = isnan(value) ? get_float8_nan() : value;
     SET_VARSIZE(result->lexical, size + VARHDRSZ);
     memcpy(VARDATA(result->lexical), data, size);
     return (RdfBox *) result;

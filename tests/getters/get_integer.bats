@@ -78,6 +78,14 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.rdfbox_get_integer(sparql.rdfbox_create_from_integer('5.0'::decimal))" {
+  expect_output '5'
+}
+
+@test "fn: sparql.rdfbox_get_integer(sparql.rdfbox_create_from_integer_with_lexical('5.0'::decimal, ' 5 '::varchar))" {
+  expect_output '5'
+}
+
 @test "fn: sparql.rdfbox_get_integer(sparql.rdfbox_create_from_boolean('t'::bool))" {
   expect_output '(null)'
 }

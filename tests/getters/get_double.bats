@@ -250,6 +250,18 @@ load ../psql_tests.bash
   expect_output 'NaN'
 }
 
+@test "fn: float8send(sparql.rdfbox_get_double(sparql.rdfbox_create_from_double('-NaN'::float8)))" {
+  expect_output '\x7ff8000000000000'
+}
+
+@test "fn: float8send(sparql.rdfbox_get_double(sparql.rdfbox_create_from_double('Infinity'::float8 - 'Infinity'::float8)))" {
+  expect_output '\x7ff8000000000000'
+}
+
+@test "fn: float8send(sparql.rdfbox_get_double(sparql.rdfbox_create_from_double_with_lexical('-NaN'::float8, ' NaN '::varchar)))" {
+  expect_output '\x7ff8000000000000'
+}
+
 @test "fn: sparql.rdfbox_get_double(sparql.rdfbox_create_from_double_with_lexical('nan'::float8, ' NaN '::varchar), 'true'::bool)" {
   expect_output 'NaN'
 }

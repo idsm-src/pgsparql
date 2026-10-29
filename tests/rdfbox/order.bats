@@ -1877,6 +1877,20 @@ load ../psql_tests.bash
 
 
 ####
+# identical terms in identical representations
+#
+
+@test "oc: (with t(x) as (select unnest(array[sparql.rdfbox_create_from_decimal('1'::decimal), sparql.rdfbox_create_from_decimal('1.0'::decimal), sparql.rdfbox_create_from_decimal('1.00'::decimal), '1.0'::sparql.rdfbox, sparql.rdfbox_create_from_decimal('1'::decimal) operator(sparql./) sparql.rdfbox_create_from_decimal('4'::decimal), '0.25'::sparql.rdfbox, sparql.rdfbox_create_from_integer('5.0'::decimal), '5'::sparql.rdfbox, sparql.rdfbox_create_from_decimal_with_lexical('1.50'::decimal, '1.50'::varchar), sparql.rdfbox_create_from_decimal_with_lexical('1.5'::decimal, '1.50'::varchar), '\"1.50\"^^<http://www.w3.org/2001/XMLSchema#decimal>'::sparql.rdfbox, sparql.rdfbox_create_from_double('NaN'::float8), sparql.rdfbox_create_from_double('-NaN'::float8), sparql.rdfbox_create_from_double('Infinity'::float8) operator(sparql.-) sparql.rdfbox_create_from_double('Infinity'::float8), sparql.rdfbox_create_from_float('NaN'::float4), sparql.rdfbox_create_from_float('-NaN'::float4)])) select bool_and(sparql.rdfbox_send(a.x) = sparql.rdfbox_send(b.x)) || ' ' || count(*) from t a, t b where a.x operator(sparql.@=) b.x)" {
+  expect_output 'true 46'
+}
+
+@test "oc: (select amproc from pg_amproc where amprocfamily = (select opcfamily from pg_opclass where opcname = 'rdfbox' and opcmethod = (select oid from pg_am where amname = 'btree')) and amprocnum = 4)" {
+  expect_output 'btequalimage'
+}
+
+
+
+####
 # lexical forms
 #
 

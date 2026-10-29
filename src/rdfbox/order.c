@@ -35,6 +35,15 @@
  * Triple terms are compared by their subjects, then by their predicates and then by their objects, each with
  * this very order. SPARQL leaves the relative order of two triple terms undefined and allows an implementation to
  * define it, which is what the operator class needs anyway.
+ *
+ * The terms that `@=` takes as identical are also built identically (see rdfbox/rdfbox.h): a box keeps the value of an
+ * xsd:integer or of an xsd:decimal with the least scale that holds it and every NaN in a single form, so that the
+ * xsd:decimal values 1.0 and 1.00 make the same box. The B-tree operator class therefore declares by btequalimage()
+ * that its equality implies equal images, which lets PostgreSQL deduplicate the keys of B-tree indexes. User literals
+ * whose values their boxed type takes as equal are identical even if the type prints the values differently, as
+ * numeric prints 1.0 and 1.00, so an index-only scan of a deduplicated index may return one of them for the other; the
+ * equality of a type that holds the values of user literals should tell apart all the values that it prints
+ * differently.
  */
 #include <postgres.h>
 #include <utils/builtins.h>

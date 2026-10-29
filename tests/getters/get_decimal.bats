@@ -78,6 +78,22 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.rdfbox_get_decimal(sparql.rdfbox_create_from_decimal('1.50'::decimal))" {
+  expect_output '1.5'
+}
+
+@test "fn: sparql.rdfbox_get_decimal(sparql.rdfbox_create_from_decimal_with_lexical('1.50'::decimal, ' 1.50 '::varchar))" {
+  expect_output '1.5'
+}
+
+@test "fn: sparql.rdfbox_get_decimal('\"1.50\"^^<http://www.w3.org/2001/XMLSchema#decimal>'::sparql.rdfbox)" {
+  expect_output '1.5'
+}
+
+@test "fn: sparql.rdfbox_get_decimal(sparql.rdfbox_create_from_decimal('1'::decimal) operator(sparql./) sparql.rdfbox_create_from_decimal('4'::decimal))" {
+  expect_output '0.25'
+}
+
 @test "fn: sparql.rdfbox_get_decimal(sparql.rdfbox_create_from_boolean('t'::bool))" {
   expect_output '(null)'
 }

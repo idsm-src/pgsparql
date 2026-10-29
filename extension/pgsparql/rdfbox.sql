@@ -395,7 +395,8 @@ CREATE OPERATOR CLASS rdfbox DEFAULT FOR TYPE rdfbox USING btree AS
     OPERATOR   3   @=,
     OPERATOR   4   @>=,
     OPERATOR   5   @>,
-    FUNCTION   1   rdfbox_order_compare;
+    FUNCTION   1   rdfbox_order_compare,
+    FUNCTION   4   btequalimage(oid);
 
 CREATE OPERATOR CLASS rdfbox DEFAULT FOR TYPE rdfbox USING hash AS
     OPERATOR   1   @=,
