@@ -1490,6 +1490,14 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: length(sparql.iri_string('http://example.org/'::varchar, repeat('a', 100000)::varchar))" {
+  expect_output '100019'
+}
+
+@test "fn: sparql.iri_string('http://example.org/'::varchar, (repeat('a', 100000) || ' ')::varchar)" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.iri_rdfbox('https://base.org/basedir?basequery#basetag'::varchar, sparql.rdfbox_create_from_string('http://example.org/./dir'::varchar))" {
   expect_output 'http://example.org/dir'
 }

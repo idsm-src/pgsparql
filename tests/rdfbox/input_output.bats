@@ -46,6 +46,14 @@ load ../psql_tests.bash
   expect_error
 }
 
+@test "io: length(('\"chat\"@fr' || repeat('-abcde', 20000))::sparql.rdfbox::text)" {
+  expect_output '120009'
+}
+
+@test "io: ('\"chat\"@fr' || repeat('-abcde', 20000) || '-')::sparql.rdfbox" {
+  expect_error
+}
+
 @test "io: '\"xyz\"^^<http://example.org/ns/userDatatype>'::sparql.rdfbox" {
   expect_output '"xyz"^^<http://example.org/ns/userDatatype>'
 }
@@ -1033,6 +1041,18 @@ load ../psql_tests.bash
 }
 
 @test "io: E'<http://example.org/\n>'::sparql.rdfbox" {
+  expect_error
+}
+
+@test "io: length(('<http://example.org/' || repeat('a', 100000) || '>')::sparql.rdfbox::text)" {
+  expect_output '100021'
+}
+
+@test "io: length(('<http://example.org/?' || repeat('q', 100000) || '#' || repeat('f', 100000) || '>')::sparql.rdfbox::text)" {
+  expect_output '200023'
+}
+
+@test "io: ('<http://example.org/' || repeat('a', 100000) || ' >')::sparql.rdfbox" {
   expect_error
 }
 
