@@ -38,6 +38,7 @@ libpgsparql_la_SOURCES = \
     functions/logical.c \
     functions/rdfterm.c \
     functions/regex.c \
+    functions/regex.h \
     functions/string.c \
     rdfbox/arithmetic.c \
     rdfbox/comparison.c \

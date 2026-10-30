@@ -65,5 +65,23 @@
  */
 #include <postgres.h>
 #include <fmgr.h>
+#include <utils/guc.h>
+#include "functions/regex.h"
 
 PG_MODULE_MAGIC;
+
+
+#if PG_VERSION_NUM < 160000
+void _PG_init(void);
+#endif
+
+
+/**
+ * Initializes the module when PostgreSQL loads it: defines the settings of the module and reserves their prefix
+ * `pgsparql`.
+ */
+void _PG_init(void)
+{
+    regex_cache_init();
+    MarkGUCPrefixReserved("pgsparql");
+}
