@@ -1498,6 +1498,46 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.iri_string(''::varchar, 'http://example.org/a/../b?query#tag'::varchar)" {
+  expect_output 'http://example.org/b?query#tag'
+}
+
+@test "fn: sparql.iri_string(''::varchar, 'urn:example:a'::varchar)" {
+  expect_output 'urn:example:a'
+}
+
+@test "fn: sparql.iri_string(''::varchar, '//example.org/dir?query#tag'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.iri_string(''::varchar, '/dir/a/b'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.iri_string(''::varchar, 'dir/a/b'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.iri_string(''::varchar, '?query'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.iri_string(''::varchar, '#tag'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.iri_string(''::varchar, ''::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.iri_string('basedir/base'::varchar, 'dir/a/b'::varchar)" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.iri_string('basedir/base'::varchar, 'http://example.org/dir'::varchar)" {
+  expect_output 'http://example.org/dir'
+}
+
 @test "fn: sparql.iri_rdfbox('https://base.org/basedir?basequery#basetag'::varchar, sparql.rdfbox_create_from_string('http://example.org/./dir'::varchar))" {
   expect_output 'http://example.org/dir'
 }
@@ -1602,6 +1642,18 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.iri_rdfbox(''::varchar, sparql.rdfbox_create_from_string('http://example.org/a/../b'::varchar))" {
+  expect_output 'http://example.org/b'
+}
+
+@test "fn: sparql.iri_rdfbox(''::varchar, sparql.rdfbox_create_from_string('dir/a/b'::varchar))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.iri_rdfbox(''::varchar, sparql.rdfbox_create_from_iri('http://example.org/dir?query#tag'::varchar))" {
+  expect_output 'http://example.org/dir?query#tag'
+}
+
 
 
 ####
@@ -1620,6 +1672,10 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.uri_string(''::varchar, 'dir/a/b'::varchar)" {
+  expect_output '(null)'
+}
+
 @test "fn: sparql.uri_rdfbox('https://base.org/basedir/sub?basequery#basetag'::varchar, sparql.rdfbox_create_from_string('../dir/a/b'::varchar))" {
   expect_output 'https://base.org/dir/a/b'
 }
@@ -1629,6 +1685,10 @@ load ../psql_tests.bash
 }
 
 @test "fn: sparql.uri_rdfbox('https://base.org/basedir?basequery#basetag'::varchar, sparql.rdfbox_create_from_langstring('http://example.org/dir?query#tag'::varchar, 'en'))" {
+  expect_output '(null)'
+}
+
+@test "fn: sparql.uri_rdfbox(''::varchar, sparql.rdfbox_create_from_string('dir/a/b'::varchar))" {
   expect_output '(null)'
 }
 

@@ -735,10 +735,12 @@ Datum datatype_rdfbox(PG_FUNCTION_ARGS)
  * The SPARQL function IRI of a simple literal: resolves an IRI reference against a base IRI, as section 5.2 of
  * RFC 3986 does; also bound to `uri_string(varchar, varchar)`, the SPARQL function URI.
  *
- * The base IRI is taken as it is, without a check; its fragment is not used.
+ * The base IRI is taken as it is, without a check; its fragment is not used. An empty string stands for no base IRI:
+ * the function must result in an absolute IRI, so only a reference that has a scheme can be resolved then.
  *
  * @param fcinfo the varchar base IRI and the varchar IRI reference
- * @return the varchar resolved IRI, NULL if the IRI reference is not a valid one
+ * @return the varchar resolved IRI, NULL if the IRI reference is not a valid one or if the result has no scheme,
+ *         which is the case of a relative reference resolved against a base that has none
  */
 PG_FUNCTION_INFO_V1(iri_string);
 Datum iri_string(PG_FUNCTION_ARGS)
@@ -805,7 +807,9 @@ Datum iri_string(PG_FUNCTION_ARGS)
 
     result.fragment = iri.fragment;
 
-    result.scheme = result.scheme != NULL ? result.scheme : "";
+    if(result.scheme == NULL)
+        PG_RETURN_NULL();
+
     result.authority = result.authority != NULL ? result.authority : "";
     result.path = result.path != NULL ? result.path : "";
     result.query = result.query != NULL ? result.query : "";
@@ -823,7 +827,7 @@ Datum iri_string(PG_FUNCTION_ARGS)
  *
  * @param fcinfo the varchar base IRI and the rdfbox term
  * @return the varchar IRI: an xsd:string resolved against the base IRI by iri_string(), an IRI unchanged; NULL for
- *         any other term and for a string that is not a valid IRI reference
+ *         any other term and for a string that iri_string() resolves to no IRI
  */
 PG_FUNCTION_INFO_V1(iri_rdfbox);
 Datum iri_rdfbox(PG_FUNCTION_ARGS)
