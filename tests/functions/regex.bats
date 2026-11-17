@@ -130,6 +130,58 @@ load ../psql_tests.bash
   expect_output '(null)'
 }
 
+@test "fn: sparql.regex_string(E'a\n'::varchar, 'a\$'::varchar)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.regex_string(E'a\r'::varchar, 'a\$'::varchar)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.regex_string(E'a\n'::varchar, 'a\$'::varchar, 'm'::varchar)" {
+  expect_output 't'
+}
+
+@test "fn: sparql.regex_string(E'a\nb'::varchar, '^b\$'::varchar)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.regex_string(E'a\nb'::varchar, '^b\$'::varchar, 'm'::varchar)" {
+  expect_output 't'
+}
+
+@test "fn: sparql.regex_string(E'a\rb'::varchar, '^b\$'::varchar, 'm'::varchar)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.regex_string(E'a\r\nb'::varchar, '^a\$'::varchar, 'm'::varchar)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.regex_string(E'a\rb'::varchar, 'a.b'::varchar)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.regex_string(E'a\nb'::varchar, 'a.b'::varchar)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.regex_string(E'a\rb'::varchar, 'a.b'::varchar, 's'::varchar)" {
+  expect_output 't'
+}
+
+@test "fn: sparql.regex_string(E'a\nb'::varchar, 'a.b'::varchar, 's'::varchar)" {
+  expect_output 't'
+}
+
+@test "fn: sparql.regex_rdfbox(sparql.rdfbox_create_from_string(E'a\n'::varchar), 'a\$'::varchar)" {
+  expect_output 'f'
+}
+
+@test "fn: sparql.regex_rdfbox(sparql.rdfbox_create_from_string(E'a\rb'::varchar), 'a.b'::varchar)" {
+  expect_output 'f'
+}
+
 
 
 ####
@@ -302,4 +354,16 @@ load ../psql_tests.bash
 
 @test "fn: sparql.replace_rdfbox(sparql.rdfbox_create_from_tripleterm(sparql.rdfbox_create_from_iri('http://example.org/s'::varchar), 'http://example.org/p'::varchar, sparql.rdfbox_create_from_string('o'::varchar)), 'B.'::varchar, 'Z'::varchar, 'i'::varchar)" {
   expect_output '(null)'
+}
+
+@test "fn: sparql.replace_string(E'a\rb'::varchar, '.'::varchar, 'x'::varchar) = E'x\rx'" {
+  expect_output 't'
+}
+
+@test "fn: sparql.replace_string(E'b\n'::varchar, 'b\$'::varchar, 'x'::varchar) = E'b\n'" {
+  expect_output 't'
+}
+
+@test "fn: sparql.replace_string(E'a\nb'::varchar, 'b\$'::varchar, 'x'::varchar) = E'a\nx'" {
+  expect_output 't'
 }

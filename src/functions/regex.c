@@ -4,7 +4,10 @@
  *
  * The pattern is compiled in the UTF mode of PCRE2, so it is read in the syntax of PCRE2 rather than in that of XPath
  * regular expressions; the replacement string of REPLACE, on the other hand, is read in the syntax of fn:replace and
- * translated into the substitution syntax of PCRE2.
+ * translated into the substitution syntax of PCRE2. The anchors and the dot follow XPath as far as the options of PCRE2
+ * let them (see parse_flags() and newline_of()): `$` matches at the end of the text alone, not before a final line
+ * feed, unless the flag `m` is given, and `.` matches neither a line feed nor a carriage return unless the flag `s` is
+ * given, but for a carriage return with the flag `m`.
  *
  * A function in a filter is called once per row, nearly always with the same pattern, so the compiled patterns are
  * cached for the life of the backend (see #RegexCacheEntry): a pattern is compiled on its first use, compiled into
@@ -242,6 +245,21 @@ static void compile_machine_code(RegexCacheEntry *entry)
 
 
 /**
+ * Returns the newline convention a pattern is compiled with, by which PCRE2 decides both what the dot does not match
+ * and where the anchors find the lines. XPath lets `.` match neither a line feed nor a carriage return, but takes only a
+ * line feed for the end of a line, so the convention is ANYCRLF without the flag `m`, where the anchors do not look for
+ * lines, and LF with the flag `m`, where `.` then matches a carriage return.
+ *
+ * @param options the options of pcre2_compile(), see parse_flags()
+ * @return the newline convention for pcre2_set_newline()
+ */
+static uint32 newline_of(uint32 options)
+{
+    return options & PCRE2_MULTILINE ? PCRE2_NEWLINE_LF : PCRE2_NEWLINE_ANYCRLF;
+}
+
+
+/**
  * Returns a pattern from the cache, compiling it on its first use and into machine code on its second use (see
  * compile_machine_code()); the pattern becomes the most recently used one.
  *
@@ -295,6 +313,7 @@ static RegexCacheEntry *get_cache_entry(VarChar *pattern, uint32 options)
 
     int errornumber;
     PCRE2_SIZE erroroffset;
+    pcre2_set_newline(regex_cache_compile_context, newline_of(options));
     pcre2_code *code = pcre2_compile((PCRE2_SPTR) copy, length, options, &errornumber, &erroroffset, regex_cache_compile_context);
 
     entry = hash_search(regex_cache, &key, HASH_ENTER, NULL);
@@ -323,7 +342,8 @@ static RegexCacheEntry *get_cache_entry(VarChar *pattern, uint32 options)
 /**
  * Translates the flags of a regular expression into the options of PCRE2: `s` into PCRE2_DOTALL, `m` into
  * PCRE2_MULTILINE, `i` into PCRE2_CASELESS, `x` into PCRE2_EXTENDED and `q` into PCRE2_LITERAL, with which only the
- * flag `i` stays in effect, as XPath has it.
+ * flag `i` stays in effect, as XPath has it. PCRE2_DOLLAR_ENDONLY makes `$` match at the end of the text alone, as in
+ * XPath without the flag `m`, with which PCRE2 ignores the option.
  *
  * @param flags the flags
  * @param options receives the options, which always include PCRE2_UTF
@@ -332,7 +352,7 @@ static RegexCacheEntry *get_cache_entry(VarChar *pattern, uint32 options)
 static bool parse_flags(VarChar *flags, uint32_t *options)
 {
     char *data = VARDATA_ANY(flags);
-    *options = PCRE2_UTF;
+    *options = PCRE2_UTF | PCRE2_DOLLAR_ENDONLY;
 
     for(int32 i = 0; i < VARSIZE_ANY_EXHDR(flags); i++)
     {
