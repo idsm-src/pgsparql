@@ -1129,7 +1129,7 @@ Datum strlang_string(PG_FUNCTION_ARGS)
     if(!check_language_tag(VARDATA_ANY(lang), VARSIZE_ANY_EXHDR(lang)))
         PG_RETURN_NULL();
 
-    Datum lcase_lang = CStringGetTextDatum(asc_tolower(VARDATA_ANY(lang), VARSIZE_ANY_EXHDR(lang)));
+    text *lcase_lang = cstring_to_text(asc_tolower(VARDATA_ANY(lang), VARSIZE_ANY_EXHDR(lang)));
     PG_RETURN_RDFBOX_P(GetLangStringRdfBox(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value), VARDATA_ANY(lcase_lang), VARSIZE_ANY_EXHDR(lcase_lang)));
 }
 
@@ -1155,7 +1155,7 @@ Datum strlangdir_string(PG_FUNCTION_ARGS)
     if(!check_language_tag(VARDATA_ANY(lang), VARSIZE_ANY_EXHDR(lang)))
         PG_RETURN_NULL();
 
-    Datum lcase_lang = CStringGetTextDatum(asc_tolower(VARDATA_ANY(lang), VARSIZE_ANY_EXHDR(lang)));
+    text *lcase_lang = cstring_to_text(asc_tolower(VARDATA_ANY(lang), VARSIZE_ANY_EXHDR(lang)));
 
     if(sizeof(RDF_LTR_DIRECTION) == dir_size + 1 && strncmp(RDF_LTR_DIRECTION, dir_data, dir_size) == 0)
         PG_RETURN_RDFBOX_P(GetLtrLangStringRdfBox(VARDATA_ANY(value), VARSIZE_ANY_EXHDR(value), VARDATA_ANY(lcase_lang), VARSIZE_ANY_EXHDR(lcase_lang)));
